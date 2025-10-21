@@ -1,18 +1,22 @@
-# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
-
-name: Deploy using GitHub Action
+name: Deploy React App (Client)
 
 on:
   push:
     branches: [ "main" ]
+    paths:
+      - 'client/**'   # Only run when files in client/ are changed
   pull_request:
     branches: [ "main" ]
+    paths:
+      - 'client/**'   # Optional: only build PRs that affect client/
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: client  # 👈 All npm commands run in client/
 
     strategy:
       matrix:
@@ -20,15 +24,24 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-    - run: npm ci
-    - run: npm run build --if-present
-    - run: npm test
+        cache-dependency-path: client/package-lock.json  # 👈 Cache based on client deps
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build
+      run: npm run build --if-present
+
+    - name: Run tests
+      run: npm test --if-present
+
     - name: Deploy 🚀
       uses: JamesIves/github-pages-deploy-action@v4
       with:
-        folder: build # The folder the action should deploy.    
+        folder: client/build  # 👈 Deploy the built folder inside client
