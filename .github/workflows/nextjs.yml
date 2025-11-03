@@ -42,9 +42,11 @@ jobs:
           node-version: "20"
           
       - name: Install dependencies
+        working-directory: ./DDAC-WebApplication/client
         run: npm install
         
       - name: Build with Next.js
+        working-directory: ./DDAC-WebApplication/client
         run: npm run build
 
       - name: Run tests
