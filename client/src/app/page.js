@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './globals.css';
 import LoginPage from './components/LoginPage';
 import Dashboard from './components/Dashboard';
@@ -27,18 +27,54 @@ export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [currentPage, setCurrentPage] = useState('dashboard');
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
+  // [NEW] 1. EFFECT: Check for stored user session on component mount
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        setCurrentUser(user);
+        setIsLoggedIn(true);
+      } catch (e) {
+        console.error("Failed to parse stored user data:", e);
+        localStorage.removeItem('user'); // Clear corrupted storage
+      }
+    }
+    setIsInitialLoad(false); // Finished initial loading check
+  }, []);
+
+  // [MODIFIED] 2. LOGIN: Store user data in localStorage
   const handleLogin = (user) => {
+    // Session persistence is now handled inside LoginPage.jsx,
+    // but saving it here works too if you prefer: localStorage.setItem('user', JSON.stringify(user));
+
     setCurrentUser(user);
     setIsLoggedIn(true);
     setCurrentPage('dashboard');
   };
 
+  // [MODIFIED] 3. LOGOUT: Clear user data from localStorage
   const handleLogout = () => {
+    // Clear local storage on logout
+    if (typeof window !== 'undefined') {
+        localStorage.removeItem('user');
+    }
+
     setIsLoggedIn(false);
     setCurrentUser(null);
     setCurrentPage('dashboard');
   };
+
+  // [NEW] Display a loading state while checking the session
+  if (isInitialLoad) {
+      return (
+        <div className="flex min-h-screen items-center justify-center">
+            <p>Loading session...</p>
+        </div>
+      );
+  }
 
   if (!isLoggedIn) {
     return <LoginPage onLogin={handleLogin} />;

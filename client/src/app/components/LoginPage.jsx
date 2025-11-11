@@ -7,31 +7,38 @@ import { Button } from './ui/button';
 import { Label } from './ui/label';
 import { Building2, Lock, Mail } from 'lucide-react';
 import { toast } from 'sonner';
+import axios from 'axios';
+
+const API_URL = 'http://localhost:5254/api/auth/login';
 
 export default function LoginPage({ onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Mock user database
-  const mockUsers = [
-    { id: '1', email: 'john@example.com', password: 'password', name: 'John Smith', unit: 'Unit A-101', role: 'Resident' },
-    { id: '2', email: 'sarah@example.com', password: 'password', name: 'Sarah Johnson', unit: 'Unit B-205', role: 'Resident' },
-    { id: '3', email: 'admin@example.com', password: 'admin', name: 'Admin User', unit: 'Management Office', role: 'Admin' },
-  ];
-
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      const user = mockUsers.find(
-        (u) => u.email === email && u.password === password
-      );
+    try {
+      // 1. Send the login request to the C# backend
+      const response = await axios.post(API_URL, {
+        email: email,
+        password: password,
+      });
 
-      if (user) {
+      // The backend returns the user data on success (200 OK)
+      const user = response.data; // Expected: { id, name, email, unit, role, token }
+
+      if (user && user.role) {
         toast.success('Login successful!');
+
+        // 2. Store the user object in local storage for session persistence across page loads
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('user', JSON.stringify(user));
+        }
+
+        // 3. Pass the authenticated user data up to the parent component (App)
         onLogin({
           id: user.id,
           name: user.name,
@@ -39,11 +46,20 @@ export default function LoginPage({ onLogin }) {
           unit: user.unit,
           role: user.role,
         });
-      } else {
-        toast.error('Invalid email or password');
       }
+
+    } catch (error) {
+      // Handle login error (e.g., 401 Unauthorized or network error)
+      console.error('Login API Error:', error.response ? error.response.data : error.message);
+
+      const errorMessage = error.response?.status === 401
+        ? 'Invalid email or password. Please try again.'
+        : 'A network error occurred. Please check the backend server.';
+
+      toast.error(errorMessage);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
