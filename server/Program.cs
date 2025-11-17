@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 // Make sure this 'Data' namespace matches your project
-using SmartResidentialApi.Data; 
+using server.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
