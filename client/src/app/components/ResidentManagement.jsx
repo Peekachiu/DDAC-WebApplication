@@ -12,7 +12,7 @@ import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, Dialog
 import { Label } from './ui/label';
 
 // Make sure this port (5123) matches your 'dotnet run' terminal
-const API_URL = 'http://localhost:5123';
+const API_URL = 'http://localhost:5016';
 
 export default function ResidentManagement({ user }) {
   // --- STATE ---
