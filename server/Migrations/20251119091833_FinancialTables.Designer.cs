@@ -12,8 +12,8 @@ using server.Data;
 namespace server.Migrations
 {
     [DbContext(typeof(ResidentProDbContext))]
-    [Migration("20251119090353_AddFinancialTables")]
-    partial class AddFinancialTables
+    [Migration("20251119091833_FinancialTables")]
+    partial class FinancialTables
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -90,12 +90,20 @@ namespace server.Migrations
                         .HasColumnType("int")
                         .HasColumnName("amount");
 
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("dueDate");
+
+                    b.Property<DateTime>("IssueDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("issueDate");
+
                     b.Property<string>("Method")
                         .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("method");
 
-                    b.Property<DateTime>("PaymentDate")
+                    b.Property<DateTime?>("PaymentDate")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("paymentDate");
 

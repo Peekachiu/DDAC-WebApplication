@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace server.Migrations
 {
     /// <inheritdoc />
-    public partial class AddFinancialTables : Migration
+    public partial class FinancialTables : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -18,7 +18,9 @@ namespace server.Migrations
                 {
                     paymentID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    paymentDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    issueDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    dueDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    paymentDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     paymentTime = table.Column<TimeSpan>(type: "time(6)", nullable: false),
                     amount = table.Column<int>(type: "int", nullable: false),
                     method = table.Column<string>(type: "longtext", nullable: false)

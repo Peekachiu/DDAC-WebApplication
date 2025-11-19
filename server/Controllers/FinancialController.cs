@@ -5,7 +5,7 @@ using server.Models;
 
 namespace server.Controllers
 {
-    // DTOs (Data Transfer Objects) for clean communication
+    // DTOs (Data Transfer Objects)
     public class InvoiceDto
     {
         public int Id { get; set; }
@@ -58,20 +58,32 @@ namespace server.Controllers
             var invoiceDtos = fees.Select(f => {
                 var resident = users.FirstOrDefault(u => u.PropertyID == f.PropertyID);
                 
-                string statusStr = f.Status == 1 ? "paid" : (f.PaymentDate < DateTime.Now && f.Status == 0 ? "overdue" : "pending");
+                // Correct Status Logic:
+                // If Status is 1 -> Paid
+                // If Status is 0 AND DueDate has passed -> Overdue
+                // Otherwise -> Pending
+                string statusStr = "pending";
+                if (f.Status == 1) 
+                {
+                    statusStr = "paid";
+                }
+                else if (f.DueDate < DateTime.Now)
+                {
+                    statusStr = "overdue";
+                }
 
                 return new InvoiceDto
                 {
                     Id = f.PaymentID,
                     ResidentName = resident != null ? $"{resident.FirstName} {resident.LastName}" : "Unknown",
                     Unit = f.Property != null ? $"{f.Property.Block}-{f.Property.Floor}-{f.Property.Unit}" : "Unknown",
-                    Month = f.PaymentDate.ToString("MMMM yyyy"), // Using Date as Month label
+                    Month = f.IssueDate.ToString("MMMM yyyy"), // Or use a description field if added
                     Amount = f.Amount,
-                    IssueDate = f.PaymentDate, 
-                    DueDate = f.PaymentDate.AddDays(14), // Default due 2 weeks later
+                    IssueDate = f.IssueDate, 
+                    DueDate = f.DueDate,
                     Status = statusStr,
                     PaymentMethod = f.Method,
-                    PaidDate = f.Status == 1 ? f.PaymentDate : null
+                    PaidDate = f.PaymentDate
                 };
             }).OrderByDescending(x => x.IssueDate).ToList();
 
@@ -82,7 +94,6 @@ namespace server.Controllers
         [HttpPost]
         public async Task<ActionResult> GenerateInvoice(CreateInvoiceRequest request)
         {
-            // Try to match Unit string (e.g. "A-10-05" or just "05")
             var property = await _context.Properties
                 .AsNoTracking()
                 .ToListAsync();
@@ -101,8 +112,10 @@ namespace server.Controllers
             {
                 PropertyID = targetProp.PropertyID,
                 Amount = request.Amount,
-                PaymentDate = DateTime.Now, 
-                Status = 0, // 0 = Pending
+                IssueDate = DateTime.Now,      // Set Issue Date to Now
+                DueDate = request.DueDate,     // Set Due Date from Request
+                PaymentDate = null,            // Not paid yet
+                Status = 0,                    // 0 = Pending
                 Method = "N/A",
                 PaymentTime = DateTime.Now.TimeOfDay
             };
@@ -122,7 +135,7 @@ namespace server.Controllers
 
             fee.Status = 1; // Mark as Paid
             fee.Method = request.PaymentMethod;
-            fee.PaymentDate = request.PaymentDate; // Update to actual payment date
+            fee.PaymentDate = request.PaymentDate; // Set the actual payment date
 
             await _context.SaveChangesAsync();
             return Ok(new { message = "Payment recorded successfully" });

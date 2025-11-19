@@ -127,7 +127,39 @@ export default function FinancialManagement({ user }) {
     }
   };
 
+  // 4. Handle Download Receipt (Feature Added)
   const handleDownloadReceipt = (invoice) => {
+    const receiptContent = `
+RESIDENTPRO OFFICIAL RECEIPT
+----------------------------
+Invoice ID:   #${invoice.id}
+Date Issued:  ${new Date(invoice.issueDate).toLocaleDateString()}
+Resident:     ${invoice.residentName}
+Unit No:      ${invoice.unit}
+Description:  ${invoice.month}
+
+PAYMENT DETAILS
+----------------------------
+Amount Paid:  $${invoice.amount}
+Payment Date: ${invoice.paidDate ? new Date(invoice.paidDate).toLocaleDateString() : 'N/A'}
+Method:       ${invoice.paymentMethod || 'N/A'}
+Status:       PAID
+
+----------------------------
+Thank you for your payment.
+ResidentPro Management System
+    `;
+
+    const blob = new Blob([receiptContent], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Receipt_${invoice.id}_${invoice.unit}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+
     toast.success(`Receipt for Invoice #${invoice.id} downloaded!`);
   };
 

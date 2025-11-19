@@ -87,12 +87,20 @@ namespace server.Migrations
                         .HasColumnType("int")
                         .HasColumnName("amount");
 
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("dueDate");
+
+                    b.Property<DateTime>("IssueDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("issueDate");
+
                     b.Property<string>("Method")
                         .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("method");
 
-                    b.Property<DateTime>("PaymentDate")
+                    b.Property<DateTime?>("PaymentDate")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("paymentDate");
 
