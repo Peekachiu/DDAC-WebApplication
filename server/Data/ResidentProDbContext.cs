@@ -19,13 +19,16 @@ namespace server.Data
         public DbSet<ManagementFee> ManagementFees { get; set; } = default!;
         public DbSet<Invoice> Invoices { get; set; } = default!;
 
-        // [ADDED] Bookings & Facilities
-        public DbSet<Facility> Facilities { get; set; } = default!; // Master list of facilities
-        public DbSet<SportFacility> SportFacilities { get; set; } = default!; // Sport Bookings
-        public DbSet<EventHall> EventHalls { get; set; } = default!; // Event Bookings
+        // Bookings & Facilities
+        public DbSet<Facility> Facilities { get; set; } = default!;
+        public DbSet<SportFacility> SportFacilities { get; set; } = default!;
+        public DbSet<EventHall> EventHalls { get; set; } = default!;
         public DbSet<Venue> Venues { get; set; } = default!;
         public DbSet<Visitor> Visitors { get; set; } = default!;
         public DbSet<Report> Reports { get; set; } = default!;
+
+        // [ADDED] Communication
+        public DbSet<Announcement> Announcements { get; set; } = default!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -34,14 +37,15 @@ namespace server.Data
             modelBuilder.Entity<Property>().ToTable("property");
             modelBuilder.Entity<ManagementFee>().ToTable("management_fee");
             modelBuilder.Entity<Invoice>().ToTable("invoice");
-
-            // Map Booking Tables
             modelBuilder.Entity<Facility>().ToTable("facility");
             modelBuilder.Entity<SportFacility>().ToTable("sport_facility");
             modelBuilder.Entity<EventHall>().ToTable("event_hall");
             modelBuilder.Entity<Venue>().ToTable("venue");
             modelBuilder.Entity<Visitor>().ToTable("visitor");
             modelBuilder.Entity<Report>().ToTable("report");
+            
+            // [ADDED] Map Announcement Table
+            modelBuilder.Entity<Announcement>().ToTable("announcement");
         }
     }
 }

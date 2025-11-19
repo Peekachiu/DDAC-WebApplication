@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -12,84 +12,103 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Plus, Search, UserCheck, UserX, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 
-function ResidentVisitorRegister({ user }) {
-  const [visitors, setVisitors] = useState([
-    {
-      id: '1',
-      name: 'John Doe',
-      phone: '+1-555-0101',
-      purpose: 'Personal Visit',
-      checkIn: '2025-10-21 10:30 AM',
-      checkOut: null,
-      status: 'checked-in',
-    },
-    {
-      id: '2',
-      name: 'Mike Wilson',
-      phone: '+1-555-0103',
-      purpose: 'Maintenance',
-      checkIn: '2025-10-20 02:00 PM',
-      checkOut: '2025-10-20 04:30 PM',
-      status: 'checked-out',
-    },
-  ]);
+const API_URL = 'http://localhost:5016/api/Visitors';
 
+function ResidentVisitorRegister({ user }) {
+  // State
+  const [visitors, setVisitors] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
   const [newVisitor, setNewVisitor] = useState({
     name: '',
     phone: '',
     purpose: '',
   });
 
-  const handleRegisterVisitor = (e) => {
+  // 1. Fetch My Visitors from Backend
+  // FIX: Function moved inside useEffect to satisfy ESLint dependency rules
+  useEffect(() => {
+    const fetchMyVisitors = async () => {
+      setIsLoading(true);
+      try {
+        // Calls the endpoint specific to the logged-in user
+        const response = await fetch(`${API_URL}/my-visitors/${user.id}`);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch visitors');
+        }
+        
+        const data = await response.json();
+        setVisitors(data);
+      } catch (error) {
+        console.error("Fetch error:", error);
+        toast.error('Could not load visitor history.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (user?.id) {
+      fetchMyVisitors();
+    }
+  }, [user]); // Dependency array is now correct (only depends on 'user')
+
+  // 2. Register New Visitor
+  const handleRegisterVisitor = async (e) => {
     e.preventDefault();
     
-    const visitor = {
-      id: Date.now().toString(),
+    const payload = {
       name: newVisitor.name,
       phone: newVisitor.phone,
       purpose: newVisitor.purpose,
-      checkIn: new Date().toLocaleString('en-US', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true,
-      }),
-      checkOut: null,
-      status: 'checked-in',
+      userId: user.id // IMPORTANT: Link visitor to this resident
     };
 
-    setVisitors([visitor, ...visitors]);
-    setNewVisitor({ name: '', phone: '', purpose: '' });
-    setIsDialogOpen(false);
-    toast.success('Visitor registered successfully!');
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) throw new Error('Failed to register visitor');
+
+      const addedVisitor = await response.json();
+      
+      setVisitors([addedVisitor, ...visitors]);
+      setNewVisitor({ name: '', phone: '', purpose: '' });
+      setIsDialogOpen(false);
+      toast.success('Visitor registered successfully!');
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
-  const handleCheckOut = (id) => {
-    setVisitors(
-      visitors.map((v) =>
-        v.id === id
-          ? {
-              ...v,
-              checkOut: new Date().toLocaleString('en-US', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true,
-              }),
-              status: 'checked-out',
-            }
+  // 3. Check Out Visitor
+  const handleCheckOut = async (id) => {
+    try {
+      const response = await fetch(`${API_URL}/${id}/checkout`, {
+        method: 'PUT',
+      });
+
+      if (!response.ok) throw new Error('Failed to update status');
+
+      // Update UI optimistically
+      setVisitors(visitors.map((v) => 
+        v.id === id 
+          ? { ...v, status: 'checked-out', checkOut: new Date().toLocaleString() } 
           : v
-      )
-    );
-    toast.success('Visitor checked out successfully!');
+      ));
+      
+      toast.success('Visitor checked out successfully!');
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
+  // Filtering & Display Logic
   const activeVisitors = visitors.filter((v) => v.status === 'checked-in');
   const historicalVisitors = visitors.filter((v) => v.status === 'checked-out');
 
@@ -100,6 +119,8 @@ function ResidentVisitorRegister({ user }) {
         v.phone.includes(searchTerm) ||
         v.purpose.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+  if (isLoading) return <div className="p-8 text-center">Loading your visitors...</div>;
 
   return (
     <div className="space-y-6">

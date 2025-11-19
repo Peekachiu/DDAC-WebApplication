@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -8,50 +8,48 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Bell, AlertCircle, Info, Calendar, Trash2, Check } from 'lucide-react';
 import { toast } from 'sonner';
 
-function ResidentNotifications({ user }) {
-  const [notifications, setNotifications] = useState([
-    {
-      id: '1',
-      title: 'Scheduled Water Maintenance',
-      message: 'Water supply will be temporarily suspended on November 1st from 9 AM to 3 PM for maintenance work. Please plan accordingly.',
-      type: 'warning',
-      date: '2025-10-25',
-      read: false,
-    },
-    {
-      id: '2',
-      title: 'Community Diwali Celebration',
-      message: 'Join us for our annual Diwali celebration on November 10th at 6 PM in the Main Event Hall. All residents are welcome!',
-      type: 'event',
-      date: '2025-10-24',
-      read: false,
-    },
-    {
-      id: '3',
-      title: 'Parking Policy Update',
-      message: 'New parking policy will be effective from November 15th. All vehicles must display parking permits. Please collect your permits from the office.',
-      type: 'info',
-      date: '2025-10-20',
-      read: true,
-    },
-    {
-      id: '4',
-      title: 'Security Alert',
-      message: 'Please be vigilant about package deliveries. Report any suspicious activity to security immediately.',
-      type: 'urgent',
-      date: '2025-10-22',
-      read: true,
-    },
-    {
-      id: '5',
-      title: 'Elevator Maintenance',
-      message: 'Elevator #1 will be under maintenance from Oct 30 to Nov 2. Please use the alternate elevator.',
-      type: 'info',
-      date: '2025-10-18',
-      read: true,
-    },
-  ]);
+// Ensure this matches your backend port
+const API_URL = 'http://localhost:5016/api/Announcements';
 
+function ResidentNotifications({ user }) {
+  const [notifications, setNotifications] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // --- 1. Fetch Data from Backend ---
+  const fetchNotifications = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      // Fetch only 'sent' announcements for residents
+      const response = await fetch(`${API_URL}/resident`);
+      if (!response.ok) throw new Error('Failed to fetch notifications');
+      
+      const data = await response.json();
+      
+      // Transform backend data to frontend structure
+      // Note: DB doesn't persist 'read' status per user yet, so we default to false
+      const formattedData = data.map(item => ({
+        id: item.announcementID,
+        title: item.title,
+        message: item.message,
+        type: item.type.toLowerCase(),
+        date: item.sentDate || item.scheduledDate,
+        read: false 
+      }));
+
+      setNotifications(formattedData);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      toast.error('Failed to load notifications');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
+
+  // --- 2. Local Handlers ---
   const handleMarkAsRead = (id) => {
     setNotifications(notifications.map((n) => (n.id === id ? { ...n, read: true } : n)));
     toast.success('Notification marked as read');
@@ -62,9 +60,10 @@ function ResidentNotifications({ user }) {
     toast.success('Notification marked as unread');
   };
 
+  // Removes notification from the current view (refreshing page will restore it unless we add DB logic)
   const handleDelete = (id) => {
     setNotifications(notifications.filter((n) => n.id !== id));
-    toast.success('Notification deleted');
+    toast.success('Notification removed');
   };
 
   const handleMarkAllAsRead = () => {
@@ -74,31 +73,21 @@ function ResidentNotifications({ user }) {
 
   const getTypeIcon = (type) => {
     switch (type) {
-      case 'info':
-        return <Info className="h-5 w-5 text-blue-600" />;
-      case 'warning':
-        return <AlertCircle className="h-5 w-5 text-orange-600" />;
-      case 'urgent':
-        return <Bell className="h-5 w-5 text-red-600" />;
-      case 'event':
-        return <Calendar className="h-5 w-5 text-purple-600" />;
-      default:
-        return <Info className="h-5 w-5 text-blue-600" />;
+      case 'info': return <Info className="h-5 w-5 text-blue-600" />;
+      case 'warning': return <AlertCircle className="h-5 w-5 text-orange-600" />;
+      case 'urgent': return <Bell className="h-5 w-5 text-red-600" />;
+      case 'event': return <Calendar className="h-5 w-5 text-purple-600" />;
+      default: return <Info className="h-5 w-5 text-blue-600" />;
     }
   };
 
   const getTypeBadge = (type) => {
     switch (type) {
-      case 'info':
-        return <Badge className="bg-blue-100 text-blue-800">Info</Badge>;
-      case 'warning':
-        return <Badge className="bg-orange-100 text-orange-800">Warning</Badge>;
-      case 'urgent':
-        return <Badge className="bg-red-100 text-red-800">Urgent</Badge>;
-      case 'event':
-        return <Badge className="bg-purple-100 text-purple-800">Event</Badge>;
-      default:
-        return null;
+      case 'info': return <Badge className="bg-blue-100 text-blue-800">Info</Badge>;
+      case 'warning': return <Badge className="bg-orange-100 text-orange-800">Warning</Badge>;
+      case 'urgent': return <Badge className="bg-red-100 text-red-800">Urgent</Badge>;
+      case 'event': return <Badge className="bg-purple-100 text-purple-800">Event</Badge>;
+      default: return <Badge variant="secondary">{type}</Badge>;
     }
   };
 
@@ -116,18 +105,20 @@ function ResidentNotifications({ user }) {
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="mb-2 flex items-center gap-2">
-                  <h3 className="text-sm">{notification.title}</h3>
+                  <h3 className="text-sm font-medium">{notification.title}</h3>
                   {getTypeBadge(notification.type)}
                   {!notification.read && (
                     <Badge className="bg-blue-100 text-blue-800 text-xs">New</Badge>
                   )}
                 </div>
-                <p className="mb-2 text-sm text-gray-600">{notification.message}</p>
+                <p className="mb-2 text-sm text-gray-600 whitespace-pre-wrap">{notification.message}</p>
                 <p className="text-xs text-gray-500">
                   {new Date(notification.date).toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
                   })}
                 </p>
               </div>
@@ -158,7 +149,7 @@ function ResidentNotifications({ user }) {
                 onClick={() => handleDelete(notification.id)}
               >
                 <Trash2 className="mr-1 h-3 w-3" />
-                Delete
+                Dismiss
               </Button>
             </div>
           </div>
@@ -166,6 +157,8 @@ function ResidentNotifications({ user }) {
       </CardContent>
     </Card>
   );
+
+  if (isLoading) return <div className="p-12 text-center">Loading notifications...</div>;
 
   return (
     <div className="space-y-6">
@@ -201,7 +194,7 @@ function ResidentNotifications({ user }) {
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Bell className="mb-4 h-12 w-12 text-gray-400" />
-              <p className="text-gray-600">No notifications</p>
+              <p className="text-gray-600">No notifications found</p>
             </div>
           ) : (
             notifications.map((notification) => renderNotification(notification))
