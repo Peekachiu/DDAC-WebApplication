@@ -1,151 +1,95 @@
 'use client'
 
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Users, Calendar, DollarSign, MessageSquare, TrendingUp, CheckCircle, Clock, AlertCircle, Building2, UserCheck } from 'lucide-react';
 import { Badge } from './ui/badge';
+import { toast } from 'sonner';
+import { formatDistanceToNow } from 'date-fns';
+
+const API_URL = 'http://localhost:5016/api/Dashboard/stats';
 
 export default function AdminDashboard({ user }) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const response = await fetch(API_URL);
+        if (!response.ok) throw new Error('Failed to fetch dashboard data');
+        const result = await response.json();
+        setData(result);
+      } catch (error) {
+        console.error("Dashboard Error:", error);
+        toast.error("Failed to load live dashboard data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  if (loading) {
+    return <div className="p-8 text-center">Loading dashboard...</div>;
+  }
+
+  if (!data) {
+    return <div className="p-8 text-center text-red-500">Error loading data.</div>;
+  }
+
   const stats = [
     {
       title: 'Total Residents',
-      value: '150',
+      value: data.totalResidents,
       icon: Users,
       description: 'Active residents',
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
-      change: '+5 this month',
     },
     {
       title: 'Active Visitors',
-      value: '12',
+      value: data.activeVisitors,
       icon: UserCheck,
       description: 'Currently checked in',
       color: 'text-purple-600',
       bgColor: 'bg-purple-50',
-      change: '8 today',
     },
     {
       title: 'Pending Requests',
-      value: '8',
+      value: data.pendingRequests,
       icon: Clock,
       description: 'Awaiting response',
       color: 'text-orange-600',
       bgColor: 'bg-orange-50',
-      change: '3 high priority',
     },
     {
       title: 'Monthly Revenue',
-      value: '$67,500',
+      value: `$${data.monthlyRevenue}`,
       icon: DollarSign,
-      description: 'October 2025',
+      description: 'This month',
       color: 'text-green-600',
       bgColor: 'bg-green-50',
-      change: '+12% vs last month',
-    },
-  ];
-
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'resident',
-      title: 'New Resident Registration',
-      description: 'Emily Chen registered in Unit D-401',
-      time: '1 hour ago',
-      status: 'success',
-    },
-    {
-      id: 2,
-      type: 'complaint',
-      title: 'High Priority Maintenance Request',
-      description: 'Unit B-205: Elevator malfunction reported',
-      time: '2 hours ago',
-      status: 'urgent',
-    },
-    {
-      id: 3,
-      type: 'payment',
-      title: 'Payment Received',
-      description: 'Unit A-101: $450 maintenance fee paid',
-      time: '3 hours ago',
-      status: 'success',
-    },
-    {
-      id: 4,
-      type: 'booking',
-      title: 'Event Hall Booking',
-      description: 'Unit C-304: Main Hall booked for Nov 15',
-      time: '4 hours ago',
-      status: 'pending',
-    },
-    {
-      id: 5,
-      type: 'visitor',
-      title: 'Multiple Visitor Check-ins',
-      description: '8 visitors checked in across all units',
-      time: '5 hours ago',
-      status: 'info',
-    },
-  ];
-
-  const buildingOccupancy = [
-    { building: 'Tower A', total: 50, occupied: 48, occupancy: 96 },
-    { building: 'Tower B', total: 50, occupied: 45, occupancy: 90 },
-    { building: 'Tower C', total: 50, occupied: 47, occupancy: 94 },
-    { building: 'Tower D', total: 50, occupied: 10, occupancy: 20 },
-  ];
-
-  const pendingApprovals = [
-    {
-      id: 1,
-      type: 'Booking',
-      item: 'Event Hall - Wedding Reception',
-      requester: 'Sarah Johnson (Unit B-205)',
-      date: 'Nov 20, 2025',
-      priority: 'high',
-    },
-    {
-      id: 2,
-      type: 'Maintenance',
-      item: 'AC Installation Request',
-      requester: 'John Smith (Unit A-101)',
-      date: 'Oct 25, 2025',
-      priority: 'medium',
-    },
-    {
-      id: 3,
-      type: 'Complaint',
-      item: 'Noise Complaint - Late Hours',
-      requester: 'Mike Wilson (Unit C-304)',
-      date: 'Oct 24, 2025',
-      priority: 'low',
     },
   ];
 
   const getStatusIcon = (status) => {
-    switch (status) {
-      case 'success':
-        return <CheckCircle className="h-5 w-5 text-green-600" />;
-      case 'pending':
-        return <Clock className="h-5 w-5 text-orange-600" />;
-      case 'urgent':
-        return <AlertCircle className="h-5 w-5 text-red-600" />;
-      case 'info':
-        return <TrendingUp className="h-5 w-5 text-blue-600" />;
-      default:
-        return <AlertCircle className="h-5 w-5 text-gray-600" />;
+    switch (status.toLowerCase()) {
+      case 'success': return <CheckCircle className="h-5 w-5 text-green-600" />;
+      case 'pending': return <Clock className="h-5 w-5 text-orange-600" />;
+      case 'urgent': return <AlertCircle className="h-5 w-5 text-red-600" />;
+      case 'info': return <TrendingUp className="h-5 w-5 text-blue-600" />;
+      default: return <AlertCircle className="h-5 w-5 text-gray-600" />;
     }
   };
 
   const getPriorityBadge = (priority) => {
-    switch (priority) {
-      case 'high':
-        return <Badge className="bg-red-100 text-red-800">High Priority</Badge>;
-      case 'medium':
-        return <Badge className="bg-orange-100 text-orange-800">Medium</Badge>;
-      case 'low':
-        return <Badge className="bg-gray-100 text-gray-800">Low</Badge>;
-      default:
-        return null;
+    switch (priority.toLowerCase()) {
+      case 'high': return <Badge className="bg-red-100 text-red-800">High Priority</Badge>;
+      case 'medium': return <Badge className="bg-orange-100 text-orange-800">Medium</Badge>;
+      case 'low': return <Badge className="bg-gray-100 text-gray-800">Low</Badge>;
+      default: return <Badge variant="outline">{priority}</Badge>;
     }
   };
 
@@ -153,7 +97,7 @@ export default function AdminDashboard({ user }) {
     <div className="space-y-6">
       <div>
         <h2>Admin Dashboard</h2>
-        <p className="text-gray-600">Manage and monitor the entire residential community</p>
+        <p className="text-gray-600">Overview of {new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}</p>
       </div>
 
       {/* Stats Grid */}
@@ -164,9 +108,8 @@ export default function AdminDashboard({ user }) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">{stat.title}</p>
-                  <p className="mt-1 text-2xl">{stat.value}</p>
+                  <p className="mt-1 text-2xl font-bold">{stat.value}</p>
                   <p className="mt-1 text-xs text-gray-500">{stat.description}</p>
-                  <p className="mt-1 text-xs text-green-600">{stat.change}</p>
                 </div>
                 <div className={`${stat.bgColor} rounded-lg p-3`}>
                   <stat.icon className={`h-6 w-6 ${stat.color}`} />
@@ -185,16 +128,23 @@ export default function AdminDashboard({ user }) {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentActivities.map((activity) => (
-                <div key={activity.id} className="flex items-start gap-4">
-                  <div className="mt-1">{getStatusIcon(activity.status)}</div>
-                  <div className="flex-1">
-                    <p className="text-sm">{activity.title}</p>
-                    <p className="text-xs text-gray-500">{activity.description}</p>
+              {data.recentActivities.length === 0 ? (
+                <p className="text-sm text-gray-500">No recent activities.</p>
+              ) : (
+                data.recentActivities.map((activity, index) => (
+                  <div key={index} className="flex items-start gap-4">
+                    <div className="mt-1">{getStatusIcon(activity.status)}</div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{activity.title}</p>
+                      <p className="text-xs text-gray-500">{activity.description}</p>
+                    </div>
+                    {/* If you get an invalid date error here, verify backend returns valid ISO string */}
+                    <p className="text-xs text-gray-400 whitespace-nowrap">
+                      {formatDistanceToNow(new Date(activity.time), { addSuffix: true })}
+                    </p>
                   </div>
-                  <p className="text-xs text-gray-400">{activity.time}</p>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
@@ -206,25 +156,29 @@ export default function AdminDashboard({ user }) {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {buildingOccupancy.map((building) => (
-                <div key={building.building} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Building2 className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm">{building.building}</span>
+              {data.occupancy.length === 0 ? (
+                <p className="text-sm text-gray-500">No building data available.</p>
+              ) : (
+                data.occupancy.map((building, index) => (
+                  <div key={index} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Building2 className="h-4 w-4 text-gray-500" />
+                        <span className="text-sm">{building.building}</span>
+                      </div>
+                      <span className="text-sm">
+                        {building.occupied}/{building.total} units ({building.percentage}%)
+                      </span>
                     </div>
-                    <span className="text-sm">
-                      {building.occupied}/{building.total} units ({building.occupancy}%)
-                    </span>
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+                      <div
+                        className="h-full bg-blue-600 transition-all"
+                        style={{ width: `${building.percentage}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
-                    <div
-                      className="h-full bg-blue-600 transition-all"
-                      style={{ width: `${building.occupancy}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
@@ -237,25 +191,29 @@ export default function AdminDashboard({ user }) {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {pendingApprovals.map((approval) => (
-              <div
-                key={approval.id}
-                className="flex items-center justify-between rounded-lg border p-4"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center gap-3">
-                    <Badge variant="outline">{approval.type}</Badge>
-                    <p className="text-sm">{approval.item}</p>
+            {data.pendingApprovals.length === 0 ? (
+              <p className="text-sm text-gray-500">No pending approvals.</p>
+            ) : (
+              data.pendingApprovals.map((approval, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between rounded-lg border p-4"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3">
+                      <Badge variant="outline">{approval.type}</Badge>
+                      <p className="text-sm font-medium">{approval.item}</p>
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500">
+                      {approval.requester} • {approval.date}
+                    </p>
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">
-                    {approval.requester} • {approval.date}
-                  </p>
+                  <div className="flex items-center gap-3">
+                    {getPriorityBadge(approval.priority)}
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  {getPriorityBadge(approval.priority)}
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </CardContent>
       </Card>
@@ -267,19 +225,19 @@ export default function AdminDashboard({ user }) {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <button className="rounded-lg border border-gray-200 p-4 text-left transition hover:border-blue-500 hover:bg-blue-50">
+            <button onClick={() => window.location.href='/admin/residents'} className="rounded-lg border border-gray-200 p-4 text-left transition hover:border-blue-500 hover:bg-blue-50">
               <Users className="mb-2 h-5 w-5 text-blue-600" />
               <p className="text-sm">Manage Residents</p>
             </button>
-            <button className="rounded-lg border border-gray-200 p-4 text-left transition hover:border-green-500 hover:bg-green-50">
+            <button onClick={() => window.location.href='/admin/complaints'} className="rounded-lg border border-gray-200 p-4 text-left transition hover:border-green-500 hover:bg-green-50">
               <MessageSquare className="mb-2 h-5 w-5 text-green-600" />
               <p className="text-sm">Review Requests</p>
             </button>
-            <button className="rounded-lg border border-gray-200 p-4 text-left transition hover:border-purple-500 hover:bg-purple-50">
+            <button onClick={() => window.location.href='/admin/financial'} className="rounded-lg border border-gray-200 p-4 text-left transition hover:border-purple-500 hover:bg-purple-50">
               <DollarSign className="mb-2 h-5 w-5 text-purple-600" />
               <p className="text-sm">Financial Reports</p>
             </button>
-            <button className="rounded-lg border border-gray-200 p-4 text-left transition hover:border-orange-500 hover:bg-orange-50">
+            <button onClick={() => window.location.href='/admin/bookings'} className="rounded-lg border border-gray-200 p-4 text-left transition hover:border-orange-500 hover:bg-orange-50">
               <Calendar className="mb-2 h-5 w-5 text-orange-600" />
               <p className="text-sm">View All Bookings</p>
             </button>

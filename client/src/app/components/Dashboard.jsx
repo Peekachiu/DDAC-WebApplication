@@ -1,74 +1,78 @@
 'use client'
 
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Users, Calendar, DollarSign, MessageSquare, TrendingUp, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import { Badge } from './ui/badge';
+import { toast } from 'sonner';
+import { formatDistanceToNow } from 'date-fns';
+
+// Assuming your backend is on port 5016
+const API_URL = 'http://localhost:5016/api/Dashboard/resident-stats';
 
 export default function Dashboard({ user }) {
-  const isAdmin = user.role === 'Admin';
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Different stats based on role
-  const stats = isAdmin ? [
+  useEffect(() => {
+    const fetchResidentData = async () => {
+      try {
+        // Append user ID to the endpoint
+        const response = await fetch(`${API_URL}/${user.id}`);
+        
+        if (!response.ok) {
+           throw new Error(`Server Error: ${response.status}`);
+        }
+
+        const result = await response.json();
+        setData(result);
+      } catch (error) {
+        console.error("Fetch Error:", error);
+        setError(error.message);
+        toast.error("Failed to load dashboard");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user?.id) {
+      fetchResidentData();
+    }
+  }, [user]);
+
+  if (loading) return <div className="p-8 text-center text-gray-500">Loading dashboard...</div>;
+  if (error) return <div className="p-8 text-center text-red-500">Error loading dashboard data.</div>;
+  if (!data) return <div className="p-8 text-center">No data found.</div>;
+
+  const stats = [
     {
-      title: 'Total Residents',
-      value: '150',
-      icon: Users,
-      description: 'Active residents',
+      title: 'Upcoming Bookings',
+      value: data.upcomingBookings,
+      icon: Calendar,
+      description: 'Reserved facilities',
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
     },
     {
-      title: 'Pending Approvals',
-      value: '8',
-      icon: Clock,
-      description: 'Bookings & requests',
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-50',
+      title: 'Pending Payments',
+      value: `$${data.pendingPayments}`,
+      icon: DollarSign,
+      description: 'Management fee due',
+      color: 'text-green-600',
+      bgColor: 'bg-green-50',
     },
     {
       title: 'Active Visitors',
-      value: '12',
+      value: data.activeVisitors,
       icon: Users,
       description: 'Currently checked in',
       color: 'text-purple-600',
       bgColor: 'bg-purple-50',
     },
     {
-      title: 'Total Revenue',
-      value: '$67,500',
-      icon: DollarSign,
-      description: 'This month',
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
-    },
-  ] : [
-    {
-      title: 'Upcoming Bookings',
-      value: '3',
-      icon: Calendar,
-      description: 'Next 7 days',
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-    },
-    {
-      title: 'Pending Payments',
-      value: '$450',
-      icon: DollarSign,
-      description: 'Maintenance fee due',
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
-    },
-    {
-      title: 'Active Visitors',
-      value: '2',
-      icon: Users,
-      description: 'Registered today',
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-    },
-    {
       title: 'Open Requests',
-      value: '1',
+      value: data.openRequests,
       icon: MessageSquare,
       description: 'Pending response',
       color: 'text-orange-600',
@@ -76,83 +80,20 @@ export default function Dashboard({ user }) {
     },
   ];
 
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'booking',
-      title: 'Tennis Court Booking Confirmed',
-      description: 'October 25, 2025 at 2:00 PM',
-      time: '2 hours ago',
-      status: 'success',
-    },
-    {
-      id: 2,
-      type: 'payment',
-      title: 'Maintenance Fee Payment Due',
-      description: 'Amount: $450 - Due: October 31, 2025',
-      time: '1 day ago',
-      status: 'pending',
-    },
-    {
-      id: 3,
-      type: 'complaint',
-      title: 'Maintenance Request Updated',
-      description: 'Air conditioning repair in progress',
-      time: '2 days ago',
-      status: 'progress',
-    },
-    {
-      id: 4,
-      type: 'visitor',
-      title: 'Visitor Check-in',
-      description: 'John Doe checked in at main entrance',
-      time: '3 days ago',
-      status: 'success',
-    },
-  ];
-
-  const upcomingEvents = [
-    {
-      id: 1,
-      title: 'Community BBQ Event',
-      date: 'October 28, 2025',
-      time: '6:00 PM - 9:00 PM',
-      location: 'Event Hall',
-    },
-    {
-      id: 2,
-      title: 'Yoga Class',
-      date: 'October 26, 2025',
-      time: '7:00 AM - 8:00 AM',
-      location: 'Sports Center',
-    },
-    {
-      id: 3,
-      title: 'Building Maintenance',
-      date: 'October 30, 2025',
-      time: '9:00 AM - 5:00 PM',
-      location: 'Tower A',
-    },
-  ];
-
   const getStatusIcon = (status) => {
-    switch (status) {
-      case 'success':
-        return <CheckCircle className="h-5 w-5 text-green-600" />;
-      case 'pending':
-        return <Clock className="h-5 w-5 text-orange-600" />;
-      case 'progress':
-        return <TrendingUp className="h-5 w-5 text-blue-600" />;
-      default:
-        return <AlertCircle className="h-5 w-5 text-gray-600" />;
+    switch (status?.toLowerCase()) {
+      case 'success': return <CheckCircle className="h-5 w-5 text-green-600" />;
+      case 'progress': return <TrendingUp className="h-5 w-5 text-blue-600" />;
+      case 'info': return <Users className="h-5 w-5 text-purple-600" />;
+      default: return <Clock className="h-5 w-5 text-gray-400" />;
     }
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="mb-1">Welcome back, {user.name}!</h2>
-        <p className="text-gray-600">Here's what's happening with your residence</p>
+        <h2 className="mb-1 text-2xl font-semibold tracking-tight">Welcome back, {user.name}!</h2>
+        <p className="text-gray-600">Here what happening with your residence</p>
       </div>
 
       {/* Stats Grid */}
@@ -163,7 +104,7 @@ export default function Dashboard({ user }) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">{stat.title}</p>
-                  <p className="mt-1 text-2xl">{stat.value}</p>
+                  <p className="mt-1 text-2xl font-bold">{stat.value}</p>
                   <p className="mt-1 text-xs text-gray-500">{stat.description}</p>
                 </div>
                 <div className={`${stat.bgColor} rounded-lg p-3`}>
@@ -183,16 +124,22 @@ export default function Dashboard({ user }) {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentActivities.map((activity) => (
-                <div key={activity.id} className="flex items-start gap-4">
-                  <div className="mt-1">{getStatusIcon(activity.status)}</div>
-                  <div className="flex-1">
-                    <p className="text-sm">{activity.title}</p>
-                    <p className="text-xs text-gray-500">{activity.description}</p>
+              {data.recentActivities.length === 0 ? (
+                <p className="text-sm text-gray-500 text-center py-4">No recent activity found.</p>
+              ) : (
+                data.recentActivities.map((activity, index) => (
+                  <div key={index} className="flex items-start gap-4 border-b pb-3 last:border-0">
+                    <div className="mt-1">{getStatusIcon(activity.status)}</div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{activity.title}</p>
+                      <p className="text-xs text-gray-500">{activity.description}</p>
+                    </div>
+                    <p className="text-xs text-gray-400 whitespace-nowrap">
+                      {formatDistanceToNow(new Date(activity.time), { addSuffix: true })}
+                    </p>
                   </div>
-                  <p className="text-xs text-gray-400">{activity.time}</p>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
@@ -204,24 +151,26 @@ export default function Dashboard({ user }) {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {upcomingEvents.map((event) => (
-                <div key={event.id} className="rounded-lg border p-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-sm">{event.title}</p>
-                      <p className="mt-1 text-xs text-gray-500">
-                        <Calendar className="mr-1 inline h-3 w-3" />
-                        {event.date}
-                      </p>
-                      <p className="mt-1 text-xs text-gray-500">
-                        <Clock className="mr-1 inline h-3 w-3" />
-                        {event.time}
-                      </p>
+              {data.upcomingEvents.length === 0 ? (
+                <p className="text-sm text-gray-500 text-center py-4">No upcoming bookings or events.</p>
+              ) : (
+                data.upcomingEvents.map((event, index) => (
+                  <div key={index} className="rounded-lg border p-4">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-sm font-medium">{event.title}</p>
+                        <p className="mt-1 text-xs text-gray-500 flex items-center gap-1">
+                          <Calendar className="inline h-3 w-3" /> {event.date}
+                        </p>
+                        <p className="mt-1 text-xs text-gray-500 flex items-center gap-1">
+                          <Clock className="inline h-3 w-3" /> {event.time}
+                        </p>
+                      </div>
+                      <Badge variant="outline">{event.location}</Badge>
                     </div>
-                    <Badge variant="outline">{event.location}</Badge>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
@@ -234,21 +183,21 @@ export default function Dashboard({ user }) {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <button className="rounded-lg border border-gray-200 p-4 text-left transition hover:border-blue-500 hover:bg-blue-50">
+            <button onClick={() => window.location.href = '/resident/visitors'} className="rounded-lg border border-gray-200 p-4 text-left transition hover:border-blue-500 hover:bg-blue-50">
               <Users className="mb-2 h-5 w-5 text-blue-600" />
-              <p className="text-sm">Register Visitor</p>
+              <p className="text-sm font-medium">Register Visitor</p>
             </button>
-            <button className="rounded-lg border border-gray-200 p-4 text-left transition hover:border-green-500 hover:bg-green-50">
+            <button onClick={() => window.location.href = '/resident/sports'} className="rounded-lg border border-gray-200 p-4 text-left transition hover:border-green-500 hover:bg-green-50">
               <Calendar className="mb-2 h-5 w-5 text-green-600" />
-              <p className="text-sm">Book Facility</p>
+              <p className="text-sm font-medium">Book Facility</p>
             </button>
-            <button className="rounded-lg border border-gray-200 p-4 text-left transition hover:border-purple-500 hover:bg-purple-50">
+            <button onClick={() => window.location.href = '/resident/management'} className="rounded-lg border border-gray-200 p-4 text-left transition hover:border-purple-500 hover:bg-purple-50">
               <DollarSign className="mb-2 h-5 w-5 text-purple-600" />
-              <p className="text-sm">Pay Fees</p>
+              <p className="text-sm font-medium">Pay Fees</p>
             </button>
-            <button className="rounded-lg border border-gray-200 p-4 text-left transition hover:border-orange-500 hover:bg-orange-50">
+            <button onClick={() => window.location.href = '/resident/complaints'} className="rounded-lg border border-gray-200 p-4 text-left transition hover:border-orange-500 hover:bg-orange-50">
               <MessageSquare className="mb-2 h-5 w-5 text-orange-600" />
-              <p className="text-sm">Submit Request</p>
+              <p className="text-sm font-medium">Submit Request</p>
             </button>
           </div>
         </CardContent>

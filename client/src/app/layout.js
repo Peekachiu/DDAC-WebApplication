@@ -56,6 +56,7 @@ function AppContent({ children }) {
     { id: 'invoices', label: 'Invoices & Receipts', icon: FileText, href: '/resident/invoices' },
     { id: 'complaints', label: 'Complaints & Requests', icon: MessageSquare, href: '/resident/complaints' },
     { id: 'notifications', label: 'Notifications', icon: Bell, href: '/resident/notifications' },
+    { id: 'profile', label: 'Profile Settings', icon: UserCog, href: '/resident/profile' },
   ];
 
   const menuItems = currentUser.role === 'Admin' ? adminMenuItems : residentMenuItems;
