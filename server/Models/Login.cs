@@ -3,21 +3,18 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace server.Models
 {
-    [Table("login")]
     public class Login
     {
-        [Key]
-        [Column("email")]
-        public string Email { get; set; }= default!;
+        [Key] // 'Email' is the primary key in your Login table
+        public string Email { get; set; } = string.Empty;
 
-        [Column("password")]
-        public string Password { get; set; }= default!;
+        public string Password { get; set; } = string.Empty;
 
-        [Column("userID")]
+        // Foreign Key
         public int UserID { get; set; }
 
-        // Navigation property
+        // Navigation property to User
         [ForeignKey("UserID")]
-        public User User { get; set; }= default!;
+        public User? User { get; set; }
     }
 }
