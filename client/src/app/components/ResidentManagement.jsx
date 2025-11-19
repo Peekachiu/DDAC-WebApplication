@@ -11,16 +11,14 @@ import { toast } from 'sonner';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { Label } from './ui/label';
 
-// Make sure this port (5123) matches your 'dotnet run' terminal
 const API_URL = 'http://localhost:5016';
 
 export default function ResidentManagement({ user }) {
-  // --- STATE ---
   const [residents, setResidents] = useState([]); 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const [searchTerm, setSearchTerm] = useState('');
+  
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingResident, setEditingResident] = useState(null);
 
@@ -31,7 +29,6 @@ export default function ResidentManagement({ user }) {
     role: 'Resident',
   });
 
-  // --- DATA FETCHING ---
   useEffect(() => {
     fetchResidents();
   }, []);
@@ -40,9 +37,7 @@ export default function ResidentManagement({ user }) {
     setIsLoading(true);
     try {
       const response = await fetch(`${API_URL}/api/residents`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       setResidents(data);
     } catch (e) {
@@ -53,17 +48,24 @@ export default function ResidentManagement({ user }) {
     }
   }
 
-  // --- CRUD FUNCTIONS ---
+  const handleOpenChange = (open) => {
+    setIsDialogOpen(open);
+    if (!open) {
+      setEditingResident(null);
+      setNewResident({ name: '', email: '', unitNumber: '', role: 'Resident' });
+    }
+  };
 
   const handleAddResident = async (e) => {
     e.preventDefault();
     
+    const defaultPassword = "Resident123!"; 
+
     const residentToAdd = {
       name: newResident.name,
       email: newResident.email,
       unitNumber: newResident.unitNumber,
-      role: newResident.role,
-      // You should add password handling on the server, not here
+      password: defaultPassword, 
     };
 
     try {
@@ -73,15 +75,21 @@ export default function ResidentManagement({ user }) {
         body: JSON.stringify(residentToAdd),
       });
 
-      if (!response.ok) throw new Error('Failed to add resident');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to add resident');
+      }
 
       const addedResident = await response.json();
-      setResidents([...residents, addedResident]);
       
-      closeDialog();
-      toast.success('Resident added successfully!');
+      // CRITICAL: Ensure the new resident has an ID before adding to state
+      // If backend works correctly, addedResident.id will be present.
+      setResidents((prev) => [...prev, addedResident]);
+      
+      handleOpenChange(false);
+      toast.success(`Resident added! Default password is: ${defaultPassword}`);
     } catch (e) {
-      toast.error(`Failed to add resident: ${e.message}`);
+      toast.error(e.message);
     }
   };
 
@@ -90,7 +98,7 @@ export default function ResidentManagement({ user }) {
     setNewResident({
       name: resident.name,
       email: resident.email,
-      unitNumber: resident.unitNumber,
+      unitNumber: resident.unitNumber.split('-').pop(), 
       role: resident.role,
     });
     setIsDialogOpen(true);
@@ -98,15 +106,11 @@ export default function ResidentManagement({ user }) {
 
   const handleUpdateResident = async (e) => {
     e.preventDefault();
-    
-    // This is the data we will send for the update
     const updatedResidentData = {
       id: editingResident.id,
       name: newResident.name,
       email: newResident.email,
       unitNumber: newResident.unitNumber,
-      role: newResident.role,
-      // Note: We're not sending PasswordHash, so it won't be changed
     };
 
     try {
@@ -116,16 +120,10 @@ export default function ResidentManagement({ user }) {
         body: JSON.stringify(updatedResidentData),
       });
 
-      if (!response.ok) { throw new Error('Update failed'); }
+      if (!response.ok) throw new Error('Update failed');
 
-      // Update the resident in the local list
-      setResidents(
-        residents.map((r) =>
-          r.id === editingResident.id ? { ...r, ...updatedResidentData } : r
-        )
-      );
-      
-      closeDialog();
+      setResidents(residents.map((r) => r.id === editingResident.id ? { ...r, ...updatedResidentData } : r));
+      handleOpenChange(false);
       toast.success('Resident updated successfully!');
     } catch (e) {
       toast.error(`Failed to update resident: ${e.message}`);
@@ -135,13 +133,8 @@ export default function ResidentManagement({ user }) {
   const handleDeleteResident = async (id) => {
     if (window.confirm('Are you sure you want to delete this resident?')) {
       try {
-        const response = await fetch(`${API_URL}/api/residents/${id}`, {
-          method: 'DELETE',
-        });
-
-        if (!response.ok) { throw new Error('Delete failed'); }
-
-        // Remove the resident from the local list
+        const response = await fetch(`${API_URL}/api/residents/${id}`, { method: 'DELETE' });
+        if (!response.ok) throw new Error('Delete failed');
         setResidents(residents.filter((r) => r.id !== id));
         toast.success('Resident deleted successfully!');
       } catch (e) {
@@ -150,30 +143,13 @@ export default function ResidentManagement({ user }) {
     }
   };
 
-  // --- RENDER LOGIC ---
-
-  const closeDialog = () => {
-    setIsDialogOpen(false);
-    setEditingResident(null);
-    setNewResident({ name: '', email: '', unitNumber: '', role: 'Resident' });
-  };
-
-  const filteredResidents = residents.filter(
-    (r) =>
-      r.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      r.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      r.unitNumber.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredResidents = residents.filter(r => 
+    r.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    r.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const activeResidents = residents.filter((r) => r.role === 'Resident').length;
-
-  if (isLoading) {
-    return <div>Loading residents...</div>;
-  }
-
-  if (error) {
-    return <div>Error loading residents: {error}</div>;
-  }
+  if (isLoading) return <div className="p-6">Loading...</div>;
+  if (error) return <div className="p-6 text-red-500">Error: {error}</div>;
 
   return (
     <div className="space-y-6">
@@ -182,9 +158,10 @@ export default function ResidentManagement({ user }) {
           <h2>Resident Management</h2>
           <p className="text-sm text-gray-600">Manage all residents in the community</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={closeDialog}>
+        
+        <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
           <DialogTrigger asChild>
-            <Button onClick={() => setIsDialogOpen(true)}>
+            <Button>
               <Plus className="mr-2 h-4 w-4" />
               Add Resident
             </Button>
@@ -192,11 +169,11 @@ export default function ResidentManagement({ user }) {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>{editingResident ? 'Edit Resident' : 'Add New Resident'}</DialogTitle>
+              <DialogDescription>
+                {!editingResident && "A default password (Resident123!) will be assigned."}
+              </DialogDescription>
             </DialogHeader>
-            <form
-              onSubmit={editingResident ? handleUpdateResident : handleAddResident}
-              className="space-y-4"
-            >
+            <form onSubmit={editingResident ? handleUpdateResident : handleAddResident} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
                 <Input
@@ -218,18 +195,16 @@ export default function ResidentManagement({ user }) {
                   required
                 />
               </div>
-              
               <div className="space-y-2">
                 <Label htmlFor="unit">Unit Number</Label>
                 <Input
                   id="unit"
                   value={newResident.unitNumber}
                   onChange={(e) => setNewResident({ ...newResident, unitNumber: e.target.value })}
-                  placeholder="e.g., Unit A-101"
+                  placeholder="e.g., A-10-05"
                   required
                 />
               </div>
-              
               <Button type="submit" className="w-full">
                 {editingResident ? 'Update Resident' : 'Add Resident'}
               </Button>
@@ -238,7 +213,6 @@ export default function ResidentManagement({ user }) {
         </Dialog>
       </div>
 
-      {/* --- Summary Cards (Simplified) --- */}
       <div className="grid gap-4 sm:grid-cols-2">
         <Card>
           <CardContent className="p-6">
@@ -246,7 +220,6 @@ export default function ResidentManagement({ user }) {
               <div>
                 <p className="text-sm text-gray-600">Total Residents</p>
                 <p className="mt-1 text-2xl">{residents.length}</p>
-                <p className="mt-1 text-xs text-gray-500">{activeResidents} residents</p>
               </div>
               <div className="rounded-lg bg-blue-50 p-3">
                 <UserCheck className="h-6 w-6 text-blue-600" />
@@ -258,9 +231,8 @@ export default function ResidentManagement({ user }) {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Units</p>
-                <p className="mt-1 text-2xl">{residents.length}</p>
-                <p className="mt-1 text-xs text-gray-500">Occupied</p>
+                <p className="text-sm text-gray-600">Occupied Units</p>
+                <p className="mt-1 text-2xl">{new Set(residents.map(r => r.unitNumber)).size}</p>
               </div>
               <div className="rounded-lg bg-orange-50 p-3">
                 <Home className="h-6 w-6 text-orange-600" />
@@ -270,19 +242,13 @@ export default function ResidentManagement({ user }) {
         </Card>
       </div>
 
-      {/* --- Residents Table (Simplified) --- */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>All Residents</CardTitle>
             <div className="relative w-64">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Search by name, email, unit..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+              <Input placeholder="Search residents..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
             </div>
           </div>
         </CardHeader>
@@ -298,39 +264,17 @@ export default function ResidentManagement({ user }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredResidents.map((resident) => (
-                <TableRow key={resident.id}>
+              {filteredResidents.map((resident, index) => (
+                // Key Fallback: If resident.id is missing (backend issue), use index to prevent crash
+                <TableRow key={resident.id || index}>
                   <TableCell>{resident.name}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1 text-xs">
-                      <Mail className="h-3 w-3" />
-                      {resident.email}
-                    </div>
-                  </TableCell>
+                  <TableCell>{resident.email}</TableCell>
                   <TableCell>{resident.unitNumber}</TableCell>
-                  <TableCell>
-                    {resident.role === 'Admin' ? (
-                      <Badge variant="default">Admin</Badge>
-                    ) : (
-                      <Badge variant="secondary">Resident</Badge>
-                    )}
-                  </TableCell>
+                  <TableCell><Badge variant="secondary">{resident.role}</Badge></TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEditResident(resident)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDeleteResident(resident.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-red-600" />
-                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => handleEditResident(resident)}><Edit className="h-4 w-4" /></Button>
+                      <Button size="sm" variant="outline" onClick={() => handleDeleteResident(resident.id)}><Trash2 className="h-4 w-4 text-red-600" /></Button>
                     </div>
                   </TableCell>
                 </TableRow>

@@ -1,52 +1,68 @@
 'use client'
 
-import React, { createContext, useContext, useState } from 'react';
-import { useRouter } from 'next/navigation'; // Import useRouter
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
-// Mock user database
-const mockUsers = [
-  { id: '1', email: 'john@example.com', password: 'password', name: 'John Smith', unit: 'Unit A-101', role: 'Resident' },
-  { id: '2', email: 'sarah@example.com', password: 'password', name: 'Sarah Johnson', unit: 'Unit B-205', role: 'Resident' },
-  { id: '3', email: 'admin@example.com', password: 'admin', name: 'Admin User', unit: 'Management Office', role: 'Admin' },
-];
-
 const AuthContext = createContext(null);
+const API_URL = 'http://localhost:5016'; // Check that this matches your dotnet run port
 
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleLogin = (email, password) => {
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      const user = mockUsers.find(
-        (u) => u.email === email && u.password === password
-      );
+  // Check for existing session on load
+  useEffect(() => {
+    const storedUser = localStorage.getItem('currentUser');
+    if (storedUser) {
+      setCurrentUser(JSON.parse(storedUser));
+    }
+  }, []);
 
-      if (user) {
-        toast.success('Login successful!');
-        setCurrentUser({
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          unit: user.unit,
-          role: user.role,
-        });
-        // Redirect to dashboard on successful login
-        router.push('/dashboard');
-      } else {
-        toast.error('Invalid email or password');
+  const handleLogin = async (email, password) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/api/Login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
       }
+
+      // Success
+      toast.success('Login successful!');
+      
+      const userData = {
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        unit: data.unit,
+        role: data.role, 
+      };
+
+      setCurrentUser(userData);
+      localStorage.setItem('currentUser', JSON.stringify(userData));
+      
+      router.push('/'); 
+      
+    } catch (error) {
+      console.error("Login Error:", error);
+      toast.error(error.message || 'Invalid email or password');
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   const handleLogout = () => {
     setCurrentUser(null);
-    router.push('/login'); // Redirect to login page
+    localStorage.removeItem('currentUser');
+    router.push('/login');
   };
 
   const value = {

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using server.Data;
+using BCrypt.Net; // Import BCrypt
 
 namespace server.Controllers
 {
@@ -38,22 +39,21 @@ namespace server.Controllers
                 return BadRequest(new { message = "Email and password are required." });
             }
 
-            // 1. Check Credentials
-            // Note: In production, use hashed passwords (e.g., BCrypt)
+            // 1. Find Login record by Email
             var loginRecord = await _context.Logins
                 .AsNoTracking()
-                .FirstOrDefaultAsync(l => 
-                    l.Email == request.Email && 
-                    l.Password == request.Password);
+                .FirstOrDefaultAsync(l => l.Email == request.Email);
 
-            if (loginRecord == null)
+            // 2. Verify Password (Hash Check)
+            // We use BCrypt.Verify(plainText, hashFromDb)
+            if (loginRecord == null || !BCrypt.Net.BCrypt.Verify(request.Password, loginRecord.Password))
             {
                 return Unauthorized(new { message = "Invalid email or password" });
             }
 
-            // 2. Fetch User details AND Property details
+            // 3. Fetch User details
             var user = await _context.Users
-                .Include(u => u.Property) // Join with Property table
+                .Include(u => u.Property)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.UserID == loginRecord.UserID);
 
@@ -62,15 +62,12 @@ namespace server.Controllers
                 return Unauthorized(new { message = "User data not found." });
             }
 
-            // 3. Map Role
+            // 4. Map Role
             string roleString = user.Role == 0 ? "Admin" : "Resident";
-
-            // 4. Format Unit string
             string unitString = user.Property != null 
                 ? $"{user.Property.Block}-{user.Property.Floor}-{user.Property.Unit}" 
                 : "No Unit Assigned";
 
-            // 5. Return Response
             var userDto = new UserDto
             {
                 Id = user.UserID,

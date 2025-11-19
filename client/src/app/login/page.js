@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react';
-import { useAuth } from '../AuthContext'; // Import useAuth
+import { useAuth } from '../AuthContext'; 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
@@ -11,11 +11,11 @@ import { Building2, Lock, Mail } from 'lucide-react';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { handleLogin, isLoading } = useAuth(); // Get login function from context
+  const { handleLogin, isLoading } = useAuth();
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    handleLogin(email, password); // Call context login function
+    handleLogin(email, password);
   };
 
   return (
@@ -66,15 +66,6 @@ export default function LoginPage() {
               {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
-          <div className="mt-6 rounded-lg bg-blue-50 p-4">
-            <p className="mb-2 text-sm">Demo Credentials:</p>
-            <p className="text-xs text-gray-600">
-              <strong>Resident:</strong> john@example.com / password
-            </p>
-            <p className="text-xs text-gray-600">
-              <strong>Admin:</strong> admin@example.com / admin
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>
