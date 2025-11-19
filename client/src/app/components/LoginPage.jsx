@@ -1,53 +1,26 @@
+// peekachiu/ddac-webapplication/DDAC-WebApplication-jiayuan/client/src/app/components/LoginPage.jsx
 'use client'
 
 import { useState } from 'react';
+import { useAuth } from '../layout'; // Import from layout or AuthContext
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { Label } from './ui/label';
 import { Building2, Lock, Mail } from 'lucide-react';
-import { toast } from 'sonner';
 
-const API_URL = 'http://localhost:5016/api/Login';
-
-export default function LoginPage({ onLogin }) {
+export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const { handleLogin, isLoading } = useAuth();
 
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
-      }
-
-      // Success: Pass the real user data from backend to the layout handler
-      toast.success('Login successful!');
-      onLogin(data);
-
-    } catch (error) {
-      console.error("Login Error:", error);
-      toast.error(error.message || 'Something went wrong. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
+    await handleLogin(email, password);
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-blue-50 to-indigo-100 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-600">
@@ -59,7 +32,7 @@ export default function LoginPage({ onLogin }) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
