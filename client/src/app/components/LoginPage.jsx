@@ -8,42 +8,42 @@ import { Label } from './ui/label';
 import { Building2, Lock, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 
+const API_URL = 'http://localhost:5016/api/Login';
+
 export default function LoginPage({ onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Mock user database
-  const mockUsers = [
-    { id: '1', email: 'john@example.com', password: 'password', name: 'John Smith', unit: 'Unit A-101', role: 'Resident' },
-    { id: '2', email: 'sarah@example.com', password: 'password', name: 'Sarah Johnson', unit: 'Unit B-205', role: 'Resident' },
-    { id: '3', email: 'admin@example.com', password: 'admin', name: 'Admin User', unit: 'Management Office', role: 'Admin' },
-  ];
-
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      const user = mockUsers.find(
-        (u) => u.email === email && u.password === password
-      );
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-      if (user) {
-        toast.success('Login successful!');
-        onLogin({
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          unit: user.unit,
-          role: user.role,
-        });
-      } else {
-        toast.error('Invalid email or password');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
       }
+
+      // Success: Pass the real user data from backend to the layout handler
+      toast.success('Login successful!');
+      onLogin(data);
+
+    } catch (error) {
+      console.error("Login Error:", error);
+      toast.error(error.message || 'Something went wrong. Please try again.');
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -94,15 +94,6 @@ export default function LoginPage({ onLogin }) {
               {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
-          <div className="mt-6 rounded-lg bg-blue-50 p-4">
-            <p className="mb-2 text-sm">Demo Credentials:</p>
-            <p className="text-xs text-gray-600">
-              <strong>Resident:</strong> john@example.com / password
-            </p>
-            <p className="text-xs text-gray-600">
-              <strong>Admin:</strong> admin@example.com / admin
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>

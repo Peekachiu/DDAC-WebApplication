@@ -4,14 +4,12 @@ using server.Data;
 
 namespace server.Controllers
 {
-    // Define the request data structure from the frontend
     public class LoginRequest
     {
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
     }
 
-    // Define the successful response data structure for the frontend
     public class UserDto
     {
         public int Id { get; set; }
@@ -35,41 +33,50 @@ namespace server.Controllers
         [HttpPost]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            // IMPORTANT: In a production app, never store or check plain-text passwords. Use password hashing (e.g., BCrypt).
+            if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
+            {
+                return BadRequest(new { message = "Email and password are required." });
+            }
 
-            // Query the Login table to check credentials
+            // 1. Check Credentials
+            // Note: In production, use hashed passwords (e.g., BCrypt)
             var loginRecord = await _context.Logins
                 .AsNoTracking()
                 .FirstOrDefaultAsync(l => 
                     l.Email == request.Email && 
-                    l.Password == request.Password); // Note: This is checking the plain password 'password123'
+                    l.Password == request.Password);
 
             if (loginRecord == null)
             {
                 return Unauthorized(new { message = "Invalid email or password" });
             }
 
-            // Fetch the corresponding User details
+            // 2. Fetch User details AND Property details
             var user = await _context.Users
+                .Include(u => u.Property) // Join with Property table
                 .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.UserID == loginRecord.UserID);
 
             if (user == null)
             {
-                return Unauthorized(new { message = "User data missing." });
+                return Unauthorized(new { message = "User data not found." });
             }
 
-            // Map the database role (int 0/1) to the role string expected by the frontend
+            // 3. Map Role
             string roleString = user.Role == 0 ? "Admin" : "Resident";
 
-            // Prepare the response object (UserDto)
+            // 4. Format Unit string
+            string unitString = user.Property != null 
+                ? $"{user.Property.Block}-{user.Property.Floor}-{user.Property.Unit}" 
+                : "No Unit Assigned";
+
+            // 5. Return Response
             var userDto = new UserDto
             {
                 Id = user.UserID,
                 Name = $"{user.FirstName} {user.LastName}",
                 Email = user.Email,
-                // Placeholder for Unit. You need to join the Property table later to get the Unit details (e.g., "A-101")
-                Unit = "PropertyID: " + user.PropertyID, 
+                Unit = unitString, 
                 Role = roleString
             };
 

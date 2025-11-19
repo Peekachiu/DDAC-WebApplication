@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace server.Models
 {
     public class User
@@ -13,5 +15,9 @@ namespace server.Models
 
         // Navigation property for Login
         public Login? Login { get; set; }
+
+        // [ADDED] Navigation property for Property
+        [ForeignKey("PropertyID")]
+        public Property? Property { get; set; }
     }
 }
