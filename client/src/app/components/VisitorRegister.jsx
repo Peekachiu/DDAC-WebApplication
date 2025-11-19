@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -12,152 +12,106 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Plus, Search, UserCheck, UserX, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 
+const API_URL = 'http://localhost:5016/api/Visitors';
+
 export default function VisitorRegister({ user }) {
   const isAdmin = user.role === 'Admin';
   
-  const [visitors, setVisitors] = useState([
-    {
-      id: '1',
-      name: 'John Doe',
-      phone: '+1-555-0101',
-      purpose: 'Personal Visit',
-      checkIn: '2025-10-24 10:30 AM',
-      checkOut: null,
-      status: 'checked-in',
-      unit: 'Unit A-101',
-    },
-    {
-      id: '2',
-      name: 'Jane Smith',
-      phone: '+1-555-0102',
-      purpose: 'Delivery',
-      checkIn: '2025-10-24 09:15 AM',
-      checkOut: '2025-10-24 09:30 AM',
-      status: 'checked-out',
-      unit: 'Unit B-205',
-    },
-    {
-      id: '3',
-      name: 'Mike Wilson',
-      phone: '+1-555-0103',
-      purpose: 'Maintenance',
-      checkIn: '2025-10-23 02:00 PM',
-      checkOut: '2025-10-23 04:30 PM',
-      status: 'checked-out',
-      unit: 'Unit A-101',
-    },
-    {
-      id: '4',
-      name: 'Sarah Brown',
-      phone: '+1-555-0104',
-      purpose: 'Personal Visit',
-      checkIn: '2025-10-22 06:00 PM',
-      checkOut: '2025-10-22 08:30 PM',
-      status: 'checked-out',
-      unit: 'Unit C-304',
-    },
-    {
-      id: '5',
-      name: 'Tom Anderson',
-      phone: '+1-555-0105',
-      purpose: 'Personal Visit',
-      checkIn: '2025-10-24 02:15 PM',
-      checkOut: null,
-      status: 'checked-in',
-      unit: 'Unit B-205',
-    },
-    {
-      id: '6',
-      name: 'Emily Davis',
-      phone: '+1-555-0106',
-      purpose: 'Contractor',
-      checkIn: '2025-10-24 11:00 AM',
-      checkOut: null,
-      status: 'checked-in',
-      unit: 'Unit D-401',
-    },
-    {
-      id: '7',
-      name: 'Robert Lee',
-      phone: '+1-555-0107',
-      purpose: 'Package Delivery',
-      checkIn: '2025-10-24 08:45 AM',
-      checkOut: '2025-10-24 08:50 AM',
-      status: 'checked-out',
-      unit: 'Unit C-304',
-    },
-    {
-      id: '8',
-      name: 'Lisa Martinez',
-      phone: '+1-555-0108',
-      purpose: 'Personal Visit',
-      checkIn: '2025-10-23 03:30 PM',
-      checkOut: '2025-10-23 05:00 PM',
-      status: 'checked-out',
-      unit: 'Unit A-203',
-    },
-  ]);
-
+  const [visitors, setVisitors] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
   const [newVisitor, setNewVisitor] = useState({
     name: '',
     phone: '',
     purpose: '',
   });
 
-  const handleRegisterVisitor = (e) => {
+  // 1. Fetch Visitors from Backend
+  useEffect(() => {
+    const fetchVisitors = async () => {
+      setIsLoading(true);
+      try {
+        // If Admin, fetch all. If Resident, fetch specific endpoint.
+        const endpoint = isAdmin 
+          ? API_URL 
+          : `${API_URL}/my-visitors/${user.id}`;
+  
+        const response = await fetch(endpoint);
+        if (!response.ok) throw new Error('Failed to fetch visitors');
+        
+        const data = await response.json();
+        setVisitors(data);
+      } catch (error) {
+        console.error("Fetch Error:", error);
+        toast.error('Failed to load visitor records.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchVisitors();
+  }, [user.id, isAdmin]); // Added dependencies here
+
+  // 2. Handle Registration (POST)
+  const handleRegisterVisitor = async (e) => {
     e.preventDefault();
     
-    const visitor = {
-      id: Date.now().toString(),
+    const payload = {
       name: newVisitor.name,
       phone: newVisitor.phone,
       purpose: newVisitor.purpose,
-      checkIn: new Date().toLocaleString('en-US', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true,
-      }),
-      checkOut: null,
-      status: 'checked-in',
-      unit: user.unit,
+      userId: user.id // Registers the visitor under the current user (or admin)
     };
 
-    setVisitors([visitor, ...visitors]);
-    setNewVisitor({ name: '', phone: '', purpose: '' });
-    setIsDialogOpen(false);
-    toast.success('Visitor registered successfully!');
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) throw new Error('Failed to register visitor');
+
+      const addedVisitor = await response.json();
+      
+      // Update list
+      setVisitors([addedVisitor, ...visitors]);
+      
+      // Reset form
+      setNewVisitor({ name: '', phone: '', purpose: '' });
+      setIsDialogOpen(false);
+      toast.success('Visitor registered successfully!');
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
-  const handleCheckOut = (id) => {
-    setVisitors(
-      visitors.map((v) =>
-        v.id === id
-          ? {
-              ...v,
-              checkOut: new Date().toLocaleString('en-US', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true,
-              }),
-              status: 'checked-out',
-            }
+  // 3. Handle Checkout (PUT)
+  const handleCheckOut = async (id) => {
+    try {
+      const response = await fetch(`${API_URL}/${id}/checkout`, {
+        method: 'PUT',
+      });
+
+      if (!response.ok) throw new Error('Failed to check out visitor');
+
+      // Update local state to reflect change immediately
+      setVisitors(visitors.map((v) => 
+        v.id === id 
+          ? { ...v, status: 'checked-out', checkOut: new Date().toLocaleString() } 
           : v
-      )
-    );
-    toast.success('Visitor checked out successfully!');
+      ));
+      
+      toast.success('Visitor checked out successfully!');
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
-  const displayVisitors = isAdmin 
-    ? visitors 
-    : visitors.filter((v) => v.unit === user.unit);
+  // Filtering logic
+  const displayVisitors = visitors; 
 
   const activeVisitors = displayVisitors.filter((v) => v.status === 'checked-in');
   const historicalVisitors = displayVisitors.filter((v) => v.status === 'checked-out');
@@ -170,6 +124,10 @@ export default function VisitorRegister({ user }) {
         v.purpose.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+  if (isLoading) {
+    return <div className="p-8 text-center">Loading visitor records...</div>;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -181,7 +139,6 @@ export default function VisitorRegister({ user }) {
               : `Register and track visitors to ${user.unit}`}
           </p>
         </div>
-        {!isAdmin && (
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -240,7 +197,6 @@ export default function VisitorRegister({ user }) {
             </form>
           </DialogContent>
         </Dialog>
-        )}
       </div>
 
       <Card>
