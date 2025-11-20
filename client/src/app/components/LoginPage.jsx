@@ -2,7 +2,7 @@
 'use client'
 
 import { useState } from 'react';
-import { useAuth } from '../layout'; // Import from layout or AuthContext
+import { useAuth } from '../AuthContext'; // Import from layout or AuthContext
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
 import { Button } from './ui/button';

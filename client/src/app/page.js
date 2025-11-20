@@ -1,7 +1,7 @@
 // peekachiu/ddac-webapplication/DDAC-WebApplication-jiayuan/client/src/app/page.js
 'use client'
 
-import { useAuth } from './layout'; // Import the context from layout
+import { useAuth } from './AuthContext'; // Import the context from layout
 import Dashboard from './components/Dashboard';
 import AdminDashboard from './components/AdminDashboard';
 
