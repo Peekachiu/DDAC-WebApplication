@@ -1,53 +1,26 @@
+// peekachiu/ddac-webapplication/DDAC-WebApplication-jiayuan/client/src/app/components/LoginPage.jsx
 'use client'
 
 import { useState } from 'react';
+import { useAuth } from '../AuthContext'; // Import from layout or AuthContext
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { Label } from './ui/label';
 import { Building2, Lock, Mail } from 'lucide-react';
-import { toast } from 'sonner';
 
-export default function LoginPage({ onLogin }) {
+export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const { handleLogin, isLoading } = useAuth();
 
-  // Mock user database
-  const mockUsers = [
-    { id: '1', email: 'john@example.com', password: 'password', name: 'John Smith', unit: 'Unit A-101', role: 'Resident' },
-    { id: '2', email: 'sarah@example.com', password: 'password', name: 'Sarah Johnson', unit: 'Unit B-205', role: 'Resident' },
-    { id: '3', email: 'admin@example.com', password: 'admin', name: 'Admin User', unit: 'Management Office', role: 'Admin' },
-  ];
-
-  const handleLogin = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      const user = mockUsers.find(
-        (u) => u.email === email && u.password === password
-      );
-
-      if (user) {
-        toast.success('Login successful!');
-        onLogin({
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          unit: user.unit,
-          role: user.role,
-        });
-      } else {
-        toast.error('Invalid email or password');
-      }
-      setIsLoading(false);
-    }, 1000);
+    await handleLogin(email, password);
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-blue-50 to-indigo-100 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-600">
@@ -59,7 +32,7 @@ export default function LoginPage({ onLogin }) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
@@ -94,15 +67,6 @@ export default function LoginPage({ onLogin }) {
               {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
-          <div className="mt-6 rounded-lg bg-blue-50 p-4">
-            <p className="mb-2 text-sm">Demo Credentials:</p>
-            <p className="text-xs text-gray-600">
-              <strong>Resident:</strong> john@example.com / password
-            </p>
-            <p className="text-xs text-gray-600">
-              <strong>Admin:</strong> admin@example.com / admin
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>

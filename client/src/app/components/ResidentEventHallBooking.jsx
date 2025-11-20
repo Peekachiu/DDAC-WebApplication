@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -17,34 +17,18 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 
+const API_URL = 'http://localhost:5016/api/Bookings';
+
 function ResidentEventHallBooking({ user }) {
-  const [bookings, setBookings] = useState([
-    {
-      id: '1',
-      hall: 'Main Hall',
-      event: 'Birthday Party',
-      date: '2025-11-05',
-      startTime: '6:00 PM',
-      endTime: '10:00 PM',
-      guests: 80,
-      status: 'confirmed',
-      description: 'Birthday celebration for family',
-    },
-    {
-      id: '2',
-      hall: 'Conference Room',
-      event: 'Business Meeting',
-      date: '2025-10-28',
-      startTime: '2:00 PM',
-      endTime: '5:00 PM',
-      guests: 25,
-      status: 'pending',
-      description: 'Annual business review meeting',
-    },
-  ]);
+  // --- State ---
+  const [bookings, setBookings] = useState([]);
+  const [halls, setHalls] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState();
+  
+  // Form State
   const [newBooking, setNewBooking] = useState({
     hall: '',
     event: '',
@@ -54,20 +38,48 @@ function ResidentEventHallBooking({ user }) {
     description: '',
   });
 
-  const halls = [
-    { id: 'main', name: 'Main Hall', capacity: 200 },
-    { id: 'banquet', name: 'Banquet Hall', capacity: 150 },
-    { id: 'conference', name: 'Conference Room', capacity: 50 },
-    { id: 'party', name: 'Party Room', capacity: 30 },
-  ];
-
   const timeSlots = [
-    '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
-    '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM',
-    '6:00 PM', '7:00 PM', '8:00 PM', '9:00 PM', '10:00 PM',
+    '08:00', '09:00', '10:00', '11:00', '12:00',
+    '13:00', '14:00', '15:00', '16:00', '17:00',
+    '18:00', '19:00', '20:00', '21:00', '22:00',
   ];
 
-  const handleBookHall = (e) => {
+  // --- Fetch Data from Backend ---
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        // 1. Get Facilities (Filter for 'event' type)
+        const facResponse = await fetch(`${API_URL}/facilities`);
+        if (facResponse.ok) {
+          const data = await facResponse.json();
+          setHalls(data.filter(f => f.type === 'event'));
+        }
+
+        // 2. Get All Bookings (Client-side filter for now)
+        const bookResponse = await fetch(`${API_URL}/all`);
+        if (bookResponse.ok) {
+          const data = await bookResponse.json();
+          // Filter: Only 'event' type AND belongs to current user
+          const myBookings = data.filter(b => 
+            b.residentName === user.name && b.facilityType === 'event'
+          );
+          setBookings(myBookings);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        toast.error("Failed to load data. Is the server running?");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user) fetchData();
+  }, [user]);
+
+  // --- Handlers ---
+
+  const handleBookHall = async (e) => {
     e.preventDefault();
 
     if (!selectedDate) {
@@ -75,50 +87,88 @@ function ResidentEventHallBooking({ user }) {
       return;
     }
 
-    const booking = {
-      id: Date.now().toString(),
-      hall: halls.find((h) => h.id === newBooking.hall)?.name || '',
-      event: newBooking.event,
+    // Construct Payload matches CreateEventBookingRequest in Controller
+    const payload = {
+      hallName: newBooking.hall,
+      eventType: newBooking.event,
       date: format(selectedDate, 'yyyy-MM-dd'),
       startTime: newBooking.startTime,
       endTime: newBooking.endTime,
       guests: parseInt(newBooking.guests),
-      status: 'pending',
       description: newBooking.description,
+      userId: user.id 
     };
 
-    setBookings([booking, ...bookings]);
-    setNewBooking({ hall: '', event: '', startTime: '', endTime: '', guests: '10', description: '' });
-    setSelectedDate(undefined);
-    setIsDialogOpen(false);
-    toast.success('Hall booking submitted successfully!');
+    try {
+      const response = await fetch(`${API_URL}/event`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error || "Booking failed");
+      }
+
+      toast.success('Hall booking submitted successfully!');
+      setIsDialogOpen(false);
+      
+      // Reset Form
+      setNewBooking({ hall: '', event: '', startTime: '', endTime: '', guests: '10', description: '' });
+      setSelectedDate(undefined);
+      
+      // Refresh page to show new booking (or re-fetch)
+      window.location.reload(); 
+
+    } catch (error) {
+      toast.error(`Error: ${error.message}`);
+    }
   };
 
-  const handleCancelBooking = (id) => {
-    setBookings(bookings.map((b) => (b.id === id ? { ...b, status: 'cancelled' } : b)));
-    toast.success('Booking cancelled successfully!');
+  const handleCancelBooking = async (id) => {
+    try {
+      // Calls the UpdateStatus endpoint with 'cancelled' (mapped to Rejected in backend logic for now)
+      const response = await fetch(`${API_URL}/update-status/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'cancelled' }),
+      });
+
+      if (!response.ok) throw new Error('Cancellation failed');
+
+      // Optimistic Update
+      setBookings(bookings.map((b) => (b.id === id ? { ...b, status: 'rejected' } : b)));
+      toast.success('Booking cancelled successfully!');
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
+  // --- Helpers ---
   const upcomingBookings = bookings.filter(
-    (b) => b.status !== 'cancelled' && new Date(b.date) >= new Date()
+    (b) => b.status !== 'rejected' && new Date(b.date) >= new Date()
   );
 
   const pastBookings = bookings.filter(
-    (b) => new Date(b.date) < new Date() || b.status === 'cancelled'
+    (b) => new Date(b.date) < new Date() || b.status === 'rejected'
   );
 
   const getStatusBadge = (status) => {
-    switch (status) {
-      case 'confirmed':
+    switch (status.toLowerCase()) {
+      case 'approved':
         return <Badge className="bg-green-100 text-green-800">Confirmed</Badge>;
       case 'pending':
         return <Badge className="bg-yellow-100 text-yellow-800">Pending Approval</Badge>;
+      case 'rejected': // Maps to 'Cancelled' for user view if they initiated it
       case 'cancelled':
-        return <Badge className="bg-red-100 text-red-800">Cancelled</Badge>;
+        return <Badge className="bg-red-100 text-red-800">Cancelled/Rejected</Badge>;
       default:
-        return null;
+        return <Badge className="bg-gray-100 text-gray-800">{status}</Badge>;
     }
   };
+
+  if (loading) return <div className="p-6 text-center">Loading booking data...</div>;
 
   return (
     <div className="space-y-6">
@@ -154,7 +204,7 @@ function ResidentEventHallBooking({ user }) {
                   </SelectTrigger>
                   <SelectContent>
                     {halls.map((hall) => (
-                      <SelectItem key={hall.id} value={hall.id}>
+                      <SelectItem key={hall.id} value={hall.name}>
                         {hall.name} (Capacity: {hall.capacity})
                       </SelectItem>
                     ))}
@@ -268,29 +318,34 @@ function ResidentEventHallBooking({ user }) {
         </Dialog>
       </div>
 
-      {/* Available Halls */}
+      {/* Available Halls Display */}
       <Card>
         <CardHeader>
           <CardTitle>Available Event Halls</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-2">
-            {halls.map((hall) => (
-              <div key={hall.id} className="flex items-center gap-4 rounded-lg border p-4">
-                <div className="rounded-lg bg-purple-50 p-3">
-                  <Building className="h-6 w-6 text-purple-600" />
+            {halls.length === 0 ? (
+              <p className="text-sm text-gray-500">No event halls configured yet.</p>
+            ) : (
+              halls.map((hall) => (
+                <div key={hall.id} className="flex items-center gap-4 rounded-lg border p-4">
+                  <div className="rounded-lg bg-purple-50 p-3">
+                    <Building className="h-6 w-6 text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm">{hall.name}</p>
+                    <p className="text-xs text-gray-500">Capacity: {hall.capacity} guests</p>
+                    <p className="text-xs text-gray-500">Rate: ${hall.hourlyRate}/hr</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm">{hall.name}</p>
-                  <p className="text-xs text-gray-500">Capacity: {hall.capacity} guests</p>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </CardContent>
       </Card>
 
-      {/* My Bookings */}
+      {/* My Bookings List */}
       <Card>
         <CardHeader>
           <CardTitle>My Bookings</CardTitle>
@@ -325,8 +380,8 @@ function ResidentEventHallBooking({ user }) {
                   <TableBody>
                     {upcomingBookings.map((booking) => (
                       <TableRow key={booking.id}>
-                        <TableCell>{booking.hall}</TableCell>
-                        <TableCell>{booking.event}</TableCell>
+                        <TableCell>{booking.facilityName}</TableCell>
+                        <TableCell>{booking.purpose || 'Event'}</TableCell>
                         <TableCell>{format(new Date(booking.date), 'MMM dd, yyyy')}</TableCell>
                         <TableCell>
                           {booking.startTime} - {booking.endTime}
@@ -369,8 +424,8 @@ function ResidentEventHallBooking({ user }) {
                   <TableBody>
                     {pastBookings.map((booking) => (
                       <TableRow key={booking.id}>
-                        <TableCell>{booking.hall}</TableCell>
-                        <TableCell>{booking.event}</TableCell>
+                        <TableCell>{booking.facilityName}</TableCell>
+                        <TableCell>{booking.purpose || 'Event'}</TableCell>
                         <TableCell>{format(new Date(booking.date), 'MMM dd, yyyy')}</TableCell>
                         <TableCell>
                           {booking.startTime} - {booking.endTime}

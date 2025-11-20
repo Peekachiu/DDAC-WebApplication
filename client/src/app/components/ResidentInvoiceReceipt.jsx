@@ -1,67 +1,122 @@
 'use client'
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Download, Search } from 'lucide-react';
+import { Download, Search, RefreshCcw } from 'lucide-react';
 import { toast } from 'sonner';
 
-function ResidentInvoiceReceipt({ user }) {
-  const [invoices] = useState([
-    {
-      id: 'INV-2025-001',
-      month: 'November 2025',
-      amount: 450,
-      issueDate: '2025-10-15',
-      dueDate: '2025-11-01',
-      status: 'pending',
-    },
-    {
-      id: 'INV-2025-002',
-      month: 'October 2025',
-      amount: 450,
-      issueDate: '2025-09-15',
-      dueDate: '2025-10-01',
-      status: 'paid',
-      paidDate: '2025-09-28',
-    },
-    {
-      id: 'INV-2025-003',
-      month: 'September 2025',
-      amount: 450,
-      issueDate: '2025-08-15',
-      dueDate: '2025-09-01',
-      status: 'paid',
-      paidDate: '2025-08-29',
-    },
-    {
-      id: 'INV-2025-004',
-      month: 'August 2025',
-      amount: 450,
-      issueDate: '2025-07-15',
-      dueDate: '2025-08-01',
-      status: 'paid',
-      paidDate: '2025-07-30',
-    },
-  ]);
+const API_URL = 'http://localhost:5016/api/Financial';
 
+function ResidentInvoiceReceipt({ user }) {
+  const [invoices, setInvoices] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
+  // 1. Fetch Data from Backend (Wrapped in useCallback to fix lint error)
+  const fetchInvoices = useCallback(async () => {
+    if (!user?.unit) return;
+
+    setIsLoading(true);
+    try {
+      const response = await fetch(API_URL);
+      if (!response.ok) throw new Error('Failed to fetch invoices');
+      
+      const data = await response.json();
+      
+      // Filter: Only show invoices for THIS resident's unit
+      // Ensure case-insensitive comparison (e.g., "A-10-01" vs "a-10-01")
+      const myInvoices = data.filter(inv => 
+        inv.unit.toLowerCase() === user.unit.toLowerCase()
+      );
+      
+      setInvoices(myInvoices);
+    } catch (error) {
+      console.error("Fetch error:", error);
+      toast.error('Failed to load invoices. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user]); // Dependency on user object
+
+  // Effect depends on the stable fetchInvoices function
+  useEffect(() => {
+    fetchInvoices();
+  }, [fetchInvoices]);
+
+  // 2. Generate & Download Invoice (Text File)
   const handleDownloadInvoice = (invoice) => {
-    toast.success(`Invoice ${invoice.id} downloaded!`);
+    const content = `
+OFFICIAL INVOICE
+----------------------------
+Invoice ID:   #${invoice.id}
+Issue Date:   ${new Date(invoice.issueDate).toLocaleDateString()}
+Due Date:     ${new Date(invoice.dueDate).toLocaleDateString()}
+
+BILL TO:
+Resident:     ${invoice.residentName}
+Unit No:      ${invoice.unit}
+
+DETAILS:
+Description:  ${invoice.month}
+Amount Due:   $${invoice.amount}
+Status:       ${invoice.status.toUpperCase()}
+
+----------------------------
+Please make payment before the due date.
+ResidentPro Management
+    `;
+    downloadFile(content, `Invoice_${invoice.id}.txt`);
+    toast.success(`Invoice #${invoice.id} downloaded`);
   };
 
+  // 3. Generate & Download Receipt (Text File)
   const handleDownloadReceipt = (invoice) => {
-    toast.success(`Receipt for ${invoice.id} downloaded!`);
+    const content = `
+OFFICIAL PAYMENT RECEIPT
+----------------------------
+Receipt For:  Invoice #${invoice.id}
+Date Paid:    ${invoice.paidDate ? new Date(invoice.paidDate).toLocaleDateString() : 'N/A'}
+Payment Method: ${invoice.paymentMethod || 'N/A'}
+
+RECEIVED FROM:
+Resident:     ${invoice.residentName}
+Unit No:      ${invoice.unit}
+
+DETAILS:
+Description:  ${invoice.month}
+Amount Paid:  $${invoice.amount}
+Status:       PAID
+
+----------------------------
+Thank you for your payment!
+ResidentPro Management
+    `;
+    downloadFile(content, `Receipt_${invoice.id}.txt`);
+    toast.success(`Receipt for #${invoice.id} downloaded`);
   };
 
+  // Helper to trigger browser download
+  const downloadFile = (content, filename) => {
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
+
+  // Filter logic for Search Bar
   const filteredInvoices = invoices.filter(
     (inv) =>
-      inv.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      inv.id.toString().includes(searchTerm) ||
       inv.month.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -77,25 +132,34 @@ function ResidentInvoiceReceipt({ user }) {
       case 'overdue':
         return <Badge className="bg-red-100 text-red-800">Overdue</Badge>;
       default:
-        return null;
+        return <Badge variant="outline">{status}</Badge>;
     }
   };
 
+  if (isLoading) {
+    return <div className="p-8 text-center text-gray-500">Loading your invoices...</div>;
+  }
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2>Invoices & Receipts</h2>
-        <p className="text-sm text-gray-600">View and download your invoices and payment receipts</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2>Invoices & Receipts</h2>
+          <p className="text-sm text-gray-600">View and download your invoices and payment receipts</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={fetchInvoices}>
+          <RefreshCcw className="mr-2 h-4 w-4" /> Refresh
+        </Button>
       </div>
 
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>My Invoices</CardTitle>
+            <CardTitle>My Documents</CardTitle>
             <div className="relative w-64">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search invoices..."
+                placeholder="Search by ID or Month..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -111,137 +175,71 @@ function ResidentInvoiceReceipt({ user }) {
               <TabsTrigger value="paid">Paid ({paidInvoices.length})</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="all" className="mt-4">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Invoice ID</TableHead>
-                    <TableHead>Period</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Issue Date</TableHead>
-                    <TableHead>Due Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredInvoices.map((invoice) => (
-                    <TableRow key={invoice.id}>
-                      <TableCell>{invoice.id}</TableCell>
-                      <TableCell>{invoice.month}</TableCell>
-                      <TableCell>${invoice.amount}</TableCell>
-                      <TableCell>{new Date(invoice.issueDate).toLocaleDateString()}</TableCell>
-                      <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
-                      <TableCell>{getStatusBadge(invoice.status)}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDownloadInvoice(invoice)}
-                          >
-                            <Download className="mr-1 h-3 w-3" />
-                            Invoice
-                          </Button>
-                          {invoice.status === 'paid' && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleDownloadReceipt(invoice)}
-                            >
-                              <Download className="mr-1 h-3 w-3" />
-                              Receipt
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
+            {/* Helper to render table rows to avoid duplication */}
+            {['all', 'pending', 'paid'].map((tabValue) => (
+              <TabsContent key={tabValue} value={tabValue} className="mt-4">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Invoice ID</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Issue Date</TableHead>
+                      <TableHead>Due Date</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TabsContent>
+                  </TableHeader>
+                  <TableBody>
+                    {(tabValue === 'all' ? filteredInvoices : tabValue === 'pending' ? pendingInvoices : paidInvoices).length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                          No records found.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      (tabValue === 'all' ? filteredInvoices : tabValue === 'pending' ? pendingInvoices : paidInvoices).map((invoice) => (
+                        <TableRow key={invoice.id}>
+                          <TableCell>#{invoice.id}</TableCell>
+                          <TableCell>{invoice.month}</TableCell>
+                          <TableCell>${invoice.amount}</TableCell>
+                          <TableCell>{new Date(invoice.issueDate).toLocaleDateString()}</TableCell>
+                          <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
+                          <TableCell>{getStatusBadge(invoice.status)}</TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              {/* Always show Invoice download */}
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleDownloadInvoice(invoice)}
+                                title="Download Invoice"
+                              >
+                                <Download className="mr-1 h-3 w-3" />
+                                Inv.
+                              </Button>
 
-            <TabsContent value="pending" className="mt-4">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Invoice ID</TableHead>
-                    <TableHead>Period</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Due Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {pendingInvoices.map((invoice) => (
-                    <TableRow key={invoice.id}>
-                      <TableCell>{invoice.id}</TableCell>
-                      <TableCell>{invoice.month}</TableCell>
-                      <TableCell>${invoice.amount}</TableCell>
-                      <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
-                      <TableCell>{getStatusBadge(invoice.status)}</TableCell>
-                      <TableCell>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDownloadInvoice(invoice)}
-                        >
-                          <Download className="mr-1 h-3 w-3" />
-                          Download
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TabsContent>
-
-            <TabsContent value="paid" className="mt-4">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Invoice ID</TableHead>
-                    <TableHead>Period</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Paid Date</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {paidInvoices.map((invoice) => (
-                    <TableRow key={invoice.id}>
-                      <TableCell>{invoice.id}</TableCell>
-                      <TableCell>{invoice.month}</TableCell>
-                      <TableCell>${invoice.amount}</TableCell>
-                      <TableCell>
-                        {invoice.paidDate && new Date(invoice.paidDate).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDownloadInvoice(invoice)}
-                          >
-                            <Download className="mr-1 h-3 w-3" />
-                            Invoice
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDownloadReceipt(invoice)}
-                          >
-                            <Download className="mr-1 h-3 w-3" />
-                            Receipt
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TabsContent>
+                              {/* Only show Receipt download if Paid */}
+                              {invoice.status === 'paid' && (
+                                <Button
+                                  size="sm"
+                                  variant="default"
+                                  onClick={() => handleDownloadReceipt(invoice)}
+                                  title="Download Receipt"
+                                >
+                                  <Download className="mr-1 h-3 w-3" />
+                                  Rcpt.
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </TabsContent>
+            ))}
           </Tabs>
         </CardContent>
       </Card>

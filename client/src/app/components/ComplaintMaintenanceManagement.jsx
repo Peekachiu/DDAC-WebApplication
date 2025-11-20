@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -14,90 +14,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Plus, Search, Filter, MessageSquare, Wrench, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
+const API_URL = 'http://localhost:5016/api/Reports';
+
 export default function ComplaintMaintenanceManagement({ user }) {
   const isAdmin = user.role === 'Admin';
 
+  // Original categories and contractors list preserved
   const maintenanceCategories = ['Plumbing', 'Electrical', 'HVAC', 'Carpentry', 'Painting', 'General'];
   const complaintCategories = ['Noise Complaint', 'Parking Issue', 'Neighbor Dispute', 'Security', 'Garbage', 'Other'];
-
-  const [requests, setRequests] = useState([
-    {
-      id: 'REQ-001',
-      type: 'maintenance',
-      category: 'Plumbing',
-      subject: 'Leaking Faucet',
-      description: 'Kitchen faucet is leaking continuously',
-      residentName: 'John Smith',
-      unit: 'Unit A-101',
-      status: 'in-progress',
-      priority: 'high',
-      submittedDate: '2025-10-20',
-      assignedTo: 'John Plumber - Plumbing',
-    },
-    {
-      id: 'REQ-002',
-      type: 'complaint',
-      category: 'Noise Complaint',
-      subject: 'Loud Music at Night',
-      description: 'Neighbor playing loud music after 11 PM',
-      residentName: 'Sarah Johnson',
-      unit: 'Unit B-205',
-      status: 'pending',
-      priority: 'medium',
-      submittedDate: '2025-10-22',
-    },
-    {
-      id: 'REQ-003',
-      type: 'maintenance',
-      category: 'Electrical',
-      subject: 'Power Outlet Not Working',
-      description: 'Bedroom power outlet not functioning',
-      residentName: 'Mike Wilson',
-      unit: 'Unit C-304',
-      status: 'resolved',
-      priority: 'medium',
-      submittedDate: '2025-10-15',
-      assignedTo: 'Mike Electric - Electrical',
-      resolvedDate: '2025-10-18',
-      resolutionNotes: 'Replaced faulty outlet. Tested and working properly.',
-    },
-    {
-      id: 'REQ-004',
-      type: 'complaint',
-      category: 'Parking Issue',
-      subject: 'Unauthorized Parking',
-      description: 'Unknown vehicle parking in my assigned spot',
-      residentName: 'Emily Chen',
-      unit: 'Unit D-401',
-      status: 'pending',
-      priority: 'low',
-      submittedDate: '2025-10-23',
-    },
-    {
-      id: 'REQ-005',
-      type: 'maintenance',
-      category: 'HVAC',
-      subject: 'AC Not Cooling',
-      description: 'Air conditioning unit not cooling properly',
-      residentName: 'David Brown',
-      unit: 'Unit A-203',
-      status: 'pending',
-      priority: 'high',
-      submittedDate: '2025-10-24',
-    },
-  ]);
-
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [filterType, setFilterType] = useState('all');
-  const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
-  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
-  const [isResolveDialogOpen, setIsResolveDialogOpen] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState(null);
-  const [assignedContractor, setAssignedContractor] = useState('');
-  const [resolutionNotes, setResolutionNotes] = useState('');
-
-  // Example contractors/staff list
   const contractors = [
     'John Plumber - Plumbing',
     'Mike Electric - Electrical',
@@ -107,6 +31,25 @@ export default function ComplaintMaintenanceManagement({ user }) {
     'General Maintenance Staff'
   ];
 
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Search & Filter State
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterType, setFilterType] = useState('all');
+
+  // Dialog State
+  const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
+  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
+  const [isResolveDialogOpen, setIsResolveDialogOpen] = useState(false);
+  
+  // Selected Item State
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [assignedContractor, setAssignedContractor] = useState('');
+  const [resolutionNotes, setResolutionNotes] = useState('');
+
+  // New Request Form State
   const [newRequest, setNewRequest] = useState({
     type: 'maintenance',
     category: '',
@@ -115,128 +58,174 @@ export default function ComplaintMaintenanceManagement({ user }) {
     priority: 'medium',
   });
 
-  const handleSubmitRequest = (e) => {
-    e.preventDefault();
+  // --- API: Fetch Data ---
+  const fetchRequests = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(API_URL);
+      if (!response.ok) throw new Error('Failed to fetch requests');
+      const data = await response.json();
+      setRequests(data);
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to load requests');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const request = {
-      id: `REQ-${(requests.length + 1).toString().padStart(3, '0')}`,
-      type: newRequest.type,
-      category: newRequest.category,
-      subject: newRequest.subject,
-      description: newRequest.description,
-      residentName: user.name,
-      unit: user.unit,
-      status: 'pending',
-      priority: newRequest.priority,
-      submittedDate: new Date().toISOString().split('T')[0],
+  useEffect(() => {
+    fetchRequests();
+  }, []);
+
+  // --- API: Submit Request ---
+  const handleSubmitRequest = async (e) => {
+    e.preventDefault();
+    
+    const payload = {
+      ...newRequest,
+      userId: user.id 
     };
 
-    setRequests([request, ...requests]);
-    setNewRequest({ type: 'maintenance', category: '', subject: '', description: '', priority: 'medium' });
-    setIsRequestDialogOpen(false);
-    toast.success('Request submitted successfully!');
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) throw new Error('Failed to submit request');
+
+      toast.success('Request submitted successfully!');
+      setNewRequest({ type: 'maintenance', category: '', subject: '', description: '', priority: 'medium' });
+      setIsRequestDialogOpen(false);
+      fetchRequests(); // Refresh list
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
-  const handleAssignRequest = (e) => {
+  // --- API: Assign Request ---
+  const handleAssignRequest = async (e) => {
     e.preventDefault();
-
     if (!selectedRequest) return;
 
-    setRequests(
-      requests.map((r) =>
-        r.id === selectedRequest.id
-          ? {
-              ...r,
-              status: 'in-progress',
-              assignedTo: assignedContractor,
-            }
-          : r
-      )
-    );
+    try {
+      const response = await fetch(`${API_URL}/${selectedRequest.id}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          status: 'in-progress', 
+          assignedTo: assignedContractor 
+        }),
+      });
 
-    setIsAssignDialogOpen(false);
-    setSelectedRequest(null);
-    setAssignedContractor('');
-    toast.success('Request assigned successfully!');
+      if (!response.ok) throw new Error('Failed to assign request');
+
+      toast.success('Request assigned successfully!');
+      setIsAssignDialogOpen(false);
+      setSelectedRequest(null);
+      setAssignedContractor('');
+      fetchRequests();
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
-  const handleResolveRequest = (e) => {
+  // --- API: Resolve Request ---
+  const handleResolveRequest = async (e) => {
     e.preventDefault();
-
     if (!selectedRequest) return;
 
-    setRequests(
-      requests.map((r) =>
-        r.id === selectedRequest.id
-          ? {
-              ...r,
-              status: 'resolved',
-              resolvedDate: new Date().toISOString().split('T')[0],
-              resolutionNotes: resolutionNotes,
-            }
-          : r
-      )
-    );
+    try {
+      const response = await fetch(`${API_URL}/${selectedRequest.id}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          status: 'resolved', 
+          resolutionNotes: resolutionNotes 
+        }),
+      });
 
-    setIsResolveDialogOpen(false);
-    setSelectedRequest(null);
-    setResolutionNotes('');
-    toast.success('Request marked as resolved!');
+      if (!response.ok) throw new Error('Failed to resolve request');
+
+      toast.success('Request marked as resolved!');
+      setIsResolveDialogOpen(false);
+      setSelectedRequest(null);
+      setResolutionNotes('');
+      fetchRequests();
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
-  const handleRejectRequest = (request) => {
-    setRequests(requests.map((r) => (r.id === request.id ? { ...r, status: 'rejected' } : r)));
-    toast.success('Request rejected!');
+  // --- API: Reject Request ---
+  const handleRejectRequest = async (request) => {
+    if(!window.confirm("Are you sure you want to reject this request?")) return;
+
+    try {
+      const response = await fetch(`${API_URL}/${request.id}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'rejected' }),
+      });
+
+      if (!response.ok) throw new Error('Failed to reject request');
+
+      toast.success('Request rejected!');
+      fetchRequests();
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
-  // Filter requests
+  // --- Filtering Logic (Original Logic Preserved) ---
   const filteredRequests = requests.filter((req) => {
+    // For residents, only show their own requests
+    if (!isAdmin && req.unit !== user.unit) return false;
+
     const matchesSearch =
       req.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
       req.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       req.residentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       req.unit.toLowerCase().includes(searchTerm.toLowerCase());
+    
     const matchesStatus = filterStatus === 'all' || req.status === filterStatus;
     const matchesType = filterType === 'all' || req.type === filterType;
     
-    // For residents, only show their own requests
-    const matchesResident = isAdmin || req.unit === user.unit;
-    
-    return matchesSearch && matchesStatus && matchesType && matchesResident;
+    return matchesSearch && matchesStatus && matchesType;
   });
 
-  const pendingCount = requests.filter((r) => r.status === 'pending').length;
-  const inProgressCount = requests.filter((r) => r.status === 'in-progress').length;
-  const resolvedCount = requests.filter((r) => r.status === 'resolved').length;
-  const highPriorityCount = requests.filter((r) => r.priority === 'high' && r.status !== 'resolved').length;
+  // --- Stats Calculations ---
+  // Note: For residents, we might want to show stats for THEIR requests only, 
+  // but usually admins see global stats. The logic below filters based on the *filteredRequests* // logic or global requests depending on requirement. Let's use the viewable requests.
+  const viewableRequests = isAdmin ? requests : requests.filter(r => r.unit === user.unit);
+
+  const pendingCount = viewableRequests.filter((r) => r.status === 'pending').length;
+  const inProgressCount = viewableRequests.filter((r) => r.status === 'in-progress').length;
+  const resolvedCount = viewableRequests.filter((r) => r.status === 'resolved').length;
+  const highPriorityCount = viewableRequests.filter((r) => r.priority === 'high' && r.status !== 'resolved').length;
 
   const getStatusBadge = (status) => {
     switch (status) {
-      case 'pending':
-        return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>;
-      case 'in-progress':
-        return <Badge className="bg-blue-100 text-blue-800">In Progress</Badge>;
-      case 'resolved':
-        return <Badge className="bg-green-100 text-green-800">Resolved</Badge>;
-      case 'rejected':
-        return <Badge className="bg-red-100 text-red-800">Rejected</Badge>;
-      default:
-        return null;
+      case 'pending': return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>;
+      case 'in-progress': return <Badge className="bg-blue-100 text-blue-800">In Progress</Badge>;
+      case 'resolved': return <Badge className="bg-green-100 text-green-800">Resolved</Badge>;
+      case 'rejected': return <Badge className="bg-red-100 text-red-800">Rejected</Badge>;
+      default: return null;
     }
   };
 
   const getPriorityBadge = (priority) => {
     switch (priority) {
-      case 'high':
-        return <Badge className="bg-red-100 text-red-800">High</Badge>;
-      case 'medium':
-        return <Badge className="bg-orange-100 text-orange-800">Medium</Badge>;
-      case 'low':
-        return <Badge className="bg-gray-100 text-gray-800">Low</Badge>;
-      default:
-        return null;
+      case 'high': return <Badge className="bg-red-100 text-red-800">High</Badge>;
+      case 'medium': return <Badge className="bg-orange-100 text-orange-800">Medium</Badge>;
+      case 'low': return <Badge className="bg-gray-100 text-gray-800">Low</Badge>;
+      default: return null;
     }
   };
+
+  if (loading) return <div className="p-8 text-center">Loading requests...</div>;
 
   return (
     <div className="space-y-6">
@@ -269,9 +258,7 @@ export default function ComplaintMaintenanceManagement({ user }) {
                   onValueChange={(value) => setNewRequest({ ...newRequest, type: value, category: '' })}
                   required
                 >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="maintenance">Maintenance Request</SelectItem>
                     <SelectItem value="complaint">Complaint</SelectItem>
@@ -281,14 +268,10 @@ export default function ComplaintMaintenanceManagement({ user }) {
               <div className="space-y-2">
                 <Label htmlFor="category">Category</Label>
                 <Select value={newRequest.category} onValueChange={(value) => setNewRequest({ ...newRequest, category: value })} required>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
                   <SelectContent>
                     {(newRequest.type === 'maintenance' ? maintenanceCategories : complaintCategories).map((cat) => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat}
-                      </SelectItem>
+                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -300,9 +283,7 @@ export default function ComplaintMaintenanceManagement({ user }) {
                   onValueChange={(value) => setNewRequest({ ...newRequest, priority: value })}
                   required
                 >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="low">Low</SelectItem>
                     <SelectItem value="medium">Medium</SelectItem>
@@ -326,20 +307,18 @@ export default function ComplaintMaintenanceManagement({ user }) {
                   id="description"
                   value={newRequest.description}
                   onChange={(e) => setNewRequest({ ...newRequest, description: e.target.value })}
-                  placeholder="Provide detailed information about your request"
+                  placeholder="Provide details..."
                   rows={4}
                   required
                 />
               </div>
-              <Button type="submit" className="w-full">
-                Submit Request
-              </Button>
+              <Button type="submit" className="w-full">Submit Request</Button>
             </form>
           </DialogContent>
         </Dialog>
       </div>
 
-      {/* Statistics Cards */}
+      {/* Statistics Cards (Preserved) */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardContent className="p-6">
@@ -402,7 +381,7 @@ export default function ComplaintMaintenanceManagement({ user }) {
         </Card>
       </div>
 
-      {/* Requests Management */}
+      {/* Request Management Table */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -413,10 +392,7 @@ export default function ComplaintMaintenanceManagement({ user }) {
                 <Input placeholder="Search requests..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
               </div>
               <Select value={filterType} onValueChange={setFilterType}>
-                <SelectTrigger className="w-40">
-                  <Filter className="mr-2 h-4 w-4" />
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger className="w-40"><Filter className="mr-2 h-4 w-4" /><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Types</SelectItem>
                   <SelectItem value="maintenance">Maintenance</SelectItem>
@@ -424,10 +400,7 @@ export default function ComplaintMaintenanceManagement({ user }) {
                 </SelectContent>
               </Select>
               <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="w-40">
-                  <Filter className="mr-2 h-4 w-4" />
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger className="w-40"><Filter className="mr-2 h-4 w-4" /><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
@@ -441,215 +414,74 @@ export default function ComplaintMaintenanceManagement({ user }) {
         <CardContent>
           <Tabs defaultValue="all">
             <TabsList>
-              <TabsTrigger value="all">All Requests ({filteredRequests.length})</TabsTrigger>
-              <TabsTrigger value="pending">Pending ({pendingCount})</TabsTrigger>
-              <TabsTrigger value="inprogress">In Progress ({inProgressCount})</TabsTrigger>
-              <TabsTrigger value="resolved">Resolved ({resolvedCount})</TabsTrigger>
+              <TabsTrigger value="all">All ({filteredRequests.length})</TabsTrigger>
+              <TabsTrigger value="pending">Pending ({filteredRequests.filter(r => r.status === 'pending').length})</TabsTrigger>
+              <TabsTrigger value="inprogress">In Progress ({filteredRequests.filter(r => r.status === 'in-progress').length})</TabsTrigger>
+              <TabsTrigger value="resolved">Resolved ({filteredRequests.filter(r => r.status === 'resolved').length})</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="all" className="mt-4">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Type</TableHead>
-                    {isAdmin && <TableHead>Resident</TableHead>}
-                    {isAdmin && <TableHead>Unit</TableHead>}
-                    <TableHead>Category</TableHead>
-                    <TableHead>Subject</TableHead>
-                    <TableHead>Priority</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Date</TableHead>
-                    {isAdmin && <TableHead>Assigned To</TableHead>}
-                    {isAdmin && <TableHead>Actions</TableHead>}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredRequests.map((request) => (
-                    <TableRow key={request.id}>
-                      <TableCell>{request.id}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{request.type === 'maintenance' ? <Wrench className="mr-1 h-3 w-3" /> : <MessageSquare className="mr-1 h-3 w-3" />}
-                          {request.type === 'maintenance' ? 'Maintenance' : 'Complaint'}
-                        </Badge>
-                      </TableCell>
-                      {isAdmin && <TableCell>{request.residentName}</TableCell>}
-                      {isAdmin && <TableCell>{request.unit}</TableCell>}
-                      <TableCell>{request.category}</TableCell>
-                      <TableCell>{request.subject}</TableCell>
-                      <TableCell>{getPriorityBadge(request.priority)}</TableCell>
-                      <TableCell>{getStatusBadge(request.status)}</TableCell>
-                      <TableCell>{new Date(request.submittedDate).toLocaleDateString()}</TableCell>
-                      {isAdmin && <TableCell>{request.assignedTo || '-'}</TableCell>}
-                      {isAdmin && (
-                        <TableCell>
-                          <div className="flex gap-2">
-                            {request.status === 'pending' && (
-                              <>
-                                <Button
-                                  size="sm"
-                                  onClick={() => {
-                                    setSelectedRequest(request);
-                                    setIsAssignDialogOpen(true);
-                                  }}
-                                >
-                                  Assign
-                                </Button>
-                                <Button size="sm" variant="outline" onClick={() => handleRejectRequest(request)}>
-                                  <XCircle className="h-4 w-4" />
-                                </Button>
-                              </>
-                            )}
-                            {request.status === 'in-progress' && (
-                              <Button
-                                size="sm"
-                                className="bg-green-600 hover:bg-green-700"
-                                onClick={() => {
-                                  setSelectedRequest(request);
-                                  setIsResolveDialogOpen(true);
-                                }}
-                              >
-                                <CheckCircle className="mr-1 h-3 w-3" />
-                                Resolve
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      )}
+            {/* Renders the table based on the tab selection */}
+            {['all', 'pending', 'inprogress', 'resolved'].map((tabValue) => (
+              <TabsContent key={tabValue} value={tabValue} className="mt-4">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>ID</TableHead>
+                      <TableHead>Type</TableHead>
+                      {isAdmin && <TableHead>Resident</TableHead>}
+                      {isAdmin && <TableHead>Unit</TableHead>}
+                      <TableHead>Category</TableHead>
+                      <TableHead>Subject</TableHead>
+                      <TableHead>Priority</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Date</TableHead>
+                      {isAdmin && <TableHead>Assigned To</TableHead>}
+                      {isAdmin && <TableHead>Actions</TableHead>}
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TabsContent>
-
-            <TabsContent value="pending" className="mt-4">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Type</TableHead>
-                    {isAdmin && <TableHead>Resident</TableHead>}
-                    {isAdmin && <TableHead>Unit</TableHead>}
-                    <TableHead>Subject</TableHead>
-                    <TableHead>Priority</TableHead>
-                    <TableHead>Date</TableHead>
-                    {isAdmin && <TableHead>Actions</TableHead>}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {requests
-                    .filter((r) => r.status === 'pending' && (isAdmin || r.unit === user.unit))
-                    .map((request) => (
+                  </TableHeader>
+                  <TableBody>
+                    {filteredRequests
+                      .filter(req => tabValue === 'all' || req.status === (tabValue === 'inprogress' ? 'in-progress' : tabValue))
+                      .map((request) => (
                       <TableRow key={request.id}>
                         <TableCell>{request.id}</TableCell>
                         <TableCell>
-                          <Badge variant="outline">{request.type === 'maintenance' ? 'Maintenance' : 'Complaint'}</Badge>
+                          <Badge variant="outline">
+                            {request.type === 'maintenance' ? <Wrench className="mr-1 h-3 w-3" /> : <MessageSquare className="mr-1 h-3 w-3" />}
+                            {request.type === 'maintenance' ? 'Maintenance' : 'Complaint'}
+                          </Badge>
                         </TableCell>
                         {isAdmin && <TableCell>{request.residentName}</TableCell>}
                         {isAdmin && <TableCell>{request.unit}</TableCell>}
+                        <TableCell>{request.category}</TableCell>
                         <TableCell>{request.subject}</TableCell>
                         <TableCell>{getPriorityBadge(request.priority)}</TableCell>
+                        <TableCell>{getStatusBadge(request.status)}</TableCell>
                         <TableCell>{new Date(request.submittedDate).toLocaleDateString()}</TableCell>
+                        {isAdmin && <TableCell>{request.assignedTo || '-'}</TableCell>}
                         {isAdmin && (
                           <TableCell>
                             <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedRequest(request);
-                                  setIsAssignDialogOpen(true);
-                                }}
-                              >
-                                Assign
-                              </Button>
-                              <Button size="sm" variant="outline" onClick={() => handleRejectRequest(request)}>
-                                Reject
-                              </Button>
+                              {request.status === 'pending' && (
+                                <>
+                                  <Button size="sm" onClick={() => { setSelectedRequest(request); setIsAssignDialogOpen(true); }}>Assign</Button>
+                                  <Button size="sm" variant="outline" onClick={() => handleRejectRequest(request)}><XCircle className="h-4 w-4" /></Button>
+                                </>
+                              )}
+                              {request.status === 'in-progress' && (
+                                <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => { setSelectedRequest(request); setIsResolveDialogOpen(true); }}>
+                                  <CheckCircle className="mr-1 h-3 w-3" /> Resolve
+                                </Button>
+                              )}
                             </div>
                           </TableCell>
                         )}
                       </TableRow>
                     ))}
-                </TableBody>
-              </Table>
-            </TabsContent>
-
-            <TabsContent value="inprogress" className="mt-4">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID</TableHead>
-                    {isAdmin && <TableHead>Resident</TableHead>}
-                    {isAdmin && <TableHead>Unit</TableHead>}
-                    <TableHead>Subject</TableHead>
-                    <TableHead>Priority</TableHead>
-                    {isAdmin && <TableHead>Assigned To</TableHead>}
-                    {isAdmin && <TableHead>Actions</TableHead>}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {requests
-                    .filter((r) => r.status === 'in-progress' && (isAdmin || r.unit === user.unit))
-                    .map((request) => (
-                      <TableRow key={request.id}>
-                        <TableCell>{request.id}</TableCell>
-                        {isAdmin && <TableCell>{request.residentName}</TableCell>}
-                        {isAdmin && <TableCell>{request.unit}</TableCell>}
-                        <TableCell>{request.subject}</TableCell>
-                        <TableCell>{getPriorityBadge(request.priority)}</TableCell>
-                        {isAdmin && <TableCell>{request.assignedTo}</TableCell>}
-                        {isAdmin && (
-                          <TableCell>
-                            <Button
-                              size="sm"
-                              className="bg-green-600 hover:bg-green-700"
-                              onClick={() => {
-                                setSelectedRequest(request);
-                                setIsResolveDialogOpen(true);
-                              }}
-                            >
-                              Mark Resolved
-                            </Button>
-                          </TableCell>
-                        )}
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </TabsContent>
-
-            <TabsContent value="resolved" className="mt-4">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID</TableHead>
-                    {isAdmin && <TableHead>Resident</TableHead>}
-                    {isAdmin && <TableHead>Unit</TableHead>}
-                    <TableHead>Subject</TableHead>
-                    <TableHead>Submitted</TableHead>
-                    <TableHead>Resolved</TableHead>
-                    {isAdmin && <TableHead>Assigned To</TableHead>}
-                    <TableHead>Resolution</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {requests
-                    .filter((r) => r.status === 'resolved' && (isAdmin || r.unit === user.unit))
-                    .map((request) => (
-                      <TableRow key={request.id}>
-                        <TableCell>{request.id}</TableCell>
-                        {isAdmin && <TableCell>{request.residentName}</TableCell>}
-                        {isAdmin && <TableCell>{request.unit}</TableCell>}
-                        <TableCell>{request.subject}</TableCell>
-                        <TableCell>{new Date(request.submittedDate).toLocaleDateString()}</TableCell>
-                        <TableCell>{request.resolvedDate ? new Date(request.resolvedDate).toLocaleDateString() : '-'}</TableCell>
-                        {isAdmin && <TableCell>{request.assignedTo}</TableCell>}
-                        <TableCell className="max-w-xs truncate">{request.resolutionNotes || '-'}</TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </TabsContent>
+                  </TableBody>
+                </Table>
+              </TabsContent>
+            ))}
           </Tabs>
         </CardContent>
       </Card>
@@ -663,33 +495,23 @@ export default function ComplaintMaintenanceManagement({ user }) {
           </DialogHeader>
           {selectedRequest && (
             <div className="mb-4 rounded-lg bg-blue-50 p-4">
-              <p className="text-sm">
-                <strong>Request:</strong> {selectedRequest.subject}
-              </p>
-              <p className="text-xs text-gray-600">
-                {selectedRequest.residentName} - {selectedRequest.unit}
-              </p>
+              <p className="text-sm"><strong>Request:</strong> {selectedRequest.subject}</p>
+              <p className="text-xs text-gray-600">{selectedRequest.residentName} - {selectedRequest.unit}</p>
             </div>
           )}
           <form onSubmit={handleAssignRequest} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="contractor">Assign To</Label>
               <Select value={assignedContractor} onValueChange={setAssignedContractor} required>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select contractor/staff" />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Select contractor/staff" /></SelectTrigger>
                 <SelectContent>
                   {contractors.map((contractor) => (
-                    <SelectItem key={contractor} value={contractor}>
-                      {contractor}
-                    </SelectItem>
+                    <SelectItem key={contractor} value={contractor}>{contractor}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <Button type="submit" className="w-full">
-              Assign Request
-            </Button>
+            <Button type="submit" className="w-full">Assign Request</Button>
           </form>
         </DialogContent>
       </Dialog>
@@ -703,9 +525,7 @@ export default function ComplaintMaintenanceManagement({ user }) {
           </DialogHeader>
           {selectedRequest && (
             <div className="mb-4 rounded-lg bg-green-50 p-4">
-              <p className="text-sm">
-                <strong>Request:</strong> {selectedRequest.subject}
-              </p>
+              <p className="text-sm"><strong>Request:</strong> {selectedRequest.subject}</p>
               <p className="text-xs text-gray-600">Assigned to: {selectedRequest.assignedTo}</p>
             </div>
           )}
@@ -721,9 +541,7 @@ export default function ComplaintMaintenanceManagement({ user }) {
                 required
               />
             </div>
-            <Button type="submit" className="w-full">
-              Mark as Resolved
-            </Button>
+            <Button type="submit" className="w-full">Mark as Resolved</Button>
           </form>
         </DialogContent>
       </Dialog>

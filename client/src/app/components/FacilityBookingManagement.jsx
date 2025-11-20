@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -17,109 +17,41 @@ import { Plus, Edit, Trash2, CheckCircle, XCircle, Calendar as CalendarIcon, Use
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
+const API_URL = 'http://localhost:5016/api/Bookings';
+
 export default function FacilityBookingManagement({ user }) {
   const isAdmin = user.role === 'Admin';
 
-  const [facilities, setFacilities] = useState([
-    {
-      id: '1',
-      name: 'Tennis Court',
-      type: 'sport',
-      description: 'Professional tennis court with lighting',
-      capacity: 4,
-      hourlyRate: 20,
-      status: 'available',
-    },
-    {
-      id: '2',
-      name: 'Swimming Pool',
-      type: 'sport',
-      description: 'Olympic-size swimming pool',
-      capacity: 30,
-      hourlyRate: 15,
-      status: 'available',
-    },
-    {
-      id: '3',
-      name: 'Basketball Court',
-      type: 'sport',
-      description: 'Full-size basketball court',
-      capacity: 10,
-      hourlyRate: 25,
-      status: 'available',
-    },
-    {
-      id: '4',
-      name: 'Main Event Hall',
-      type: 'event',
-      description: 'Large event hall for celebrations',
-      capacity: 200,
-      hourlyRate: 100,
-      status: 'available',
-    },
-    {
-      id: '5',
-      name: 'Banquet Hall',
-      type: 'event',
-      description: 'Elegant banquet hall with catering facilities',
-      capacity: 150,
-      hourlyRate: 80,
-      status: 'available',
-    },
-  ]);
+  // --- State Management ---
+  const [facilities, setFacilities] = useState([]);
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [bookings, setBookings] = useState([
-    {
-      id: '1',
-      facilityName: 'Tennis Court',
-      facilityType: 'sport',
-      residentName: 'John Smith',
-      unit: 'Unit A-101',
-      date: '2025-10-25',
-      startTime: '2:00 PM',
-      endTime: '4:00 PM',
-      guests: 2,
-      status: 'approved',
-    },
-    {
-      id: '2',
-      facilityName: 'Main Event Hall',
-      facilityType: 'event',
-      residentName: 'Sarah Johnson',
-      unit: 'Unit B-205',
-      date: '2025-11-20',
-      startTime: '5:00 PM',
-      endTime: '11:00 PM',
-      guests: 120,
-      status: 'pending',
-      purpose: 'Wedding Reception',
-      notes: 'Need catering setup',
-    },
-    {
-      id: '3',
-      facilityName: 'Swimming Pool',
-      facilityType: 'sport',
-      residentName: 'Mike Wilson',
-      unit: 'Unit C-304',
-      date: '2025-10-28',
-      startTime: '10:00 AM',
-      endTime: '12:00 PM',
-      guests: 5,
-      status: 'approved',
-    },
-    {
-      id: '4',
-      facilityName: 'Basketball Court',
-      facilityType: 'sport',
-      residentName: 'Emily Chen',
-      unit: 'Unit D-401',
-      date: '2025-10-26',
-      startTime: '4:00 PM',
-      endTime: '6:00 PM',
-      guests: 8,
-      status: 'pending',
-    },
-  ]);
+  // Fetch data on mount
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      // Fetch Facilities
+      const facResponse = await fetch(`${API_URL}/facilities`);
+      const facData = await facResponse.json();
+      if (facResponse.ok) setFacilities(facData);
+
+      // Fetch Bookings
+      const bookResponse = await fetch(`${API_URL}/all`);
+      const bookData = await bookResponse.json();
+      if (bookResponse.ok) setBookings(bookData);
+
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      toast.error("Failed to load data. Check backend connection.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const [blockedDates, setBlockedDates] = useState([
     {
@@ -148,43 +80,48 @@ export default function FacilityBookingManagement({ user }) {
     reason: '',
   });
 
+  // --- API HANDLERS ---
+
   // Add/Edit Facility
-  const handleSaveFacility = (e) => {
+  const handleSaveFacility = async (e) => {
     e.preventDefault();
 
-    if (editingFacility) {
-      setFacilities(
-        facilities.map((f) =>
-          f.id === editingFacility.id
-            ? {
-                ...f,
-                name: newFacility.name,
-                type: newFacility.type,
-                description: newFacility.description,
-                capacity: parseInt(newFacility.capacity),
-                hourlyRate: parseFloat(newFacility.hourlyRate),
-              }
-            : f
-        )
-      );
-      toast.success('Facility updated successfully!');
-    } else {
-      const facility = {
-        id: Date.now().toString(),
-        name: newFacility.name,
-        type: newFacility.type,
-        description: newFacility.description,
-        capacity: parseInt(newFacility.capacity),
-        hourlyRate: parseFloat(newFacility.hourlyRate),
-        status: 'available',
-      };
-      setFacilities([...facilities, facility]);
-      toast.success('Facility added successfully!');
-    }
+    const payload = {
+      name: newFacility.name,
+      type: newFacility.type,
+      description: newFacility.description,
+      capacity: parseInt(newFacility.capacity),
+      hourlyRate: parseFloat(newFacility.hourlyRate),
+    };
 
-    setNewFacility({ name: '', type: 'sport', description: '', capacity: '', hourlyRate: '' });
-    setEditingFacility(null);
-    setIsFacilityDialogOpen(false);
+    try {
+      let response;
+      if (editingFacility) {
+        response = await fetch(`${API_URL}/facilities/${editingFacility.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        response = await fetch(`${API_URL}/facilities`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+      }
+
+      if (response.ok) {
+        toast.success(editingFacility ? 'Facility updated!' : 'Facility added!');
+        fetchData(); // Refresh list
+        setIsFacilityDialogOpen(false);
+        setEditingFacility(null);
+        setNewFacility({ name: '', type: 'sport', description: '', capacity: '', hourlyRate: '' });
+      } else {
+        toast.error('Failed to save facility');
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
   const handleEditFacility = (facility) => {
@@ -199,41 +136,53 @@ export default function FacilityBookingManagement({ user }) {
     setIsFacilityDialogOpen(true);
   };
 
-  const handleDeleteFacility = (id) => {
+  const handleDeleteFacility = async (id) => {
     if (window.confirm('Are you sure you want to delete this facility?')) {
-      setFacilities(facilities.filter((f) => f.id !== id));
-      toast.success('Facility deleted successfully!');
+      try {
+        await fetch(`${API_URL}/facilities/${id}`, { method: 'DELETE' });
+        toast.success('Facility deleted successfully!');
+        fetchData();
+      } catch (error) {
+        toast.error('Failed to delete facility');
+      }
     }
   };
 
-  const handleToggleFacilityStatus = (id) => {
-    setFacilities(
-      facilities.map((f) =>
-        f.id === id
-          ? { ...f, status: f.status === 'available' ? ('maintenance') : ('available') }
-          : f
-      )
-    );
-    toast.success('Facility status updated!');
+  const handleToggleFacilityStatus = async (id) => {
+    try {
+      await fetch(`${API_URL}/facilities/toggle/${id}`, { method: 'PUT' });
+      toast.success('Facility status updated!');
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to update status');
+    }
   };
 
-  // Booking Actions
-  const handleApproveBooking = (id) => {
-    setBookings(bookings.map((b) => (b.id === id ? { ...b, status: 'approved' } : b)));
-    toast.success('Booking approved successfully!');
+  // Booking Status Updates
+  const updateBookingStatus = async (id, status) => {
+    try {
+      const response = await fetch(`${API_URL}/update-status/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+
+      if (response.ok) {
+        toast.success(`Booking ${status} successfully!`);
+        fetchData();
+      } else {
+        toast.error('Failed to update booking');
+      }
+    } catch (error) {
+      toast.error('Error updating booking');
+    }
   };
 
-  const handleRejectBooking = (id) => {
-    setBookings(bookings.map((b) => (b.id === id ? { ...b, status: 'rejected' } : b)));
-    toast.success('Booking rejected!');
-  };
+  const handleApproveBooking = (id) => updateBookingStatus(id, 'approved');
+  const handleRejectBooking = (id) => updateBookingStatus(id, 'rejected');
+  const handleCancelBooking = (id) => updateBookingStatus(id, 'cancelled');
 
-  const handleCancelBooking = (id) => {
-    setBookings(bookings.map((b) => (b.id === id ? { ...b, status: 'cancelled' } : b)));
-    toast.success('Booking cancelled!');
-  };
-
-  // Block Date
+  // Block Date (Mock for now, unless you create a BlockedDate table)
   const handleBlockDate = (e) => {
     e.preventDefault();
 
@@ -278,6 +227,8 @@ export default function FacilityBookingManagement({ user }) {
 
   const pendingBookings = bookings.filter((b) => b.status === 'pending');
   const approvedBookings = bookings.filter((b) => b.status === 'approved');
+
+  if (loading) return <div className="p-8 text-center">Loading...</div>;
 
   if (!isAdmin) {
     // Resident view - simple booking list

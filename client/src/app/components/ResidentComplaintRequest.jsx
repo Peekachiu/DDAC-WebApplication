@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image'; // Added for optimization
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -10,52 +11,28 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Badge } from './ui/badge';
-import { Plus, Eye, X } from 'lucide-react';
+import { Plus, Eye, X, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
-function ResidentComplaintRequest({ user }) {
-  const [complaints, setComplaints] = useState([
-    {
-      id: '1',
-      type: 'maintenance',
-      category: 'Plumbing',
-      subject: 'Leaking Faucet',
-      description: 'Kitchen faucet is leaking continuously. Water is dripping from the base of the faucet.',
-      photos: [],
-      status: 'in-progress',
-      date: '2025-10-20',
-    },
-    {
-      id: '2',
-      type: 'complaint',
-      category: 'Noise',
-      subject: 'Loud Music',
-      description: 'Neighbor playing loud music at night after 11 PM. This has been happening for the past 3 days.',
-      photos: [],
-      status: 'pending',
-      date: '2025-10-22',
-    },
-    {
-      id: '3',
-      type: 'maintenance',
-      category: 'Electrical',
-      subject: 'Power Outlet',
-      description: 'Bedroom outlet not working. Tried different devices but none are getting power.',
-      photos: [],
-      status: 'resolved',
-      date: '2025-10-15',
-    },
-  ]);
+const API_URL = 'http://localhost:5016/api/Reports';
 
+function ResidentComplaintRequest({ user }) {
+  const [complaints, setComplaints] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Dialog & Selection States
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedComplaint, setSelectedComplaint] = useState(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+
+  // Form State
   const [newComplaint, setNewComplaint] = useState({
     type: 'maintenance',
     category: '',
     subject: '',
     description: '',
-    photos: [],
+    priority: 'medium',
+    photos: [], 
   });
 
   const categories = {
@@ -63,40 +40,94 @@ function ResidentComplaintRequest({ user }) {
     complaint: ['Noise', 'Parking', 'Cleanliness', 'Security', 'Other'],
   };
 
-  const handleSubmit = (e) => {
+  // --- 1. Fetch Data on Load ---
+  // Wrapped in useCallback to fix the dependency warning
+  const fetchComplaints = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/user/${user.id}`);
+      if (!response.ok) throw new Error('Failed to fetch data');
+      const data = await response.json();
+
+      const mappedData = data.map(item => ({
+        id: item.id,
+        type: item.type,
+        category: item.category,
+        subject: item.subject,
+        description: item.description,
+        status: item.status,
+        priority: item.priority,
+        date: item.submittedDate,
+        assignedTo: item.assignedTo,
+        resolutionNotes: item.resolutionNotes,
+        photos: item.photo ? [item.photo] : [] 
+      }));
+
+      setComplaints(mappedData);
+    } catch (error) {
+      console.error("Fetch error:", error);
+      toast.error("Could not load your requests.");
+    } finally {
+      setLoading(false);
+    }
+  }, [user.id]); 
+
+  useEffect(() => {
+    if (user?.id) {
+      fetchComplaints();
+    }
+  }, [user?.id, fetchComplaints]); // Dependency array is now correct
+
+  // --- 2. Handle Form Submission ---
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const complaint = {
-      id: Date.now().toString(),
+    const payload = {
       type: newComplaint.type,
       category: newComplaint.category,
       subject: newComplaint.subject,
       description: newComplaint.description,
-      photos: newComplaint.photos,
-      status: 'pending',
-      date: new Date().toISOString().split('T')[0],
+      priority: newComplaint.priority,
+      userId: user.id,
+      photo: newComplaint.photos.length > 0 ? newComplaint.photos[0] : null
     };
 
-    setComplaints([complaint, ...complaints]);
-    setNewComplaint({ type: 'maintenance', category: '', subject: '', description: '', photos: [] });
-    setIsDialogOpen(false);
-    toast.success('Request submitted successfully!');
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) throw new Error('Failed to submit request');
+
+      toast.success('Request submitted successfully!');
+      
+      setNewComplaint({ 
+        type: 'maintenance', 
+        category: '', 
+        subject: '', 
+        description: '', 
+        priority: 'medium', 
+        photos: [] 
+      });
+      setIsDialogOpen(false);
+      
+      fetchComplaints();
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
+  // --- 3. Helper Functions ---
   const handlePhotoUpload = (e) => {
     const files = e.target.files;
-    if (files) {
-      const newPhotos = [];
-      Array.from(files).forEach((file) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          newPhotos.push(reader.result);
-          if (newPhotos.length === files.length) {
-            setNewComplaint({ ...newComplaint, photos: [...newComplaint.photos, ...newPhotos] });
-          }
-        };
-        reader.readAsDataURL(file);
-      });
+    if (files && files[0]) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewComplaint({ ...newComplaint, photos: [reader.result] });
+      };
+      reader.readAsDataURL(files[0]);
     }
   };
 
@@ -115,10 +146,14 @@ function ResidentComplaintRequest({ user }) {
         return <Badge className="bg-blue-100 text-blue-800">In Progress</Badge>;
       case 'resolved':
         return <Badge className="bg-green-100 text-green-800">Resolved</Badge>;
+      case 'rejected':
+        return <Badge className="bg-red-100 text-red-800">Rejected</Badge>;
       default:
-        return null;
+        return <Badge>Unknown</Badge>;
     }
   };
+
+  if (loading) return <div className="p-8 text-center">Loading your requests...</div>;
 
   return (
     <div className="space-y-6">
@@ -184,6 +219,22 @@ function ResidentComplaintRequest({ user }) {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="priority">Priority</Label>
+                <Select
+                  value={newComplaint.priority}
+                  onValueChange={(value) => setNewComplaint({ ...newComplaint, priority: value })}
+                  required
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="subject">Subject</Label>
                 <Input
                   id="subject"
@@ -211,26 +262,27 @@ function ResidentComplaintRequest({ user }) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="photos">Upload Photos (Optional)</Label>
+                <Label htmlFor="photos">Upload Photo (Optional)</Label>
                 <Input
                   id="photos"
                   type="file"
                   accept="image/*"
-                  multiple
                   onChange={handlePhotoUpload}
                 />
                 {newComplaint.photos.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-2">
                     {newComplaint.photos.map((photo, index) => (
-                      <div key={index} className="relative">
-                        <img
+                      <div key={index} className="relative h-20 w-20">
+                        <Image
                           src={photo}
                           alt={`Upload ${index + 1}`}
-                          className="h-20 w-20 rounded-lg object-cover"
+                          className="rounded-lg object-cover"
+                          fill
+                          unoptimized // Needed for Base64 blobs in some Next.js configs
                         />
                         <button
                           type="button"
-                          className="absolute -right-2 -top-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
+                          className="absolute -right-2 -top-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600 z-10"
                           onClick={() => handleRemovePhoto(index)}
                         >
                           <X className="h-3 w-3" />
@@ -266,32 +318,40 @@ function ResidentComplaintRequest({ user }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {complaints.map((complaint) => (
-                <TableRow key={complaint.id}>
-                  <TableCell>
-                    <Badge variant="outline">
-                      {complaint.type === 'maintenance' ? 'Maintenance' : 'Complaint'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{complaint.category}</TableCell>
-                  <TableCell>{complaint.subject}</TableCell>
-                  <TableCell>{new Date(complaint.date).toLocaleDateString()}</TableCell>
-                  <TableCell>{getStatusBadge(complaint.status)}</TableCell>
-                  <TableCell>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setSelectedComplaint(complaint);
-                        setIsViewDialogOpen(true);
-                      }}
-                    >
-                      <Eye className="mr-1 h-3 w-3" />
-                      View
-                    </Button>
+              {complaints.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-4 text-gray-500">
+                    No requests found.
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                complaints.map((complaint) => (
+                  <TableRow key={complaint.id}>
+                    <TableCell>
+                      <Badge variant="outline">
+                        {complaint.type === 'maintenance' ? 'Maintenance' : 'Complaint'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{complaint.category}</TableCell>
+                    <TableCell>{complaint.subject}</TableCell>
+                    <TableCell>{new Date(complaint.date).toLocaleDateString()}</TableCell>
+                    <TableCell>{getStatusBadge(complaint.status)}</TableCell>
+                    <TableCell>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedComplaint(complaint);
+                          setIsViewDialogOpen(true);
+                        }}
+                      >
+                        <Eye className="mr-1 h-3 w-3" />
+                        View
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -308,15 +368,15 @@ function ResidentComplaintRequest({ user }) {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Request ID</Label>
-                  <p className="text-sm">{selectedComplaint.id}</p>
+                  <p className="text-sm font-mono">#{selectedComplaint.id}</p>
                 </div>
                 <div>
                   <Label>Type</Label>
-                  <p className="text-sm">
+                  <div className="mt-1">
                     <Badge variant="outline">
                       {selectedComplaint.type === 'maintenance' ? 'Maintenance' : 'Complaint'}
                     </Badge>
-                  </p>
+                  </div>
                 </div>
                 <div>
                   <Label>Category</Label>
@@ -330,30 +390,49 @@ function ResidentComplaintRequest({ user }) {
               
               <div>
                 <Label>Subject</Label>
-                <p className="text-sm">{selectedComplaint.subject}</p>
+                <p className="text-sm font-medium">{selectedComplaint.subject}</p>
               </div>
 
-              <div>
-                <Label>Description</Label>
-                <p className="text-sm text-gray-600">{selectedComplaint.description}</p>
+              <div className="rounded-md bg-gray-50 p-3">
+                <Label className="mb-1 block text-xs text-gray-500">Description</Label>
+                <p className="text-sm text-gray-700 whitespace-pre-wrap">{selectedComplaint.description}</p>
               </div>
 
-              <div>
-                <Label>Status</Label>
-                <div className="mt-1">{getStatusBadge(selectedComplaint.status)}</div>
+              <div className="grid grid-cols-2 gap-4 border-t pt-4">
+                <div>
+                    <Label>Status</Label>
+                    <div className="mt-1">{getStatusBadge(selectedComplaint.status)}</div>
+                </div>
+                <div>
+                    <Label>Assigned To</Label>
+                    <p className="text-sm text-gray-600">{selectedComplaint.assignedTo || 'Not assigned yet'}</p>
+                </div>
               </div>
+
+              {selectedComplaint.status === 'resolved' && selectedComplaint.resolutionNotes && (
+                <div className="rounded-md bg-green-50 p-3 border border-green-100">
+                    <div className="flex items-center gap-2 mb-1">
+                        <CheckCircle className="h-4 w-4 text-green-600"/>
+                        <Label className="text-green-800">Resolution Notes</Label>
+                    </div>
+                    <p className="text-sm text-green-700">{selectedComplaint.resolutionNotes}</p>
+                </div>
+              )}
 
               {selectedComplaint.photos.length > 0 && (
                 <div>
-                  <Label className="mb-2 block">Photos ({selectedComplaint.photos.length})</Label>
+                  <Label className="mb-2 block">Attached Photo</Label>
                   <div className="grid grid-cols-3 gap-2">
                     {selectedComplaint.photos.map((photo, index) => (
-                      <img
-                        key={index}
-                        src={photo}
-                        alt={`Photo ${index + 1}`}
-                        className="h-32 w-full rounded-lg object-cover"
-                      />
+                      <div key={index} className="relative h-40 w-full">
+                        <Image
+                          src={photo}
+                          alt={`Evidence ${index + 1}`}
+                          className="rounded-lg object-cover border"
+                          fill
+                          unoptimized
+                        />
+                      </div>
                     ))}
                   </div>
                 </div>
