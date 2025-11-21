@@ -11,7 +11,7 @@ namespace server.Controllers
         public int Id { get; set; }
         public string ResidentName { get; set; } = string.Empty;
         public string Unit { get; set; } = string.Empty;
-        public string Month { get; set; } = string.Empty; 
+        public string Month { get; set; } = string.Empty;
         public int Amount { get; set; }
         public DateTime IssueDate { get; set; }
         public DateTime DueDate { get; set; }
@@ -57,13 +57,13 @@ namespace server.Controllers
 
             var invoiceDtos = fees.Select(f => {
                 var resident = users.FirstOrDefault(u => u.PropertyID == f.PropertyID);
-                
+
                 // Correct Status Logic:
                 // If Status is 1 -> Paid
                 // If Status is 0 AND DueDate has passed -> Overdue
                 // Otherwise -> Pending
                 string statusStr = "pending";
-                if (f.Status == 1) 
+                if (f.Status == 1)
                 {
                     statusStr = "paid";
                 }
@@ -79,7 +79,7 @@ namespace server.Controllers
                     Unit = f.Property != null ? $"{f.Property.Block}-{f.Property.Floor}-{f.Property.Unit}" : "Unknown",
                     Month = f.IssueDate.ToString("MMMM yyyy"), // Or use a description field if added
                     Amount = f.Amount,
-                    IssueDate = f.IssueDate, 
+                    IssueDate = f.IssueDate,
                     DueDate = f.DueDate,
                     Status = statusStr,
                     PaymentMethod = f.Method,
@@ -98,8 +98,8 @@ namespace server.Controllers
                 .AsNoTracking()
                 .ToListAsync();
 
-            var targetProp = property.FirstOrDefault(p => 
-                p.Unit == request.Unit || 
+            var targetProp = property.FirstOrDefault(p =>
+                p.Unit == request.Unit ||
                 $"{p.Block}-{p.Floor}-{p.Unit}" == request.Unit
             );
 
