@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using server.Data;
 using server.Models;
+using Stripe;
 
 namespace server.Controllers
 {
@@ -15,15 +16,15 @@ namespace server.Controllers
         public int Amount { get; set; }
         public DateTime IssueDate { get; set; }
         public DateTime DueDate { get; set; }
-        public string Status { get; set; } = string.Empty; // "pending", "paid", "overdue"
-        public string? PaymentMethod { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public string PaymentMethod { get; set; } = string.Empty;
         public DateTime? PaidDate { get; set; }
     }
 
     public class CreateInvoiceRequest
     {
-        public string Unit { get; set; } = string.Empty; // Accepts "A-10-05"
-        public string Month { get; set; } = string.Empty; // Description/Month
+        public string Unit { get; set; } = string.Empty;
+        public string Month { get; set; } = string.Empty;
         public int Amount { get; set; }
         public DateTime DueDate { get; set; }
     }
@@ -31,7 +32,6 @@ namespace server.Controllers
     public class PayInvoiceRequest
     {
         public string PaymentMethod { get; set; } = string.Empty;
-        public DateTime PaymentDate { get; set; }
     }
 
     [Route("api/[controller]")]
@@ -55,29 +55,20 @@ namespace server.Controllers
 
             var users = await _context.Users.ToListAsync();
 
-            var invoiceDtos = fees.Select(f => {
+            var invoiceDtos = fees.Select(f =>
+            {
                 var resident = users.FirstOrDefault(u => u.PropertyID == f.PropertyID);
 
-                // Correct Status Logic:
-                // If Status is 1 -> Paid
-                // If Status is 0 AND DueDate has passed -> Overdue
-                // Otherwise -> Pending
                 string statusStr = "pending";
-                if (f.Status == 1)
-                {
-                    statusStr = "paid";
-                }
-                else if (f.DueDate < DateTime.Now)
-                {
-                    statusStr = "overdue";
-                }
+                if (f.Status == 1) statusStr = "paid";
+                else if (f.DueDate < DateTime.Now) statusStr = "overdue";
 
                 return new InvoiceDto
                 {
                     Id = f.PaymentID,
                     ResidentName = resident != null ? $"{resident.FirstName} {resident.LastName}" : "Unknown",
                     Unit = f.Property != null ? $"{f.Property.Block}-{f.Property.Floor}-{f.Property.Unit}" : "Unknown",
-                    Month = f.IssueDate.ToString("MMMM yyyy"), // Or use a description field if added
+                    Month = f.IssueDate.ToString("MMMM yyyy"),
                     Amount = f.Amount,
                     IssueDate = f.IssueDate,
                     DueDate = f.DueDate,
@@ -85,7 +76,9 @@ namespace server.Controllers
                     PaymentMethod = f.Method,
                     PaidDate = f.PaymentDate
                 };
-            }).OrderByDescending(x => x.IssueDate).ToList();
+            })
+            .OrderByDescending(x => x.IssueDate)
+            .ToList();
 
             return Ok(invoiceDtos);
         }
@@ -94,9 +87,7 @@ namespace server.Controllers
         [HttpPost]
         public async Task<ActionResult> GenerateInvoice(CreateInvoiceRequest request)
         {
-            var property = await _context.Properties
-                .AsNoTracking()
-                .ToListAsync();
+            var property = await _context.Properties.AsNoTracking().ToListAsync();
 
             var targetProp = property.FirstOrDefault(p =>
                 p.Unit == request.Unit ||
@@ -112,12 +103,12 @@ namespace server.Controllers
             {
                 PropertyID = targetProp.PropertyID,
                 Amount = request.Amount,
-                IssueDate = DateTime.Now,      // Set Issue Date to Now
-                DueDate = request.DueDate,     // Set Due Date from Request
-                PaymentDate = null,            // Not paid yet
-                Status = 0,                    // 0 = Pending
-                Method = "N/A",
-                PaymentTime = DateTime.Now.TimeOfDay
+                IssueDate = DateTime.Now,
+                DueDate = request.DueDate,
+                PaymentDate = null,
+                Status = 0,
+                Method = "",   // Removed "N/A"
+                PaymentTime = TimeSpan.Zero
             };
 
             _context.ManagementFees.Add(newFee);
@@ -131,14 +122,47 @@ namespace server.Controllers
         public async Task<IActionResult> PayInvoice(int id, PayInvoiceRequest request)
         {
             var fee = await _context.ManagementFees.FindAsync(id);
-            if (fee == null) return NotFound(new { message = "Invoice not found" });
+            if (fee == null)
+                return NotFound(new { message = "Invoice not found" });
 
-            fee.Status = 1; // Mark as Paid
-            fee.Method = request.PaymentMethod;
-            fee.PaymentDate = request.PaymentDate; // Set the actual payment date
+            try
+            {
+                // 1. Retrieve full PaymentMethod object from Stripe
+                var stripeService = new PaymentMethodService();
+                var pm = await stripeService.GetAsync(request.PaymentMethod);
 
-            await _context.SaveChangesAsync();
-            return Ok(new { message = "Payment recorded successfully" });
+                string prettyMethod = "Online Payment";
+
+                if (pm.Type == "card")
+                    prettyMethod = "Credit/Debit Card";
+
+                else if (pm.Type == "fpx")
+                    prettyMethod = $"FPX - {pm.Fpx.Bank?.ToUpper()}";
+
+                else if (pm.Type == "grabpay")
+                    prettyMethod = "GrabPay E-Wallet";
+
+
+                // 2. Update DB
+                var malaysiaTime = DateTime.UtcNow.AddHours(8);
+
+                fee.Method = prettyMethod;
+                fee.Status = 1;
+                fee.PaymentDate = malaysiaTime;
+                fee.PaymentTime = malaysiaTime.TimeOfDay;
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    message = "Payment recorded successfully",
+                    method = prettyMethod
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
     }
 }
