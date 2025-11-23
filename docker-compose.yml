@@ -26,10 +26,17 @@ services:
       # This overrides ConnectionStrings:DefaultConnection in appsettings.json
       # Note: "server=db" matches the service name above
       ConnectionStrings__DefaultConnection: "Server=db;Port=3306;Database=residentprodb;User=root;Password=${DB_PASSWORD};"
+      SECRET_KEY: ${SECRET_KEY}
+      PUBLISHABLE_KEY: ${PUBLISHABLE_KEY}
 
   # 3. Frontend
   frontend:
-    build: ./client
+    build: 
+      context: ./client
+
+      args:
+        PUBLISHABLE_KEY: ${PUBLISHABLE_KEY}
+
     container_name: DDAC_Frontend
     depends_on:
       - backend

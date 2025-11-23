@@ -1,0 +1,22 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # This step passes the GitHub Secrets into Environment Variables
+      # so docker-compose can read them.
+      - name: Build and Run with Docker Compose
+        env:
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          # Next.js needs this mapping to pass it to the 'args' we defined earlier
+          PUBLISHABLE_KEY: ${{ secrets.PUBLISHABLE_KEY }}
+        run: |
+          docker-compose up -d --build

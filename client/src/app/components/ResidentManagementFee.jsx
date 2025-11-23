@@ -14,7 +14,7 @@ import CheckoutForm from './CheckoutForm';
 const BASE_API_URL = 'http://localhost:5016/api';
 
 const stripePromise = loadStripe(
-  "publishable_key"
+  "PUBLISHABLE_KEY"
 );
 
 function ResidentManagementFee({ user }) {
