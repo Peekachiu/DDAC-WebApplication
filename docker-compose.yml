@@ -27,7 +27,8 @@ services:
       # Note: "server=db" matches the service name above
       ConnectionStrings__DefaultConnection: "Server=db;Port=3306;Database=residentprodb;User=root;Password=${DB_PASSWORD};"
       # 1. Pass the Backend Secret Key (Runtime)
-      SECRET_KEY: ${SECRET_KEY}
+      Stripe__SecretKey: ${SECRET_KEY}
+      Stripe__PublishableKey: ${PUBLISHABLE_KEY}
 
   # 3. Frontend
   frontend:
