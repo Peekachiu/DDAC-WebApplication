@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # 1. MySQL Database
+  db:
+    image: mysql:8.0
+    container_name: DDAC_DB
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
+      MYSQL_DATABASE: residentprodb
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  # 2. .NET Backend
+  backend:
+    build: ./server
+    container_name: DDAC_Backend
+    depends_on:
+      - db
+    ports:
+      - "5016:80" # Map localhost:5016 to container port 80
+    environment:
+      # This overrides ConnectionStrings:DefaultConnection in appsettings.json
+      # Note: "server=db" matches the service name above
+      ConnectionStrings__DefaultConnection: "Server=db;Port=3306;Database=residentprodb;User=root;Password=${DB_PASSWORD};"
+      # 1. Pass the Backend Secret Key (Runtime)
+      Stripe__SecretKey: ${SECRET_KEY}
+      Stripe__PublishableKey: ${PUBLISHABLE_KEY}
+
+  # 3. Frontend
+  frontend:
+    build: 
+      context: ./client
+      args:
+        PUBLISHABLE_KEY: ${PUBLISHABLE_KEY}
+    container_name: DDAC_Frontend
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000" # Map localhost:3000 to container port 3000
+    environment:
+    - WATCHPACK_POLLING=true
+
+volumes:
+  mysql_data:

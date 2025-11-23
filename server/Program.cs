@@ -29,6 +29,17 @@ builder.Services.AddCors(options =>
 // --- 3. Add Controllers ---
 builder.Services.AddControllers();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:3000") // This matches your frontend URL
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
+
 // (These are for API documentation)
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -43,10 +54,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseRouting();
 // --- 4. Use CORS (CRITICAL) ---
 app.UseCors("AllowReactApp"); // This line must be here
-
+app.UseCors("AllowFrontend");
 app.UseAuthorization();
 
 // --- 5. Map Controllers ---
