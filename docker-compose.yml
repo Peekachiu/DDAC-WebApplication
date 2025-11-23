@@ -18,6 +18,7 @@ services:
   backend:
     build: ./server
     container_name: DDAC_Backend
+    image: peekachiu/ddac-backend:latest
     depends_on:
       - db
     ports:
@@ -37,6 +38,7 @@ services:
       args:
         PUBLISHABLE_KEY: ${PUBLISHABLE_KEY}
     container_name: DDAC_Frontend
+    image: peekachiu/ddac-frontend:latest
     depends_on:
       - backend
     ports:
