@@ -13,7 +13,7 @@ COPY . .
 # 1. Declare the argument
 ARG PUBLISHABLE_KEY
 # 2. Set it as an environment variable so the build can see it
-ENV PUBLISHABLE_KEY=$PUBLISHABLE_KEY
+ENV NEXT_PUBLIC_PUBLISHABLE_KEY=$PUBLISHABLE_KEY
 
 # Build the Next.js application
 RUN npm run build
