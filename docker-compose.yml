@@ -18,6 +18,7 @@ services:
   backend:
     build: ./server
     container_name: DDAC_Backend
+    image: junnnwan/ddac_backend:latest
     depends_on:
       - db
     ports:
@@ -32,11 +33,12 @@ services:
 
   # 3. Frontend
   frontend:
-    build: 
+    build:
       context: ./client
       args:
         PUBLISHABLE_KEY: ${PUBLISHABLE_KEY}
     container_name: DDAC_Frontend
+    image: junnnwan/ddac_frontend:latest
     depends_on:
       - backend
     ports:
