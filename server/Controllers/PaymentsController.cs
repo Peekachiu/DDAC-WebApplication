@@ -31,6 +31,15 @@ namespace DDAC_WebApplication.Server.Controllers
                     "card",
                     "fpx",
                     "grabpay"
+                },
+
+                // 🔥 FORCE 3DS REDIRECT FOR CARD
+                PaymentMethodOptions = new PaymentIntentPaymentMethodOptionsOptions
+                {
+                    Card = new PaymentIntentPaymentMethodOptionsCardOptions
+                    {
+                        RequestThreeDSecure = "any"
+                    }
                 }
             };
 
@@ -50,9 +59,6 @@ namespace DDAC_WebApplication.Server.Controllers
 
         // -------------------------------------------------------------
         // 2️⃣ RETRIEVE FULL PAYMENT INTENT (EXPANDED)
-        // -------------------------------------------------------------
-        // This endpoint is required for redirect flows (FPX, GrabPay)
-        // and is called by your frontend after redirect back.
         // -------------------------------------------------------------
         [HttpGet("payment-intent/{id}")]
         public async Task<ActionResult> GetPaymentIntent(string id)

@@ -277,8 +277,8 @@ function ResidentManagementFee({ user }) {
                     <div>
                       <p className="text-sm font-medium">{invoice.month}</p>
                       <p className="text-xs text-gray-500">
-                        Paid on: {invoice.paymentDate
-                          ? new Date(invoice.paymentDate).toLocaleDateString()
+                        Paid on: {invoice.paidDate
+                          ? new Date(invoice.paidDate).toLocaleDateString()
                           : 'N/A'}
                       </p>
                     </div>
