@@ -18,7 +18,11 @@ services:
   backend:
     build: ./server
     container_name: DDAC_Backend
+<<<<<<< HEAD
     image: jywong75/ddac-webapplication-backend:latest
+=======
+    image: ${BACKEND_IMAGE_NAME}
+>>>>>>> main
     depends_on:
       - db
     ports:
@@ -38,7 +42,11 @@ services:
       args:
         PUBLISHABLE_KEY: ${PUBLISHABLE_KEY}
     container_name: DDAC_Frontend
+<<<<<<< HEAD
     image: jywong75/ddac-webapplication-frontend:latest
+=======
+    image: ${FRONTEND_IMAGE_NAME}
+>>>>>>> main
     depends_on:
       - backend
     ports:
