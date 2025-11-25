@@ -53,14 +53,7 @@ export default function FacilityBookingManagement({ user }) {
     }
   };
 
-  const [blockedDates, setBlockedDates] = useState([
-    {
-      id: '1',
-      facilityName: 'Tennis Court',
-      date: '2025-11-15',
-      reason: 'Court resurfacing maintenance',
-    },
-  ]);
+  const [blockedDates, setBlockedDates] = useState([]);
 
   const [isFacilityDialogOpen, setIsFacilityDialogOpen] = useState(false);
   const [isBlockDateDialogOpen, setIsBlockDateDialogOpen] = useState(false);
@@ -72,7 +65,6 @@ export default function FacilityBookingManagement({ user }) {
     type: 'sport',
     description: '',
     capacity: '',
-    hourlyRate: '',
   });
 
   const [blockDate, setBlockDate] = useState({
@@ -91,7 +83,6 @@ export default function FacilityBookingManagement({ user }) {
       type: newFacility.type,
       description: newFacility.description,
       capacity: parseInt(newFacility.capacity),
-      hourlyRate: parseFloat(newFacility.hourlyRate),
     };
 
     try {
@@ -115,7 +106,7 @@ export default function FacilityBookingManagement({ user }) {
         fetchData(); // Refresh list
         setIsFacilityDialogOpen(false);
         setEditingFacility(null);
-        setNewFacility({ name: '', type: 'sport', description: '', capacity: '', hourlyRate: '' });
+        setNewFacility({ name: '', type: 'sport', description: '', capacity: '' });
       } else {
         toast.error('Failed to save facility');
       }
@@ -131,7 +122,6 @@ export default function FacilityBookingManagement({ user }) {
       type: facility.type,
       description: facility.description,
       capacity: facility.capacity.toString(),
-      hourlyRate: facility.hourlyRate.toString(),
     });
     setIsFacilityDialogOpen(true);
   };
@@ -182,7 +172,7 @@ export default function FacilityBookingManagement({ user }) {
   const handleRejectBooking = (id) => updateBookingStatus(id, 'rejected');
   const handleCancelBooking = (id) => updateBookingStatus(id, 'cancelled');
 
-  // Block Date (Mock for now, unless you create a BlockedDate table)
+  // Block Date
   const handleBlockDate = (e) => {
     e.preventDefault();
 
@@ -194,13 +184,13 @@ export default function FacilityBookingManagement({ user }) {
     const blocked = {
       id: Date.now().toString(),
       facilityName: blockDate.facility,
-      date: format(selectedDate, 'yyyy-MM-dd'),
+      date: selectedDate,
       reason: blockDate.reason,
     };
 
     setBlockedDates([...blockedDates, blocked]);
     setBlockDate({ facility: '', reason: '' });
-    setSelectedDate(undefined);
+    setSelectedDate('');
     setIsBlockDateDialogOpen(false);
     toast.success('Date blocked successfully!');
   };
@@ -334,31 +324,19 @@ export default function FacilityBookingManagement({ user }) {
                     rows={3}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="capacity">Capacity</Label>
-                    <Input
-                      id="capacity"
-                      type="number"
-                      value={newFacility.capacity}
-                      onChange={(e) => setNewFacility({ ...newFacility, capacity: e.target.value })}
-                      placeholder="Max people"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="hourlyRate">Hourly Rate ($)</Label>
-                    <Input
-                      id="hourlyRate"
-                      type="number"
-                      step="0.01"
-                      value={newFacility.hourlyRate}
-                      onChange={(e) => setNewFacility({ ...newFacility, hourlyRate: e.target.value })}
-                      placeholder="0.00"
-                      required
-                    />
-                  </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="capacity">Capacity</Label>
+                  <Input
+                    id="capacity"
+                    type="number"
+                    value={newFacility.capacity}
+                    onChange={(e) => setNewFacility({ ...newFacility, capacity: e.target.value })}
+                    placeholder="Max people"
+                    required
+                  />
                 </div>
+
                 <Button type="submit" className="w-full">
                   {editingFacility ? 'Update Facility' : 'Add Facility'}
                 </Button>
@@ -395,18 +373,15 @@ export default function FacilityBookingManagement({ user }) {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Date to Block</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full justify-start">
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {selectedDate ? format(selectedDate, 'PPP') : 'Pick a date'}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} initialFocus />
-                    </PopoverContent>
-                  </Popover>
+                  <Label htmlFor="blockDate">Date to Block</Label>
+                  <Input
+                    id="blockDate"
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    required
+                    min={new Date().toISOString().split('T')[0]}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="reason">Reason</Label>
@@ -428,67 +403,11 @@ export default function FacilityBookingManagement({ user }) {
         </div>
       </div>
 
-      {/* Statistics Cards */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Facilities</p>
-                <p className="mt-1 text-2xl">{facilities.length}</p>
-                <p className="mt-1 text-xs text-gray-500">{facilities.filter((f) => f.status === 'available').length} available</p>
-              </div>
-              <div className="rounded-lg bg-blue-50 p-3">
-                <Users className="h-6 w-6 text-blue-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Pending Requests</p>
-                <p className="mt-1 text-2xl">{pendingBookings.length}</p>
-                <p className="mt-1 text-xs text-gray-500">Awaiting approval</p>
-              </div>
-              <div className="rounded-lg bg-yellow-50 p-3">
-                <Clock className="h-6 w-6 text-yellow-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Approved Bookings</p>
-                <p className="mt-1 text-2xl">{approvedBookings.length}</p>
-                <p className="mt-1 text-xs text-gray-500">Upcoming</p>
-              </div>
-              <div className="rounded-lg bg-green-50 p-3">
-                <CheckCircle className="h-6 w-6 text-green-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Blocked Dates</p>
-                <p className="mt-1 text-2xl">{blockedDates.length}</p>
-                <p className="mt-1 text-xs text-gray-500">Maintenance/Events</p>
-              </div>
-              <div className="rounded-lg bg-red-50 p-3">
-                <Ban className="h-6 w-6 text-red-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Total Facilities</p><p className="mt-1 text-2xl">{facilities.length}</p></div><div className="rounded-lg bg-blue-50 p-3"><Users className="h-6 w-6 text-blue-600" /></div></div></CardContent></Card>
+        <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Pending Requests</p><p className="mt-1 text-2xl">{pendingBookings.length}</p></div><div className="rounded-lg bg-yellow-50 p-3"><Clock className="h-6 w-6 text-yellow-600" /></div></div></CardContent></Card>
+        <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Approved Bookings</p><p className="mt-1 text-2xl">{approvedBookings.length}</p></div><div className="rounded-lg bg-green-50 p-3"><CheckCircle className="h-6 w-6 text-green-600" /></div></div></CardContent></Card>
+        <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Blocked Dates</p><p className="mt-1 text-2xl">{blockedDates.length}</p></div><div className="rounded-lg bg-red-50 p-3"><Ban className="h-6 w-6 text-red-600" /></div></div></CardContent></Card>
       </div>
 
       <Tabs defaultValue="facilities">
@@ -499,7 +418,6 @@ export default function FacilityBookingManagement({ user }) {
           <TabsTrigger value="blocked">Blocked Dates ({blockedDates.length})</TabsTrigger>
         </TabsList>
 
-        {/* Facilities Tab */}
         <TabsContent value="facilities" className="mt-4">
           <Card>
             <CardHeader>
@@ -513,7 +431,6 @@ export default function FacilityBookingManagement({ user }) {
                     <TableHead>Type</TableHead>
                     <TableHead>Description</TableHead>
                     <TableHead>Capacity</TableHead>
-                    <TableHead>Hourly Rate</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -522,30 +439,15 @@ export default function FacilityBookingManagement({ user }) {
                   {facilities.map((facility) => (
                     <TableRow key={facility.id}>
                       <TableCell>{facility.name}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{facility.type === 'sport' ? 'Sports' : 'Event Hall'}</Badge>
-                      </TableCell>
+                      <TableCell><Badge variant="outline">{facility.type}</Badge></TableCell>
                       <TableCell className="max-w-xs truncate">{facility.description}</TableCell>
                       <TableCell>{facility.capacity} people</TableCell>
-                      <TableCell>${facility.hourlyRate}/hr</TableCell>
-                      <TableCell>
-                        {facility.status === 'available' ? (
-                          <Badge className="bg-green-100 text-green-800">Available</Badge>
-                        ) : (
-                          <Badge className="bg-red-100 text-red-800">Maintenance</Badge>
-                        )}
-                      </TableCell>
+                      <TableCell>{facility.status === 'available' ? <Badge className="bg-green-100 text-green-800">Available</Badge> : <Badge className="bg-red-100 text-red-800">Maintenance</Badge>}</TableCell>
                       <TableCell>
                         <div className="flex gap-2">
-                          <Button size="sm" variant="outline" onClick={() => handleEditFacility(facility)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => handleToggleFacilityStatus(facility.id)}>
-                            {facility.status === 'available' ? 'Set Maintenance' : 'Set Available'}
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => handleDeleteFacility(facility.id)}>
-                            <Trash2 className="h-4 w-4 text-red-600" />
-                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => handleEditFacility(facility)}><Edit className="h-4 w-4" /></Button>
+                          <Button size="sm" variant="outline" onClick={() => handleToggleFacilityStatus(facility.id)}>{facility.status === 'available' ? 'Set Maintenance' : 'Set Available'}</Button>
+                          <Button size="sm" variant="outline" onClick={() => handleDeleteFacility(facility.id)}><Trash2 className="h-4 w-4 text-red-600" /></Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -572,6 +474,7 @@ export default function FacilityBookingManagement({ user }) {
                     <TableHead>Date</TableHead>
                     <TableHead>Time</TableHead>
                     <TableHead>Guests</TableHead>
+                    <TableHead>Purpose</TableHead> {/* [ADDED] Purpose Column */}
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -587,6 +490,7 @@ export default function FacilityBookingManagement({ user }) {
                         {booking.startTime} - {booking.endTime}
                       </TableCell>
                       <TableCell>{booking.guests}</TableCell>
+                      <TableCell>{booking.purpose || '-'}</TableCell> {/* [ADDED] Show Purpose */}
                       <TableCell>{getStatusBadge(booking.status)}</TableCell>
                       <TableCell>
                         <div className="flex gap-2">

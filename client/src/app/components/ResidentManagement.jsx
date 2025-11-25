@@ -6,7 +6,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Badge } from './ui/badge';
-import { Search, Plus, UserCheck, Home, Mail, Edit, Trash2 } from 'lucide-react';
+import { Search, Plus, UserCheck, Home, Edit, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { Label } from './ui/label';
@@ -22,10 +22,13 @@ export default function ResidentManagement({ user }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingResident, setEditingResident] = useState(null);
 
+  // [CHANGED] State now tracks Block, Floor, and Unit separately
   const [newResident, setNewResident] = useState({
     name: '',
     email: '',
-    unitNumber: '',
+    block: '',
+    floor: '',
+    unit: '',
     role: 'Resident',
   });
 
@@ -52,7 +55,8 @@ export default function ResidentManagement({ user }) {
     setIsDialogOpen(open);
     if (!open) {
       setEditingResident(null);
-      setNewResident({ name: '', email: '', unitNumber: '', role: 'Resident' });
+      // [CHANGED] Reset separate fields
+      setNewResident({ name: '', email: '', block: '', floor: '', unit: '', role: 'Resident' });
     }
   };
 
@@ -61,10 +65,13 @@ export default function ResidentManagement({ user }) {
     
     const defaultPassword = "Resident123!"; 
 
+    // [CHANGED] Payload matches new DTO structure
     const residentToAdd = {
       name: newResident.name,
       email: newResident.email,
-      unitNumber: newResident.unitNumber,
+      block: newResident.block,
+      floor: newResident.floor,
+      unit: newResident.unit,
       password: defaultPassword, 
     };
 
@@ -81,9 +88,6 @@ export default function ResidentManagement({ user }) {
       }
 
       const addedResident = await response.json();
-      
-      // CRITICAL: Ensure the new resident has an ID before adding to state
-      // If backend works correctly, addedResident.id will be present.
       setResidents((prev) => [...prev, addedResident]);
       
       handleOpenChange(false);
@@ -95,10 +99,13 @@ export default function ResidentManagement({ user }) {
 
   const handleEditResident = (resident) => {
     setEditingResident(resident);
+    // [CHANGED] Populate separate fields from the selected resident
     setNewResident({
       name: resident.name,
       email: resident.email,
-      unitNumber: resident.unitNumber.split('-').pop(), 
+      block: resident.block,
+      floor: resident.floor,
+      unit: resident.unit,
       role: resident.role,
     });
     setIsDialogOpen(true);
@@ -106,11 +113,14 @@ export default function ResidentManagement({ user }) {
 
   const handleUpdateResident = async (e) => {
     e.preventDefault();
+    // [CHANGED] Payload matches new DTO structure
     const updatedResidentData = {
       id: editingResident.id,
       name: newResident.name,
       email: newResident.email,
-      unitNumber: newResident.unitNumber,
+      block: newResident.block,
+      floor: newResident.floor,
+      unit: newResident.unit,
     };
 
     try {
@@ -122,6 +132,7 @@ export default function ResidentManagement({ user }) {
 
       if (!response.ok) throw new Error('Update failed');
 
+      // Update local state immediately
       setResidents(residents.map((r) => r.id === editingResident.id ? { ...r, ...updatedResidentData } : r));
       handleOpenChange(false);
       toast.success('Resident updated successfully!');
@@ -195,16 +206,41 @@ export default function ResidentManagement({ user }) {
                   required
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="unit">Unit Number</Label>
-                <Input
-                  id="unit"
-                  value={newResident.unitNumber}
-                  onChange={(e) => setNewResident({ ...newResident, unitNumber: e.target.value })}
-                  placeholder="e.g., A-10-05"
-                  required
-                />
+              
+              {/* [CHANGED] 3 Separate Inputs for Block, Floor, Unit */}
+              <div className="grid grid-cols-3 gap-2">
+                <div className="space-y-2">
+                  <Label htmlFor="block">Block</Label>
+                  <Input
+                    id="block"
+                    value={newResident.block}
+                    onChange={(e) => setNewResident({ ...newResident, block: e.target.value })}
+                    placeholder="e.g. A"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="floor">Floor</Label>
+                  <Input
+                    id="floor"
+                    value={newResident.floor}
+                    onChange={(e) => setNewResident({ ...newResident, floor: e.target.value })}
+                    placeholder="e.g. 10"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="unit">Unit</Label>
+                  <Input
+                    id="unit"
+                    value={newResident.unit}
+                    onChange={(e) => setNewResident({ ...newResident, unit: e.target.value })}
+                    placeholder="e.g. 05"
+                    required
+                  />
+                </div>
               </div>
+
               <Button type="submit" className="w-full">
                 {editingResident ? 'Update Resident' : 'Add Resident'}
               </Button>
@@ -232,7 +268,10 @@ export default function ResidentManagement({ user }) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Occupied Units</p>
-                <p className="mt-1 text-2xl">{new Set(residents.map(r => r.unitNumber)).size}</p>
+                {/* [CHANGED] Calculate unique units based on combo of block-floor-unit */}
+                <p className="mt-1 text-2xl">
+                  {new Set(residents.map(r => `${r.block}-${r.floor}-${r.unit}`)).size}
+                </p>
               </div>
               <div className="rounded-lg bg-orange-50 p-3">
                 <Home className="h-6 w-6 text-orange-600" />
@@ -258,18 +297,18 @@ export default function ResidentManagement({ user }) {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>Unit</TableHead>
+                <TableHead>Unit (Block-Floor-Unit)</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredResidents.map((resident, index) => (
-                // Key Fallback: If resident.id is missing (backend issue), use index to prevent crash
                 <TableRow key={resident.id || index}>
                   <TableCell>{resident.name}</TableCell>
                   <TableCell>{resident.email}</TableCell>
-                  <TableCell>{resident.unitNumber}</TableCell>
+                  {/* [CHANGED] Display formatted unit string */}
+                  <TableCell>{`${resident.block}-${resident.floor}-${resident.unit}`}</TableCell>
                   <TableCell><Badge variant="secondary">{resident.role}</Badge></TableCell>
                   <TableCell>
                     <div className="flex gap-2">

@@ -23,6 +23,7 @@ function ResidentManagementFee({ user }) {
   const [clientSecret, setClientSecret] = useState(null);
   const [preparingPayment, setPreparingPayment] = useState(false);
 
+  // 1. Fetch Invoices (Stable function)
   const fetchInvoices = useCallback(async () => {
     if (!user?.unit) return;
 
@@ -32,9 +33,11 @@ function ResidentManagementFee({ user }) {
       if (!response.ok) throw new Error('Failed to fetch data');
       const data = await response.json();
 
-      const myInvoices = data.filter(
-        inv => inv.unit.toLowerCase() === user.unit.toLowerCase()
-      );
+      // Filter: Match full unit string (e.g., "A-10-05")
+      const myInvoices = data.filter(inv => {
+        const fullUnit = `${inv.block}-${inv.floor}-${inv.unit}`;
+        return fullUnit.toLowerCase() === user.unit.toLowerCase();
+      });
 
       setInvoices(myInvoices);
     } catch (error) {
@@ -45,18 +48,16 @@ function ResidentManagementFee({ user }) {
     }
   }, [user]);
 
+  // 2. Initial Fetch
   useEffect(() => {
     fetchInvoices();
   }, [fetchInvoices]);
 
-  // --------------------------
-  // 🔥 FIXED updateInvoiceStatus (Works Now)
-  // --------------------------
-  const updateInvoiceStatus = async (invoiceId, paymentIntent) => {
+  // 3. Update Status Function (Wrapped in useCallback to fix lint error)
+  const updateInvoiceStatus = useCallback(async (invoiceId, paymentIntent) => {
     try {
         console.log("PaymentIntent received:", paymentIntent);
 
-        // Send ONLY the payment method ID to backend
         const payload = {
             paymentMethod: paymentIntent.payment_method
         };
@@ -70,20 +71,18 @@ function ResidentManagementFee({ user }) {
         if (!response.ok) throw new Error("Database update failed");
 
         const result = await response.json();
-
         toast.success(`Payment successful! (${result.method})`);
-
+        
+        // Refresh list to show "Paid" status immediately
         fetchInvoices();
 
     } catch (error) {
         console.error("DB Update Failed:", error);
         toast.error("Payment succeeded but database update failed.");
     }
-  };
+  }, [fetchInvoices]); // Dependency ensures it stays up to date
 
-  // --------------------------
-  // 🔥 FIXED — Retrieve FULL PaymentIntent from Backend
-  // --------------------------
+  // 4. Handle Stripe Redirect Return (Uses updateInvoiceStatus)
   useEffect(() => {
     const clientSecretParam = new URLSearchParams(window.location.search).get(
       "payment_intent_client_secret"
@@ -95,28 +94,28 @@ function ResidentManagementFee({ user }) {
       if (!stripe) return;
 
       const piId = clientSecretParam.split("_secret")[0];
+      
+      try {
+        const res = await fetch(`${BASE_API_URL}/payments/payment-intent/${piId}`);
+        const paymentIntent = await res.json();
 
-      // 🔥 Retrieve the fully expanded PaymentIntent FROM BACKEND
-      const res = await fetch(`${BASE_API_URL}/payments/payment-intent/${piId}`);
-      const paymentIntent = await res.json();
+        if (paymentIntent && paymentIntent.status === "succeeded") {
+          const pendingId = localStorage.getItem("pendingInvoiceId");
 
-      console.log("Expanded PI (backend):", paymentIntent);
-
-      if (paymentIntent && paymentIntent.status === "succeeded") {
-        const pendingId = localStorage.getItem("pendingInvoiceId");
-
-        if (pendingId) {
-          await updateInvoiceStatus(pendingId, paymentIntent);
-          localStorage.removeItem("pendingInvoiceId");
-          window.history.replaceState(null, "", window.location.pathname);
+          if (pendingId) {
+            await updateInvoiceStatus(pendingId, paymentIntent);
+            localStorage.removeItem("pendingInvoiceId");
+            // Clear URL params to prevent re-running on refresh
+            window.history.replaceState(null, "", window.location.pathname);
+          }
         }
+      } catch (e) {
+        console.error("Error verifying payment intent:", e);
       }
     });
-  }, [fetchInvoices]);
+  }, [updateInvoiceStatus]); // Fixed dependency
 
-  // --------------------------
-  // Pay Now
-  // --------------------------
+  // 5. Pay Now Button Logic
   const handleInitiatePayment = async (invoice) => {
     localStorage.setItem('pendingInvoiceId', invoice.id);
     setSelectedInvoice(invoice);
@@ -140,7 +139,7 @@ function ResidentManagementFee({ user }) {
     }
   };
 
-  // From Stripe CheckoutForm (non-redirect flows)
+  // 6. Stripe Success Handler (for non-redirect flows)
   const handleStripeSuccess = async (paymentIntent) => {
     if (!selectedInvoice) return;
     await updateInvoiceStatus(selectedInvoice.id, paymentIntent);
@@ -237,7 +236,7 @@ function ResidentManagementFee({ user }) {
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <p className="text-lg font-bold">RM {invoice.amount}</p>
+                    <p className="text-lg font-bold">RM {invoice.amount.toFixed(2)}</p>
                     <Button onClick={() => handleInitiatePayment(invoice)}>
                       Pay Now
                     </Button>
@@ -284,7 +283,7 @@ function ResidentManagementFee({ user }) {
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <p className="text-lg">RM {invoice.amount}</p>
+                    <p className="text-lg">RM {invoice.amount.toFixed(2)}</p>
                     <span className="rounded-full bg-green-100 px-3 py-1 text-xs text-green-800">
                       Paid
                     </span>
@@ -302,7 +301,7 @@ function ResidentManagementFee({ user }) {
           <DialogHeader>
             <DialogTitle>Make Payment</DialogTitle>
             <DialogDescription>
-              Securely pay RM {selectedInvoice?.amount} via Stripe
+              Securely pay RM {selectedInvoice?.amount.toFixed(2)} via Stripe
             </DialogDescription>
           </DialogHeader>
 

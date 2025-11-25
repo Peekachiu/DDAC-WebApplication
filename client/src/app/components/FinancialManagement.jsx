@@ -9,8 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Badge } from './ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { DollarSign, Plus, FileText, Download, Search, Filter, CheckCircle, AlertCircle, Receipt } from 'lucide-react';
+import { DollarSign, Plus, AlertCircle, Receipt, Trash2, Calendar, Clock, Download } from 'lucide-react'; // [CHANGED] Removed Filter/Search/CheckCircle to clean up imports if unused, kept necessary ones
 import { toast } from 'sonner';
 
 const API_URL = 'http://localhost:5016/api/Financial';
@@ -18,31 +17,30 @@ const API_URL = 'http://localhost:5016/api/Financial';
 export default function FinancialManagement({ user }) {
   const isAdmin = user.role === 'Admin';
 
-  // State variables
   const [invoices, setInvoices] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   
-  // Dialog states
   const [isGenerateDialogOpen, setIsGenerateDialogOpen] = useState(false);
-  const [isRecordPaymentDialogOpen, setIsRecordPaymentDialogOpen] = useState(false);
   
-  // Selected item for actions
+  // [CHANGED] Removed Manual Payment State & Functions (No longer needed)
+  /* const [isRecordPaymentDialogOpen, setIsRecordPaymentDialogOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
-  
-  // Form states
   const [paymentMethod, setPaymentMethod] = useState('');
   const [paymentDate, setPaymentDate] = useState('');
+  */
+
   const [newInvoice, setNewInvoice] = useState({
+    block: '',
+    floor: '',
     unit: '',
-    month: '', // Description field
-    amount: '450',
+    month: '',
+    amount: '450.00',
     dueDate: ''
   });
 
-  // 1. Fetch Data from Backend
   useEffect(() => {
     fetchInvoices();
   }, []);
@@ -56,20 +54,21 @@ export default function FinancialManagement({ user }) {
       setInvoices(data);
     } catch (error) {
       console.error("Fetch error:", error);
-      toast.error('Error loading financial data. Is the backend running?');
+      toast.error('Error loading financial data.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // 2. Handle Generate Invoice (POST)
   const handleGenerateInvoice = async (e) => {
     e.preventDefault();
 
     const payload = {
+      block: newInvoice.block,
+      floor: newInvoice.floor,
       unit: newInvoice.unit,
       month: newInvoice.month,
-      amount: parseInt(newInvoice.amount),
+      amount: parseFloat(newInvoice.amount),
       dueDate: newInvoice.dueDate || new Date().toISOString()
     };
 
@@ -81,66 +80,50 @@ export default function FinancialManagement({ user }) {
       });
 
       const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Failed to generate invoice');
-      }
+      if (!response.ok) throw new Error(result.message || 'Failed to generate invoice');
 
       toast.success('Invoice generated successfully!');
       setIsGenerateDialogOpen(false);
-      // Reset form
-      setNewInvoice({ unit: '', month: '', amount: '450', dueDate: '' });
-      // Refresh list
+      setNewInvoice({ block: '', floor: '', unit: '', month: '', amount: '450.00', dueDate: '' });
       fetchInvoices(); 
     } catch (error) {
       toast.error(error.message);
     }
   };
 
-  // 3. Handle Record Payment (PUT)
-  const handleRecordPayment = async (e) => {
-    e.preventDefault();
-    if (!selectedInvoice) return;
+  // [CHANGED] Removed handleRecordPayment function
 
-    const payload = {
-      paymentMethod: paymentMethod,
-      paymentDate: paymentDate || new Date().toISOString()
-    };
+  const handleDeleteInvoice = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this invoice?')) return;
 
     try {
-      const response = await fetch(`${API_URL}/pay/${selectedInvoice.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+        const response = await fetch(`${API_URL}/${id}`, {
+            method: 'DELETE',
+        });
 
-      if (!response.ok) throw new Error('Failed to record payment');
+        if (!response.ok) throw new Error('Failed to delete invoice');
 
-      toast.success('Payment recorded successfully!');
-      setIsRecordPaymentDialogOpen(false);
-      setSelectedInvoice(null);
-      setPaymentMethod('');
-      setPaymentDate('');
-      fetchInvoices(); // Refresh list
+        toast.success('Invoice deleted successfully');
+        setInvoices(invoices.filter(inv => inv.id !== id));
     } catch (error) {
-      toast.error(error.message);
+        toast.error(error.message);
     }
   };
 
-  // 4. Handle Download Receipt (Feature Added)
   const handleDownloadReceipt = (invoice) => {
+    const fullUnit = `${invoice.block}-${invoice.floor}-${invoice.unit}`;
     const receiptContent = `
 RESIDENTPRO OFFICIAL RECEIPT
 ----------------------------
 Invoice ID:   #${invoice.id}
 Date Issued:  ${new Date(invoice.issueDate).toLocaleDateString()}
 Resident:     ${invoice.residentName}
-Unit No:      ${invoice.unit}
+Unit No:      ${fullUnit}
 Description:  ${invoice.month}
 
 PAYMENT DETAILS
 ----------------------------
-Amount Paid:  $${invoice.amount}
+Amount Paid:  $${invoice.amount.toFixed(2)}
 Payment Date: ${invoice.paidDate ? new Date(invoice.paidDate).toLocaleDateString() : 'N/A'}
 Method:       ${invoice.paymentMethod || 'N/A'}
 Status:       PAID
@@ -154,31 +137,38 @@ ResidentPro Management System
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Receipt_${invoice.id}_${invoice.unit}.txt`;
+    a.download = `Receipt_${invoice.id}_${fullUnit}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
-
-    toast.success(`Receipt for Invoice #${invoice.id} downloaded!`);
+    toast.success(`Receipt downloaded!`);
   };
 
-  // Filter logic
   const filteredInvoices = invoices.filter((inv) => {
+    const fullUnit = `${inv.block}-${inv.floor}-${inv.unit}`;
     const matchesSearch =
       (inv.residentName && inv.residentName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (inv.unit && inv.unit.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (fullUnit.toLowerCase().includes(searchTerm.toLowerCase())) ||
       inv.id.toString().includes(searchTerm);
     
     const matchesStatus = filterStatus === 'all' || inv.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
 
-  // Statistics
+  // --- STATS CALCULATIONS ---
   const totalRevenue = invoices.filter((i) => i.status === 'paid').reduce((sum, i) => sum + i.amount, 0);
   const totalOutstanding = invoices.filter((i) => i.status !== 'paid').reduce((sum, i) => sum + i.amount, 0);
-  const paidCount = invoices.filter((i) => i.status === 'paid').length;
-  const overdueCount = invoices.filter((i) => i.status === 'overdue').length;
+  const pendingAmount = invoices.filter((i) => i.status === 'pending').reduce((sum, i) => sum + i.amount, 0);
+  
+  const currentMonthRevenue = invoices
+    .filter((i) => {
+      if (i.status !== 'paid' || !i.paidDate) return false;
+      const paidDate = new Date(i.paidDate);
+      const now = new Date();
+      return paidDate.getMonth() === now.getMonth() && paidDate.getFullYear() === now.getFullYear();
+    })
+    .reduce((sum, i) => sum + i.amount, 0);
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -189,8 +179,11 @@ ResidentPro Management System
     }
   };
 
-  // View selection
-  const residentInvoices = invoices.filter((inv) => inv.unit === user.unit);
+  const residentInvoices = invoices.filter((inv) => {
+    const invFull = `${inv.block}-${inv.floor}-${inv.unit}`;
+    return invFull === user.unit; 
+  });
+  
   const displayInvoices = isAdmin ? filteredInvoices : residentInvoices;
 
   if (isLoading) return <div className="p-8 text-center">Loading financial records...</div>;
@@ -225,7 +218,7 @@ ResidentPro Management System
                     <TableRow key={invoice.id}>
                       <TableCell>#{invoice.id}</TableCell>
                       <TableCell>{invoice.month}</TableCell>
-                      <TableCell>${invoice.amount}</TableCell>
+                      <TableCell>${invoice.amount.toFixed(2)}</TableCell>
                       <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
                       <TableCell>{getStatusBadge(invoice.status)}</TableCell>
                       <TableCell>
@@ -234,6 +227,7 @@ ResidentPro Management System
                             <Download className="mr-2 h-4 w-4" /> Receipt
                           </Button>
                         )}
+                        {/* Note: Residents pay via automatic/external means, so no manual Pay button here unless Stripe integration is added */}
                       </TableCell>
                     </TableRow>
                    ))
@@ -252,7 +246,7 @@ ResidentPro Management System
       <div className="flex items-center justify-between">
         <div>
           <h2>Financial Management</h2>
-          <p className="text-sm text-gray-600">Manage invoices and record payments</p>
+          <p className="text-sm text-gray-600">Manage invoices and track revenue</p>
         </div>
         <div className="flex gap-2">
           <Dialog open={isGenerateDialogOpen} onOpenChange={setIsGenerateDialogOpen}>
@@ -265,45 +259,31 @@ ResidentPro Management System
                 <DialogDescription>Create a fee for a specific unit</DialogDescription>
               </DialogHeader>
               <form onSubmit={handleGenerateInvoice} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="unit">Unit Number (e.g. A-10-05)</Label>
-                  <Input 
-                    id="unit" 
-                    value={newInvoice.unit}
-                    onChange={(e) => setNewInvoice({ ...newInvoice, unit: e.target.value })}
-                    placeholder="Enter full unit number"
-                    required 
-                  />
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="space-y-2">
+                    <Label>Block</Label>
+                    <Input value={newInvoice.block} onChange={(e) => setNewInvoice({ ...newInvoice, block: e.target.value })} placeholder="A" required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Floor</Label>
+                    <Input value={newInvoice.floor} onChange={(e) => setNewInvoice({ ...newInvoice, floor: e.target.value })} placeholder="10" required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Unit</Label>
+                    <Input value={newInvoice.unit} onChange={(e) => setNewInvoice({ ...newInvoice, unit: e.target.value })} placeholder="05" required />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="month">Billing Month/Desc</Label>
-                  <Input 
-                    id="month" 
-                    value={newInvoice.month}
-                    onChange={(e) => setNewInvoice({ ...newInvoice, month: e.target.value })}
-                    placeholder="e.g. November 2025"
-                    required 
-                  />
+                  <Input id="month" value={newInvoice.month} onChange={(e) => setNewInvoice({ ...newInvoice, month: e.target.value })} placeholder="e.g. November 2025" required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="amount">Amount ($)</Label>
-                  <Input 
-                    id="amount" 
-                    type="number"
-                    value={newInvoice.amount}
-                    onChange={(e) => setNewInvoice({ ...newInvoice, amount: e.target.value })}
-                    required 
-                  />
+                  <Input id="amount" type="number" step="0.01" value={newInvoice.amount} onChange={(e) => setNewInvoice({ ...newInvoice, amount: e.target.value })} required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="dueDate">Due Date</Label>
-                  <Input 
-                    id="dueDate" 
-                    type="date"
-                    value={newInvoice.dueDate}
-                    onChange={(e) => setNewInvoice({ ...newInvoice, dueDate: e.target.value })}
-                    required 
-                  />
+                  <Input id="dueDate" type="date" value={newInvoice.dueDate} onChange={(e) => setNewInvoice({ ...newInvoice, dueDate: e.target.value })} required />
                 </div>
                 <Button type="submit" className="w-full">Generate</Button>
               </form>
@@ -312,68 +292,58 @@ ResidentPro Management System
         </div>
       </div>
 
-      {/* Summary Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="p-6 flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Revenue</p>
-              <p className="text-2xl text-green-600 font-bold">${totalRevenue}</p>
-              <p className="text-xs text-gray-500">{paidCount} paid</p>
+              <p className="text-2xl text-green-600 font-bold">${totalRevenue.toFixed(2)}</p>
             </div>
             <div className="bg-green-50 p-3 rounded-lg"><DollarSign className="h-6 w-6 text-green-600"/></div>
           </CardContent>
         </Card>
+        
+        <Card>
+          <CardContent className="p-6 flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Revenue (This Month)</p>
+              <p className="text-2xl text-blue-600 font-bold">${currentMonthRevenue.toFixed(2)}</p>
+            </div>
+            <div className="bg-blue-50 p-3 rounded-lg"><Calendar className="h-6 w-6 text-blue-600"/></div>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardContent className="p-6 flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Outstanding</p>
-              <p className="text-2xl text-orange-600 font-bold">${totalOutstanding}</p>
-              <p className="text-xs text-gray-500">{invoices.length - paidCount} unpaid</p>
+              <p className="text-2xl text-orange-600 font-bold">${totalOutstanding.toFixed(2)}</p>
             </div>
             <div className="bg-orange-50 p-3 rounded-lg"><AlertCircle className="h-6 w-6 text-orange-600"/></div>
           </CardContent>
         </Card>
+
         <Card>
           <CardContent className="p-6 flex items-center justify-between">
              <div>
-              <p className="text-sm text-gray-600">Overdue</p>
-              <p className="text-2xl text-red-600 font-bold">{overdueCount}</p>
-              <p className="text-xs text-gray-500">Require action</p>
+              <p className="text-sm text-gray-600">Pending Amount</p>
+              <p className="text-2xl text-yellow-600 font-bold">${pendingAmount.toFixed(2)}</p>
             </div>
-            <div className="bg-red-50 p-3 rounded-lg"><FileText className="h-6 w-6 text-red-600"/></div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6 flex items-center justify-between">
-             <div>
-              <p className="text-sm text-gray-600">Collection Rate</p>
-              <p className="text-2xl font-bold">{invoices.length > 0 ? Math.round((paidCount / invoices.length) * 100) : 0}%</p>
-            </div>
-            <div className="bg-blue-50 p-3 rounded-lg"><CheckCircle className="h-6 w-6 text-blue-600"/></div>
+            <div className="bg-yellow-50 p-3 rounded-lg"><Clock className="h-6 w-6 text-yellow-600"/></div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Main Table */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Invoice List</CardTitle>
             <div className="flex gap-2">
               <div className="relative w-64">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input 
-                  className="pl-10" 
-                  placeholder="Search unit, name, ID..." 
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+                <Input className="pl-2" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
               </div>
               <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="w-40">
-                  <Filter className="mr-2 h-4 w-4" /> <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="paid">Paid</SelectItem>
@@ -403,27 +373,28 @@ ResidentPro Management System
                 <TableRow key={invoice.id}>
                   <TableCell>#{invoice.id}</TableCell>
                   <TableCell>{invoice.residentName}</TableCell>
-                  <TableCell>{invoice.unit}</TableCell>
+                  <TableCell>{`${invoice.block}-${invoice.floor}-${invoice.unit}`}</TableCell>
                   <TableCell>{invoice.month}</TableCell>
-                  <TableCell>${invoice.amount}</TableCell>
+                  <TableCell>${invoice.amount.toFixed(2)}</TableCell>
                   <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
                   <TableCell>{getStatusBadge(invoice.status)}</TableCell>
                   <TableCell>
-                    {invoice.status !== 'paid' ? (
-                      <Button 
-                        size="sm" 
-                        onClick={() => {
-                          setSelectedInvoice(invoice);
-                          setIsRecordPaymentDialogOpen(true);
-                        }}
-                      >
-                        Record Payment
-                      </Button>
-                    ) : (
-                      <Button size="sm" variant="outline" onClick={() => handleDownloadReceipt(invoice)}>
-                        <Receipt className="mr-2 h-4 w-4" /> Receipt
-                      </Button>
-                    )}
+                    <div className="flex gap-2">
+                        {/* [CHANGED] Removed "Pay" button. Only show Receipt if paid. */}
+                        {invoice.status === 'paid' && (
+                          <Button size="sm" variant="outline" onClick={() => handleDownloadReceipt(invoice)}>
+                              <Receipt className="mr-2 h-4 w-4" />
+                          </Button>
+                        )}
+                        
+                        <Button 
+                            size="sm" 
+                            variant="destructive" 
+                            onClick={() => handleDeleteInvoice(invoice.id)}
+                        >
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -432,39 +403,7 @@ ResidentPro Management System
         </CardContent>
       </Card>
 
-      {/* Record Payment Modal */}
-      <Dialog open={isRecordPaymentDialogOpen} onOpenChange={setIsRecordPaymentDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Record Payment</DialogTitle>
-            <DialogDescription>For Invoice #{selectedInvoice?.id} - {selectedInvoice?.unit}</DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleRecordPayment} className="space-y-4">
-            <div className="space-y-2">
-              <Label>Payment Date</Label>
-              <Input 
-                type="date" 
-                value={paymentDate}
-                onChange={(e) => setPaymentDate(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Method</Label>
-              <Select value={paymentMethod} onValueChange={setPaymentMethod} required>
-                <SelectTrigger><SelectValue placeholder="Select method" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Cash">Cash</SelectItem>
-                  <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                  <SelectItem value="Credit Card">Credit Card</SelectItem>
-                  <SelectItem value="Check">Check</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <Button type="submit" className="w-full">Confirm Payment</Button>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {/* [CHANGED] Removed Record Payment Dialog */}
     </div>
   );
 }

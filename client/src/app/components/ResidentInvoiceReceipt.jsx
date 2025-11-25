@@ -17,7 +17,6 @@ function ResidentInvoiceReceipt({ user }) {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // 1. Fetch Data from Backend (Wrapped in useCallback to fix lint error)
   const fetchInvoices = useCallback(async () => {
     if (!user?.unit) return;
 
@@ -28,11 +27,11 @@ function ResidentInvoiceReceipt({ user }) {
       
       const data = await response.json();
       
-      // Filter: Only show invoices for THIS resident's unit
-      // Ensure case-insensitive comparison (e.g., "A-10-01" vs "a-10-01")
-      const myInvoices = data.filter(inv => 
-        inv.unit.toLowerCase() === user.unit.toLowerCase()
-      );
+      // [FIXED] Filter using combined unit string
+      const myInvoices = data.filter(inv => {
+        const fullUnit = `${inv.block}-${inv.floor}-${inv.unit}`;
+        return fullUnit.toLowerCase() === user.unit.toLowerCase();
+      });
       
       setInvoices(myInvoices);
     } catch (error) {
@@ -41,15 +40,15 @@ function ResidentInvoiceReceipt({ user }) {
     } finally {
       setIsLoading(false);
     }
-  }, [user]); // Dependency on user object
+  }, [user]);
 
-  // Effect depends on the stable fetchInvoices function
   useEffect(() => {
     fetchInvoices();
   }, [fetchInvoices]);
 
-  // 2. Generate & Download Invoice (Text File)
+  // [FIXED] Updated to use separate Block/Floor/Unit fields
   const handleDownloadInvoice = (invoice) => {
+    const fullUnit = `${invoice.block}-${invoice.floor}-${invoice.unit}`;
     const content = `
 OFFICIAL INVOICE
 ----------------------------
@@ -59,11 +58,11 @@ Due Date:     ${new Date(invoice.dueDate).toLocaleDateString()}
 
 BILL TO:
 Resident:     ${invoice.residentName}
-Unit No:      ${invoice.unit}
+Unit No:      ${fullUnit}
 
 DETAILS:
 Description:  ${invoice.month}
-Amount Due:   $${invoice.amount}
+Amount Due:   RM ${invoice.amount.toFixed(2)}
 Status:       ${invoice.status.toUpperCase()}
 
 ----------------------------
@@ -74,8 +73,8 @@ ResidentPro Management
     toast.success(`Invoice #${invoice.id} downloaded`);
   };
 
-  // 3. Generate & Download Receipt (Text File)
   const handleDownloadReceipt = (invoice) => {
+    const fullUnit = `${invoice.block}-${invoice.floor}-${invoice.unit}`;
     const content = `
 OFFICIAL PAYMENT RECEIPT
 ----------------------------
@@ -85,11 +84,11 @@ Payment Method: ${invoice.paymentMethod || 'N/A'}
 
 RECEIVED FROM:
 Resident:     ${invoice.residentName}
-Unit No:      ${invoice.unit}
+Unit No:      ${fullUnit}
 
 DETAILS:
 Description:  ${invoice.month}
-Amount Paid:  $${invoice.amount}
+Amount Paid:  RM ${invoice.amount.toFixed(2)}
 Status:       PAID
 
 ----------------------------
@@ -100,7 +99,6 @@ ResidentPro Management
     toast.success(`Receipt for #${invoice.id} downloaded`);
   };
 
-  // Helper to trigger browser download
   const downloadFile = (content, filename) => {
     const blob = new Blob([content], { type: 'text/plain' });
     const url = window.URL.createObjectURL(blob);
@@ -113,7 +111,6 @@ ResidentPro Management
     window.URL.revokeObjectURL(url);
   };
 
-  // Filter logic for Search Bar
   const filteredInvoices = invoices.filter(
     (inv) =>
       inv.id.toString().includes(searchTerm) ||
@@ -175,7 +172,6 @@ ResidentPro Management
               <TabsTrigger value="paid">Paid ({paidInvoices.length})</TabsTrigger>
             </TabsList>
 
-            {/* Helper to render table rows to avoid duplication */}
             {['all', 'pending', 'paid'].map((tabValue) => (
               <TabsContent key={tabValue} value={tabValue} className="mt-4">
                 <Table>
@@ -202,13 +198,12 @@ ResidentPro Management
                         <TableRow key={invoice.id}>
                           <TableCell>#{invoice.id}</TableCell>
                           <TableCell>{invoice.month}</TableCell>
-                          <TableCell>${invoice.amount}</TableCell>
+                          <TableCell>RM {invoice.amount.toFixed(2)}</TableCell>
                           <TableCell>{new Date(invoice.issueDate).toLocaleDateString()}</TableCell>
                           <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
                           <TableCell>{getStatusBadge(invoice.status)}</TableCell>
                           <TableCell>
                             <div className="flex gap-2">
-                              {/* Always show Invoice download */}
                               <Button
                                 size="sm"
                                 variant="outline"
@@ -219,7 +214,6 @@ ResidentPro Management
                                 Inv.
                               </Button>
 
-                              {/* Only show Receipt download if Paid */}
                               {invoice.status === 'paid' && (
                                 <Button
                                   size="sm"

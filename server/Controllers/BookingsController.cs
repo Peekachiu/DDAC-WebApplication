@@ -6,7 +6,7 @@ using System.Globalization;
 
 namespace server.Controllers
 {
-    // DTOs matching your Frontend state
+    // DTOs
     public class FacilityDto
     {
         public string Id { get; set; } = string.Empty;
@@ -14,7 +14,6 @@ namespace server.Controllers
         public string Type { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public int Capacity { get; set; }
-        public decimal HourlyRate { get; set; }
         public string Status { get; set; } = string.Empty;
     }
 
@@ -30,8 +29,29 @@ namespace server.Controllers
         public string EndTime { get; set; } = string.Empty;
         public int Guests { get; set; }
         public string Status { get; set; } = string.Empty;
-        public string? Purpose { get; set; }
-        public string? Notes { get; set; }
+        public string Purpose { get; set; } = string.Empty; // Matches 'Purpose' in DB
+    }
+
+    public class CreateSportBookingRequest
+    {
+        public string SportName { get; set; } = string.Empty;
+        public DateTime Date { get; set; }
+        public string StartTime { get; set; } = string.Empty;
+        public int Duration { get; set; }
+        public int UserId { get; set; }
+        public int Guests { get; set; } // [ADDED] Allow guests for sports
+    }
+
+    public class CreateEventBookingRequest
+    {
+        public string HallName { get; set; } = string.Empty;
+        public string EventType { get; set; } = string.Empty; // This will go to 'Purpose'
+        public DateTime Date { get; set; }
+        public string StartTime { get; set; } = string.Empty; 
+        public string EndTime { get; set; } = string.Empty;
+        public int Guests { get; set; }
+        public string Description { get; set; } = string.Empty;
+        public int UserId { get; set; }
     }
 
     public class UpdateStatusRequest { public string Status { get; set; } = string.Empty; }
@@ -47,8 +67,7 @@ namespace server.Controllers
             _context = context;
         }
 
-        // --- FACILITY MANAGEMENT ENDPOINTS ---
-
+        // --- FACILITY MANAGEMENT ---
         [HttpGet("facilities")]
         public async Task<ActionResult<IEnumerable<FacilityDto>>> GetFacilities()
         {
@@ -60,8 +79,7 @@ namespace server.Controllers
                 Type = f.Type,
                 Description = f.Description,
                 Capacity = f.Capacity,
-                HourlyRate = f.HourlyRate,
-                Status = f.Status
+                Status = f.Status 
             }));
         }
 
@@ -74,7 +92,6 @@ namespace server.Controllers
                 Type = dto.Type,
                 Description = dto.Description,
                 Capacity = dto.Capacity,
-                HourlyRate = dto.HourlyRate,
                 Status = "available"
             };
             _context.Facilities.Add(facility);
@@ -92,8 +109,6 @@ namespace server.Controllers
             facility.Type = dto.Type;
             facility.Description = dto.Description;
             facility.Capacity = dto.Capacity;
-            facility.HourlyRate = dto.HourlyRate;
-            // Status updated via toggle endpoint usually, but can be here too
             
             await _context.SaveChangesAsync();
             return Ok(new { message = "Facility updated" });
@@ -120,86 +135,120 @@ namespace server.Controllers
             return Ok(new { message = "Status toggled" });
         }
 
-        // --- BOOKING MANAGEMENT ENDPOINTS ---
+        // --- BOOKING MANAGEMENT ---
+
+        [HttpPost("sport")]
+        public async Task<IActionResult> CreateSportBooking(CreateSportBookingRequest request)
+        {
+            // [CHANGED] Pass request.Guests instead of 0
+            // [CHANGED] Purpose defaults to "Sport Booking"
+            return await CreateBookingInternal(
+                request.SportName, "sport", request.Date, request.StartTime, 
+                TimeSpan.Parse(request.StartTime).Add(TimeSpan.FromHours(request.Duration)).ToString(@"hh\:mm"), 
+                request.UserId, request.Guests, "Sport Booking"); 
+        }
+
+        [HttpPost("event")]
+        public async Task<IActionResult> CreateEventBooking(CreateEventBookingRequest request)
+        {
+            // [CHANGED] Map 'EventType' to 'Purpose' so it shows up in the Purpose column
+            string bookingPurpose = string.IsNullOrEmpty(request.EventType) ? "Event" : request.EventType;
+
+            return await CreateBookingInternal(
+                request.HallName, "event", request.Date, request.StartTime, 
+                request.EndTime, request.UserId, request.Guests, bookingPurpose);
+        }
+
+        private async Task<IActionResult> CreateBookingInternal(
+            string facilityName, string type, DateTime date, string startTimeStr, string endTimeStr, 
+            int userId, int guests, string purpose)
+        {
+            var facility = await _context.Facilities
+                .FirstOrDefaultAsync(f => f.Name == facilityName && f.Type == type);
+
+            if (facility == null) return BadRequest("Facility not found.");
+            if (facility.Status == "maintenance") return BadRequest("This facility is under maintenance.");
+
+            if (!TimeSpan.TryParse(startTimeStr, out var start) || !TimeSpan.TryParse(endTimeStr, out var end))
+                return BadRequest("Invalid time format.");
+
+            if (end <= start) return BadRequest("End time must be after start time.");
+
+            var conflict = await _context.Bookings
+                .AnyAsync(b => b.FacilityID == facility.Id
+                            && b.BookingDate.Date == date.Date
+                            && b.Status != 2 && b.Status != 3 
+                            && ((b.StartTime < end && b.EndTime > start)));
+
+            if (conflict) return BadRequest("The selected time slot is already booked.");
+
+            var booking = new Booking
+            {
+                FacilityID = facility.Id,
+                UserID = userId,
+                BookingDate = date,
+                StartTime = start,
+                EndTime = end,
+                Guests = guests,   // [FIXED] Now correctly saves guests
+                Purpose = purpose, // [FIXED] Now correctly saves EventType or Sport Booking
+                Status = 0 
+            };
+
+            _context.Bookings.Add(booking);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Booking successful" });
+        }
 
         [HttpGet("all")]
         public async Task<ActionResult<IEnumerable<BookingDto>>> GetAllBookings()
         {
-            var bookings = new List<BookingDto>();
-
-            // 1. Sports
-            var sports = await _context.SportFacilities
-                .Include(s => s.User).ThenInclude(u => u.Property)
-                .ToListAsync();
-            
-            foreach (var s in sports)
-            {
-                var endTime = s.StartTime.Add(TimeSpan.FromHours(s.Duration));
-                bookings.Add(new BookingDto
-                {
-                    Id = $"S-{s.SBookingID}",
-                    FacilityName = s.SportName,
-                    FacilityType = "sport",
-                    ResidentName = $"{s.User.FirstName} {s.User.LastName}",
-                    Unit = s.User.Property != null ? $"{s.User.Property.Block}-{s.User.Property.Floor}-{s.User.Property.Unit}" : "N/A",
-                    Date = s.BookingDate.ToString("yyyy-MM-dd"),
-                    StartTime = DateTime.Today.Add(s.StartTime).ToString("h:mm tt"),
-                    EndTime = DateTime.Today.Add(endTime).ToString("h:mm tt"),
-                    Guests = 0, 
-                    Status = MapStatus(s.Status)
-                });
-            }
-
-            // 2. Events
-            var events = await _context.EventHalls
-                .Include(e => e.Venue)
-                .Include(e => e.User).ThenInclude(u => u.Property)
+            var bookings = await _context.Bookings
+                .Include(b => b.Facility)
+                .Include(b => b.User).ThenInclude(u => u.Property)
+                .OrderByDescending(b => b.BookingDate)
                 .ToListAsync();
 
-            foreach (var e in events)
+            var dtos = bookings.Select(b => new BookingDto
             {
-                var endTime = e.StartTime.Add(TimeSpan.FromHours(e.Duration));
-                bookings.Add(new BookingDto
-                {
-                    Id = $"E-{e.HBookingID}",
-                    FacilityName = e.Venue?.VenueDescription ?? "Unknown",
-                    FacilityType = "event",
-                    ResidentName = $"{e.User.FirstName} {e.User.LastName}",
-                    Unit = e.User.Property != null ? $"{e.User.Property.Block}-{e.User.Property.Floor}-{e.User.Property.Unit}" : "N/A",
-                    Date = e.BookingDate.ToString("yyyy-MM-dd"),
-                    StartTime = DateTime.Today.Add(e.StartTime).ToString("h:mm tt"),
-                    EndTime = DateTime.Today.Add(endTime).ToString("h:mm tt"),
-                    Guests = 0,
-                    Status = MapStatus(e.Status),
-                    Purpose = "Event"
-                });
-            }
+                Id = b.BookingID.ToString(),
+                FacilityName = b.Facility?.Name ?? "Unknown",
+                FacilityType = b.Facility?.Type ?? "Unknown",
+                ResidentName = b.User != null ? $"{b.User.FirstName} {b.User.LastName}" : "Unknown",
+                Unit = b.User?.Property != null ? $"{b.User.Property.Block}-{b.User.Property.Floor}-{b.User.Property.Unit}" : "N/A",
+                Date = b.BookingDate.ToString("yyyy-MM-dd"),
+                StartTime = DateTime.Today.Add(b.StartTime).ToString("h:mm tt"),
+                EndTime = DateTime.Today.Add(b.EndTime).ToString("h:mm tt"),
+                Guests = b.Guests,      // [FIXED] Now included in DTO
+                Status = MapStatus(b.Status),
+                Purpose = b.Purpose     // [FIXED] Now included in DTO
+            });
 
-            return Ok(bookings.OrderByDescending(b => b.Date));
+            return Ok(dtos);
         }
 
         [HttpPut("update-status/{id}")]
         public async Task<IActionResult> UpdateBookingStatus(string id, [FromBody] UpdateStatusRequest request)
         {
-            int statusCode = request.Status == "approved" ? 1 : 2; // 0=Pending, 1=Approved, 2=Rejected
+            var numericIdString = new string(id.Where(char.IsDigit).ToArray());
+            if (!int.TryParse(numericIdString, out int dbId)) return BadRequest("Invalid ID");
 
-            var parts = id.Split('-');
-            var type = parts[0];
-            var dbId = int.Parse(parts[1]);
+            var booking = await _context.Bookings.FindAsync(dbId);
+            if (booking == null) return NotFound();
 
-            if (type == "S") {
-                var item = await _context.SportFacilities.FindAsync(dbId);
-                if (item != null) item.Status = statusCode;
-            }
-            else if (type == "E") {
-                var item = await _context.EventHalls.FindAsync(dbId);
-                if (item != null) item.Status = statusCode;
-            }
-            
+            booking.Status = request.Status switch {
+                "approved" => 1,
+                "rejected" => 2,
+                "cancelled" => 3,
+                _ => 0
+            };
+
             await _context.SaveChangesAsync();
             return Ok(new { message = "Status updated" });
         }
 
-        private string MapStatus(int status) => status switch { 0 => "pending", 1 => "approved", _ => "rejected" };
+        private string MapStatus(int status) => status switch { 
+            0 => "pending", 1 => "approved", 2 => "rejected", 3 => "cancelled", _ => "unknown" 
+        };
     }
 }

@@ -17,13 +17,13 @@ namespace server.Models
         [Column("invoiceTime")]
         public TimeSpan InvoiceTime { get; set; }
 
-        [Column("amount")]
-        public int Amount { get; set; }
+        // [CHANGED] Changed int to decimal
+        [Column("amount", TypeName = "decimal(18, 2)")]
+        public decimal Amount { get; set; }
 
         [Column("paymentID")]
         public int PaymentID { get; set; }
 
-        // Navigation property
         [ForeignKey("PaymentID")]
         public ManagementFee ManagementFee { get; set; }= default!;
     }

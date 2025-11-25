@@ -21,13 +21,14 @@ namespace server.Data
 
         // Bookings & Facilities
         public DbSet<Facility> Facilities { get; set; } = default!;
-        public DbSet<SportFacility> SportFacilities { get; set; } = default!;
-        public DbSet<EventHall> EventHalls { get; set; } = default!;
-        public DbSet<Venue> Venues { get; set; } = default!;
+        
+        // [CHANGED] Unified Booking Table
+        public DbSet<Booking> Bookings { get; set; } = default!;
+        
         public DbSet<Visitor> Visitors { get; set; } = default!;
         public DbSet<Report> Reports { get; set; } = default!;
 
-        // [ADDED] Communication
+        // Communication
         public DbSet<Announcement> Announcements { get; set; } = default!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -38,14 +39,12 @@ namespace server.Data
             modelBuilder.Entity<ManagementFee>().ToTable("management_fee");
             modelBuilder.Entity<Invoice>().ToTable("invoice");
             modelBuilder.Entity<Facility>().ToTable("facility");
-            modelBuilder.Entity<SportFacility>().ToTable("sport_facility");
-            modelBuilder.Entity<EventHall>().ToTable("event_hall");
-            modelBuilder.Entity<Venue>().ToTable("venue");
             modelBuilder.Entity<Visitor>().ToTable("visitor");
             modelBuilder.Entity<Report>().ToTable("report");
-            
-            // [ADDED] Map Announcement Table
             modelBuilder.Entity<Announcement>().ToTable("announcement");
+
+            // [CHANGED] Map Booking Table
+            modelBuilder.Entity<Booking>().ToTable("booking");
         }
     }
 }

@@ -22,9 +22,6 @@ namespace server.Models
         [Column("capacity")]
         public int Capacity { get; set; }
 
-        [Column("hourlyRate")]
-        public decimal HourlyRate { get; set; }
-
         [Column("status")]
         public string Status { get; set; } = "available"; // "available" or "maintenance"
     }
