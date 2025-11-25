@@ -45,6 +45,9 @@ export default function FacilityBookingManagement({ user }) {
       const bookData = await bookResponse.json();
       if (bookResponse.ok) setBookings(bookData);
 
+      const blockResponse = await fetch(`${API_URL}/blocked-dates`);
+      if (blockResponse.ok) setBlockedDates(await blockResponse.json());
+
     } catch (error) {
       console.error("Error fetching data:", error);
       toast.error("Failed to load data. Check backend connection.");
@@ -173,7 +176,7 @@ export default function FacilityBookingManagement({ user }) {
   const handleCancelBooking = (id) => updateBookingStatus(id, 'cancelled');
 
   // Block Date
-  const handleBlockDate = (e) => {
+  const handleBlockDate = async (e) => {
     e.preventDefault();
 
     if (!selectedDate) {
@@ -181,23 +184,40 @@ export default function FacilityBookingManagement({ user }) {
       return;
     }
 
-    const blocked = {
-      id: Date.now().toString(),
-      facilityName: blockDate.facility,
-      date: selectedDate,
-      reason: blockDate.reason,
-    };
+    try {
+      const response = await fetch(`${API_URL}/block-date`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          facilityName: blockDate.facility,
+          date: selectedDate,
+          reason: blockDate.reason
+        }),
+      });
 
-    setBlockedDates([...blockedDates, blocked]);
-    setBlockDate({ facility: '', reason: '' });
-    setSelectedDate('');
-    setIsBlockDateDialogOpen(false);
-    toast.success('Date blocked successfully!');
+      if (response.ok) {
+        toast.success('Date blocked successfully!');
+        setBlockDate({ facility: '', reason: '' });
+        setSelectedDate('');
+        setIsBlockDateDialogOpen(false);
+        fetchData(); // Refresh list
+      } else {
+        const error = await response.text();
+        toast.error(error || 'Failed to block date');
+      }
+    } catch (error) {
+      toast.error('Error blocking date');
+    }
   };
 
-  const handleUnblockDate = (id) => {
-    setBlockedDates(blockedDates.filter((b) => b.id !== id));
-    toast.success('Date unblocked!');
+  const handleUnblockDate = async (id) => {
+    try {
+      await fetch(`${API_URL}/unblock-date/${id}`, { method: 'DELETE' });
+      toast.success('Date unblocked!');
+      fetchData(); // Refresh
+    } catch (error) {
+      toast.error('Failed to unblock date');
+    }
   };
 
   const getStatusBadge = (status) => {
@@ -474,7 +494,7 @@ export default function FacilityBookingManagement({ user }) {
                     <TableHead>Date</TableHead>
                     <TableHead>Time</TableHead>
                     <TableHead>Guests</TableHead>
-                    <TableHead>Purpose</TableHead> {/* [ADDED] Purpose Column */}
+                    <TableHead>Purpose</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -490,17 +510,45 @@ export default function FacilityBookingManagement({ user }) {
                         {booking.startTime} - {booking.endTime}
                       </TableCell>
                       <TableCell>{booking.guests}</TableCell>
-                      <TableCell>{booking.purpose || '-'}</TableCell> {/* [ADDED] Show Purpose */}
+                      <TableCell>{booking.purpose || '-'}</TableCell>
                       <TableCell>{getStatusBadge(booking.status)}</TableCell>
+                      {/* [FIX START]: Added controls for Pending bookings */}
                       <TableCell>
                         <div className="flex gap-2">
+                          {booking.status === 'pending' && (
+                            <>
+                              <Button 
+                                size="sm" 
+                                className="bg-green-600 hover:bg-green-700 h-8 w-8 p-0" 
+                                onClick={() => handleApproveBooking(booking.id)}
+                                title="Approve"
+                              >
+                                <CheckCircle className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="h-8 w-8 p-0 border-red-200 text-red-600 hover:bg-red-50" 
+                                onClick={() => handleRejectBooking(booking.id)}
+                                title="Reject"
+                              >
+                                <XCircle className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
                           {booking.status === 'approved' && (
-                            <Button size="sm" variant="outline" onClick={() => handleCancelBooking(booking.id)}>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="text-red-600 hover:bg-red-50" 
+                              onClick={() => handleCancelBooking(booking.id)}
+                            >
                               Cancel
                             </Button>
                           )}
                         </div>
                       </TableCell>
+                      {/* [FIX END] */}
                     </TableRow>
                   ))}
                 </TableBody>

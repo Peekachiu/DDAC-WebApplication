@@ -32,6 +32,12 @@ namespace server.Controllers
         public string Purpose { get; set; } = string.Empty; // Matches 'Purpose' in DB
     }
 
+    public class BlockDateRequest
+{
+    public string FacilityName { get; set; } = string.Empty;
+    public DateTime Date { get; set; }
+    public string Reason { get; set; } = string.Empty;
+}
     public class CreateSportBookingRequest
     {
         public string SportName { get; set; } = string.Empty;
@@ -159,6 +165,43 @@ namespace server.Controllers
                 request.EndTime, request.UserId, request.Guests, bookingPurpose);
         }
 
+        [HttpGet("blocked-dates")]
+        public async Task<ActionResult<IEnumerable<BlockedDate>>> GetBlockedDates()
+        {
+            return await _context.BlockedDates.ToListAsync();
+        }
+
+        [HttpPost("block-date")]
+        public async Task<IActionResult> BlockDate(BlockDateRequest request)
+        {
+            var exists = await _context.BlockedDates
+                .AnyAsync(b => b.FacilityName == request.FacilityName && b.Date.Date == request.Date.Date);
+
+            if (exists) return BadRequest("Date already blocked for this facility.");
+
+            var blockedDate = new BlockedDate
+            {
+                FacilityName = request.FacilityName,
+                Date = request.Date,
+                Reason = request.Reason
+            };
+
+            _context.BlockedDates.Add(blockedDate);
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Date blocked successfully" });
+        }
+
+        [HttpDelete("unblock-date/{id}")]
+        public async Task<IActionResult> UnblockDate(int id)
+        {
+            var blocked = await _context.BlockedDates.FindAsync(id);
+            if (blocked == null) return NotFound();
+
+            _context.BlockedDates.Remove(blocked);
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Date unblocked" });
+        }
+
         private async Task<IActionResult> CreateBookingInternal(
             string facilityName, string type, DateTime date, string startTimeStr, string endTimeStr, 
             int userId, int guests, string purpose)
@@ -168,6 +211,11 @@ namespace server.Controllers
 
             if (facility == null) return BadRequest("Facility not found.");
             if (facility.Status == "maintenance") return BadRequest("This facility is under maintenance.");
+
+            var isBlocked = await _context.BlockedDates
+                .AnyAsync(b => b.FacilityName == facilityName && b.Date.Date == date.Date);
+
+            if (isBlocked) return BadRequest("This date is unavailable due to maintenance or facility blocking.");
 
             if (!TimeSpan.TryParse(startTimeStr, out var start) || !TimeSpan.TryParse(endTimeStr, out var end))
                 return BadRequest("Invalid time format.");

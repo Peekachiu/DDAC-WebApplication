@@ -23,6 +23,7 @@ export default function ResidentSportFacilityBooking({ user }) {
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState();
+  const [blockedDates, setBlockedDates] = useState([]);
   
   const [newBooking, setNewBooking] = useState({
     facility: '',
@@ -56,6 +57,11 @@ export default function ResidentSportFacilityBooking({ user }) {
           );
           setBookings(myBookings);
         }
+
+        const blockResponse = await fetch(`${API_URL}/blocked-dates`);
+        if (blockResponse.ok) setBlockedDates(await blockResponse.json());
+
+
       } catch (error) {
         console.error("Error fetching data:", error);
         toast.error("Failed to load data.");
@@ -88,6 +94,16 @@ export default function ResidentSportFacilityBooking({ user }) {
       userId: user.id,
       guests: parseInt(newBooking.guests) // [FIXED] Now sending guests
     };
+
+    const isBlocked = blockedDates.some(b => 
+      b.facilityName === newBooking.facility && 
+      new Date(b.date).toDateString() === new Date(selectedDate).toDateString()
+    );
+
+    if (isBlocked) {
+      toast.error('This date is unavailable due to maintenance/blocking.');
+      return;
+    }
 
     try {
       const response = await fetch(`${API_URL}/sport`, {

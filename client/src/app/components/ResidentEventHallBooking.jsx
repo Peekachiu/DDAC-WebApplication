@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Badge } from './ui/badge';
 import { Calendar } from './ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { Plus, CalendarIcon, Building, AlertTriangle } from 'lucide-react';
+import { Plus, CalendarIcon, Building, AlertTriangle, Clock, CheckCircle, XCircle, Ban } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
@@ -25,6 +25,7 @@ function ResidentEventHallBooking({ user }) {
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState();
+  const [blockedDates, setBlockedDates] = useState([]);
   
   const [newBooking, setNewBooking] = useState({
     hall: '', event: '', startTime: '', endTime: '', guests: '10', description: '',
@@ -49,6 +50,10 @@ function ResidentEventHallBooking({ user }) {
           );
           setBookings(myBookings);
         }
+
+        const blockResponse = await fetch(`${API_URL}/blocked-dates`);
+        if (blockResponse.ok) setBlockedDates(await blockResponse.json());
+
       } catch (error) {
         toast.error("Failed to load data.");
       } finally {
@@ -70,7 +75,7 @@ function ResidentEventHallBooking({ user }) {
 
     const payload = {
       hallName: newBooking.hall,
-      eventType: newBooking.event, // [FIXED] Backend will now map this to 'Purpose' column
+      eventType: newBooking.event, 
       date: selectedDate,
       startTime: newBooking.startTime,
       endTime: newBooking.endTime,
@@ -78,6 +83,16 @@ function ResidentEventHallBooking({ user }) {
       description: newBooking.description,
       userId: user.id 
     };
+
+    const isBlocked = blockedDates.some(b => 
+      b.facilityName === newBooking.hall && 
+      new Date(b.date).toDateString() === new Date(selectedDate).toDateString()
+    );
+
+    if (isBlocked) {
+      toast.error('This date is unavailable due to maintenance/blocking.');
+      return;
+    }
 
     try {
       const response = await fetch(`${API_URL}/event`, {
@@ -126,14 +141,20 @@ function ResidentEventHallBooking({ user }) {
     }
   };
 
+  // Helper for grid icon
+  const getFacilityIcon = (name) => {
+    return <Building className="h-6 w-6 text-blue-600" />;
+  };
+
   // --- Helpers ---
   const upcomingBookings = bookings.filter(
     (b) => b.status !== 'rejected' && new Date(b.date) >= new Date()
   );
 
-  const pastBookings = bookings.filter(
-    (b) => new Date(b.date) < new Date() || b.status === 'rejected'
-  );
+  const totalBookings = bookings.length;
+  const pendingCount = bookings.filter(b => b.status === 'pending').length;
+  const approvedCount = bookings.filter(b => b.status === 'approved').length;
+  const rejectedCount = bookings.filter(b => b.status === 'rejected' || b.status === 'cancelled').length;
 
   if (loading) return <div className="p-6 text-center">Loading...</div>;
 
@@ -205,6 +226,27 @@ function ResidentEventHallBooking({ user }) {
         </Dialog>
       </div>
 
+
+      {/* Facilities Grid (Added as requested) */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {halls.map((facility) => (
+          <div key={facility.id} className={`flex items-center gap-4 rounded-lg border p-4 ${facility.status === 'maintenance' ? 'bg-gray-50 opacity-75' : 'bg-white'}`}>
+            <div className="rounded-full bg-gray-100 p-2">
+              {facility.status === 'maintenance' ? <AlertTriangle className="h-6 w-6 text-yellow-600"/> : getFacilityIcon(facility.name)}
+            </div>
+            <div>
+              <p className="text-sm font-medium">{facility.name}</p>
+              <p className="text-xs text-gray-500">Capacity: {facility.capacity}</p>
+              {facility.status === 'maintenance' ? (
+                <Badge variant="destructive" className="mt-1 text-xs">Maintenance</Badge>
+              ) : (
+                <p className="text-xs text-green-600 font-medium mt-1">Available</p>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
       <Card>
         <CardHeader><CardTitle>My Bookings</CardTitle></CardHeader>
         <CardContent>
@@ -212,10 +254,10 @@ function ResidentEventHallBooking({ user }) {
             <TableHeader>
               <TableRow>
                 <TableHead>Hall</TableHead>
-                <TableHead>Event</TableHead> {/* [ADDED] Event Type (Purpose) */}
+                <TableHead>Event</TableHead> 
                 <TableHead>Date</TableHead>
                 <TableHead>Time</TableHead>
-                <TableHead>Guests</TableHead> {/* [ADDED] Guests */}
+                <TableHead>Guests</TableHead> 
                 <TableHead>Status</TableHead>
                 <TableHead>Action</TableHead>
               </TableRow>
@@ -224,10 +266,10 @@ function ResidentEventHallBooking({ user }) {
               {upcomingBookings.map((b) => (
                 <TableRow key={b.id}>
                   <TableCell>{b.facilityName}</TableCell>
-                  <TableCell>{b.purpose}</TableCell> {/* [ADDED] Show Event Type */}
+                  <TableCell>{b.purpose}</TableCell> 
                   <TableCell>{format(new Date(b.date), 'MMM dd, yyyy')}</TableCell>
                   <TableCell>{b.startTime} - {b.endTime}</TableCell>
-                  <TableCell>{b.guests}</TableCell> {/* [ADDED] Show Guests */}
+                  <TableCell>{b.guests}</TableCell> 
                   <TableCell>{getStatusBadge(b.status)}</TableCell>
                   <TableCell>
                     {b.status === 'pending' && <Button size="sm" variant="outline" onClick={() => handleCancelBooking(b.id)}>Cancel</Button>}
