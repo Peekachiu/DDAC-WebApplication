@@ -1,0 +1,16 @@
+// peekachiu/ddac-webapplication/DDAC-WebApplication-jiayuan/client/src/app/financial/page.js
+'use client'
+
+import { useAuth } from '../../layout';
+import FinancialManagement from '../../components/FinancialManagement';
+
+export default function FinancialPage() {
+  const { currentUser } = useAuth();
+  if (!currentUser) return <div>Loading...</div>;
+
+  if (currentUser.role !== 'Admin') {
+    return <div>Access Denied. This page is for admins only.</div>;
+  }
+
+  return <FinancialManagement user={currentUser} />;
+}

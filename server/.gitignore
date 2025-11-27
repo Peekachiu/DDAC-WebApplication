@@ -1,0 +1,26 @@
+# Visual Studio / .NET Core
+
+## User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+## Build results
+[Bb]in/
+[Oo]bj/
+
+## IDE folders
+.vs/
+.vscode/
+
+## Local Tool Manifest
+.config/dotnet-tools.json
+
+## Secrets
+# This file often contains local database passwords!
+appsettings.Development.json
+
+## Misc
+*.log
+*.db
