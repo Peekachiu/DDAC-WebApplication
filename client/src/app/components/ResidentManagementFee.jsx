@@ -13,7 +13,7 @@ import CheckoutForm from './CheckoutForm';
 
 const BASE_API_URL = '/api';
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_PUBLISHABLE_KEY);
+const stripePromise = loadStripe("pk_test_51SShspDHK3g2RSaD4TA2mWa4Ags0RudgGgjo8mzLeHTLgvlKGYStPWmIBTI0FyowL95p8NAOAXSnSYmp0kU88XHD00LtjssHh0");
 
 function ResidentManagementFee({ user }) {
   const [invoices, setInvoices] = useState([]);
