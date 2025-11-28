@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Plus, Search, UserCheck, UserX, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 
-const API_URL = 'http://localhost:5016/api/Visitors';
+const API_URL = '';
 
 export default function VisitorRegister({ user }) {
   const isAdmin = user.role === 'Admin';
