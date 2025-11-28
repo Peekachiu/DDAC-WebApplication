@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Plus, Search, UserCheck, UserX, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 
-const API_URL = '';
+const API_URL = '/api/Visitors';
 
 function ResidentVisitorRegister({ user }) {
   // State

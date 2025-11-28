@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Download, Search, RefreshCcw } from 'lucide-react';
 import { toast } from 'sonner';
 
-const API_URL = '';
+const API_URL = '/api/Financial';
 
 function ResidentInvoiceReceipt({ user }) {
   const [invoices, setInvoices] = useState([]);

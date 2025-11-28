@@ -17,7 +17,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 
-const API_URL = '';
+const API_URL = '/api/Bookings';
 
 function ResidentEventHallBooking({ user }) {
   // --- State ---

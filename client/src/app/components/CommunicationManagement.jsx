@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Plus, Send, Bell, Megaphone, Calendar, AlertCircle, Info, CheckCircle, Trash2, Edit } from 'lucide-react';
 import { toast } from 'sonner';
 
-const API_URL = '';
+const API_URL = '/api/Announcements';
 
 export default function CommunicationManagement({ user }) {
   const isAdmin = user.role === 'Admin';

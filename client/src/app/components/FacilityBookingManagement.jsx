@@ -17,7 +17,7 @@ import { Plus, Edit, Trash2, CheckCircle, XCircle, Calendar as CalendarIcon, Use
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
-const API_URL = '';
+const API_URL = '/api/Bookings';
 
 export default function FacilityBookingManagement({ user }) {
   const isAdmin = user.role === 'Admin';

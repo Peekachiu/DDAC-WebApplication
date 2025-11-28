@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { DollarSign, Plus, FileText, Download, Search, Filter, CheckCircle, AlertCircle, Receipt } from 'lucide-react';
 import { toast } from 'sonner';
 
-const API_URL = '';
+const API_URL = '/api/Financial';
 
 export default function FinancialManagement({ user }) {
   const isAdmin = user.role === 'Admin';

@@ -7,7 +7,7 @@ import { Badge } from './ui/badge';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 
-const API_URL = '';
+const API_URL = '/api/Dashboard/stats';
 
 export default function AdminDashboard({ user }) {
   const [data, setData] = useState(null);
