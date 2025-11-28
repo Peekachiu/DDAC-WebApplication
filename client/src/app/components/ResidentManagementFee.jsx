@@ -11,7 +11,7 @@ import { Elements } from '@stripe/react-stripe-js';
 import axios from 'axios';
 import CheckoutForm from './CheckoutForm';
 
-const BASE_API_URL = '';
+const BASE_API_URL = 'api/Financial';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_PUBLISHABLE_KEY);
 
