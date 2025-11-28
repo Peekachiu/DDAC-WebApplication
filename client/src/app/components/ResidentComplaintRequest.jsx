@@ -14,7 +14,7 @@ import { Badge } from './ui/badge';
 import { Plus, Eye, X, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
-const API_URL = 'http://localhost:5016/api/Reports';
+const API_URL = '';
 
 function ResidentComplaintRequest({ user }) {
   const [complaints, setComplaints] = useState([]);

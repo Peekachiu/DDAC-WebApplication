@@ -8,7 +8,7 @@ import { Label } from './ui/label';
 import { User, Lock, ShieldCheck, KeyRound } from 'lucide-react';
 import { toast } from 'sonner';
 
-const API_URL = 'http://localhost:5016/api/Profile';
+const API_URL = '';
 
 export default function ResidentProfile({ user }) {
   const [passwords, setPasswords] = useState({

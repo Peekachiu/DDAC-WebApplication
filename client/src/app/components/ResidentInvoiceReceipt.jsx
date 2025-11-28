@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Download, Search, RefreshCcw } from 'lucide-react';
 import { toast } from 'sonner';
 
-const API_URL = 'http://localhost:5016/api/Financial';
+const API_URL = '';
 
 function ResidentInvoiceReceipt({ user }) {
   const [invoices, setInvoices] = useState([]);
@@ -25,15 +25,15 @@ function ResidentInvoiceReceipt({ user }) {
     try {
       const response = await fetch(API_URL);
       if (!response.ok) throw new Error('Failed to fetch invoices');
-      
+
       const data = await response.json();
-      
+
       // Filter: Only show invoices for THIS resident's unit
       // Ensure case-insensitive comparison (e.g., "A-10-01" vs "a-10-01")
-      const myInvoices = data.filter(inv => 
+      const myInvoices = data.filter(inv =>
         inv.unit.toLowerCase() === user.unit.toLowerCase()
       );
-      
+
       setInvoices(myInvoices);
     } catch (error) {
       console.error("Fetch error:", error);

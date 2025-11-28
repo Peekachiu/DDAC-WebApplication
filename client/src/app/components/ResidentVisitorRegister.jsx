@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Plus, Search, UserCheck, UserX, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 
-const API_URL = 'http://localhost:5016/api/Visitors';
+const API_URL = '';
 
 function ResidentVisitorRegister({ user }) {
   // State
@@ -20,7 +20,7 @@ function ResidentVisitorRegister({ user }) {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  
+
   const [newVisitor, setNewVisitor] = useState({
     name: '',
     phone: '',
@@ -35,11 +35,11 @@ function ResidentVisitorRegister({ user }) {
       try {
         // Calls the endpoint specific to the logged-in user
         const response = await fetch(`${API_URL}/my-visitors/${user.id}`);
-        
+
         if (!response.ok) {
           throw new Error('Failed to fetch visitors');
         }
-        
+
         const data = await response.json();
         setVisitors(data);
       } catch (error) {
@@ -58,7 +58,7 @@ function ResidentVisitorRegister({ user }) {
   // 2. Register New Visitor
   const handleRegisterVisitor = async (e) => {
     e.preventDefault();
-    
+
     const payload = {
       name: newVisitor.name,
       phone: newVisitor.phone,
@@ -76,7 +76,7 @@ function ResidentVisitorRegister({ user }) {
       if (!response.ok) throw new Error('Failed to register visitor');
 
       const addedVisitor = await response.json();
-      
+
       setVisitors([addedVisitor, ...visitors]);
       setNewVisitor({ name: '', phone: '', purpose: '' });
       setIsDialogOpen(false);
@@ -96,12 +96,12 @@ function ResidentVisitorRegister({ user }) {
       if (!response.ok) throw new Error('Failed to update status');
 
       // Update UI optimistically
-      setVisitors(visitors.map((v) => 
-        v.id === id 
-          ? { ...v, status: 'checked-out', checkOut: new Date().toLocaleString() } 
+      setVisitors(visitors.map((v) =>
+        v.id === id
+          ? { ...v, status: 'checked-out', checkOut: new Date().toLocaleString() }
           : v
       ));
-      
+
       toast.success('Visitor checked out successfully!');
     } catch (error) {
       toast.error(error.message);

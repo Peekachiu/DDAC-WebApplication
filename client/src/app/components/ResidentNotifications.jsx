@@ -9,7 +9,7 @@ import { Bell, AlertCircle, Info, Calendar, Trash2, Check } from 'lucide-react';
 import { toast } from 'sonner';
 
 // Ensure this matches your backend port
-const API_URL = 'http://localhost:5016/api/Announcements';
+const API_URL = '';
 
 function ResidentNotifications({ user }) {
   const [notifications, setNotifications] = useState([]);

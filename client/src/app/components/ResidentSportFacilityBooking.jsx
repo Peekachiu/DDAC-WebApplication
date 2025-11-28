@@ -15,7 +15,7 @@ import { Plus, CalendarIcon, Dumbbell, Users, Activity } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
-const API_URL = 'http://localhost:5016/api/Bookings';
+const API_URL = '';
 
 export default function ResidentSportFacilityBooking({ user }) {
   // --- State ---
