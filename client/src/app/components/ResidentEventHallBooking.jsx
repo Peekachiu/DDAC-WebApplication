@@ -46,8 +46,8 @@ function ResidentEventHallBooking({ user }) {
         if (bookResponse.ok) {
           const data = await bookResponse.json();
           const myBookings = data.filter(b => 
-            b.residentName === user.name && b.facilityType === 'event'
-          );
+    b.userId === user.id && b.facilityType === 'event'
+  );
           setBookings(myBookings);
         }
 
@@ -147,9 +147,18 @@ function ResidentEventHallBooking({ user }) {
   };
 
   // --- Helpers ---
-  const upcomingBookings = bookings.filter(
-    (b) => b.status !== 'rejected' && new Date(b.date) >= new Date()
-  );
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const upcomingBookings = bookings.filter((b) => {
+    const bDate = new Date(b.date);
+    return bDate >= today && b.status !== 'cancelled' && b.status !== 'rejected';
+  });
+
+  const pastBookings = bookings.filter((b) => {
+    const bDate = new Date(b.date);
+    return bDate < today || b.status === 'cancelled' || b.status === 'rejected';
+  });
 
   const totalBookings = bookings.length;
   const pendingCount = bookings.filter(b => b.status === 'pending').length;
@@ -247,39 +256,86 @@ function ResidentEventHallBooking({ user }) {
         ))}
       </div>
 
-      <Card>
-        <CardHeader><CardTitle>My Bookings</CardTitle></CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Hall</TableHead>
-                <TableHead>Event</TableHead> 
-                <TableHead>Date</TableHead>
-                <TableHead>Time</TableHead>
-                <TableHead>Guests</TableHead> 
-                <TableHead>Status</TableHead>
-                <TableHead>Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {upcomingBookings.map((b) => (
-                <TableRow key={b.id}>
-                  <TableCell>{b.facilityName}</TableCell>
-                  <TableCell>{b.purpose}</TableCell> 
-                  <TableCell>{format(new Date(b.date), 'MMM dd, yyyy')}</TableCell>
-                  <TableCell>{b.startTime} - {b.endTime}</TableCell>
-                  <TableCell>{b.guests}</TableCell> 
-                  <TableCell>{getStatusBadge(b.status)}</TableCell>
-                  <TableCell>
-                    {b.status === 'pending' && <Button size="sm" variant="outline" onClick={() => handleCancelBooking(b.id)}>Cancel</Button>}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="upcoming" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="upcoming">Upcoming Events</TabsTrigger>
+          <TabsTrigger value="history">Event History</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="upcoming">
+          <Card>
+            <CardHeader><CardTitle>Upcoming</CardTitle></CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Hall</TableHead>
+                    <TableHead>Event</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Time</TableHead>
+                    <TableHead>Guests</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {upcomingBookings.length === 0 ? (
+                    <TableRow><TableCell colSpan={7} className="text-center">No upcoming events</TableCell></TableRow>
+                  ) : (
+                    upcomingBookings.map((b) => (
+                      <TableRow key={b.id}>
+                        <TableCell>{b.facilityName}</TableCell>
+                        <TableCell>{b.purpose}</TableCell>
+                        <TableCell>{format(new Date(b.date), 'MMM dd, yyyy')}</TableCell>
+                        <TableCell>{b.startTime} - {b.endTime}</TableCell>
+                        <TableCell>{b.guests}</TableCell>
+                        <TableCell>{getStatusBadge(b.status)}</TableCell>
+                        <TableCell>
+                          {b.status === 'pending' && (
+                            <Button size="sm" variant="outline" onClick={() => handleCancelBooking(b.id)}>Cancel</Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="history">
+          <Card>
+            <CardHeader><CardTitle>History</CardTitle></CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Hall</TableHead>
+                    <TableHead>Event</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pastBookings.length === 0 ? (
+                     <TableRow><TableCell colSpan={4} className="text-center">No history</TableCell></TableRow>
+                  ) : (
+                    pastBookings.map((b) => (
+                      <TableRow key={b.id} className="opacity-70">
+                        <TableCell>{b.facilityName}</TableCell>
+                        <TableCell>{b.purpose}</TableCell>
+                        <TableCell>{format(new Date(b.date), 'MMM dd, yyyy')}</TableCell>
+                        <TableCell>{getStatusBadge(b.status)}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

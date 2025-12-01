@@ -20,6 +20,7 @@ namespace server.Controllers
     public class BookingDto
     {
         public string Id { get; set; } = string.Empty;
+        public int UserId { get; set; } // [ADD THIS]
         public string FacilityName { get; set; } = string.Empty;
         public string FacilityType { get; set; } = string.Empty;
         public string ResidentName { get; set; } = string.Empty;
@@ -260,6 +261,7 @@ namespace server.Controllers
             var dtos = bookings.Select(b => new BookingDto
             {
                 Id = b.BookingID.ToString(),
+                UserId = b.UserID,
                 FacilityName = b.Facility?.Name ?? "Unknown",
                 FacilityType = b.Facility?.Type ?? "Unknown",
                 ResidentName = b.User != null ? $"{b.User.FirstName} {b.User.LastName}" : "Unknown",
