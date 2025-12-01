@@ -212,17 +212,60 @@ function ResidentEventHallBooking({ user }) {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Start Time</Label>
-                  <Select onValueChange={(val) => setNewBooking({ ...newBooking, startTime: val })} required>
-                    <SelectTrigger><SelectValue placeholder="Start" /></SelectTrigger>
-                    <SelectContent>{timeSlots.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-                  </Select>
+    <Select onValueChange={(val) => setNewBooking({ ...newBooking, startTime: val })} required>
+      <SelectTrigger><SelectValue placeholder="Start" /></SelectTrigger>
+      <SelectContent>
+        {timeSlots.map(t => {
+          const now = new Date();
+          const localToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+          
+          const isToday = selectedDate === localToday;
+          const slotHour = parseInt(t.split(':')[0], 10);
+          
+          // Disable if it's today and the time has passed
+          const isPastTime = isToday && slotHour <= now.getHours();
+
+          return (
+            <SelectItem key={t} value={t} disabled={isPastTime}>
+              {t}
+            </SelectItem>
+          );
+        })}
+      </SelectContent>
+    </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>End Time</Label>
-                  <Select onValueChange={(val) => setNewBooking({ ...newBooking, endTime: val })} required>
-                    <SelectTrigger><SelectValue placeholder="End" /></SelectTrigger>
-                    <SelectContent>{timeSlots.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-                  </Select>
+    <Select onValueChange={(val) => setNewBooking({ ...newBooking, endTime: val })} required>
+      <SelectTrigger><SelectValue placeholder="End" /></SelectTrigger>
+      <SelectContent>
+        {timeSlots.map(t => {
+          const now = new Date();
+          const localToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+          
+          const isToday = selectedDate === localToday;
+          const slotHour = parseInt(t.split(':')[0], 10);
+
+          // Disable if past time OR if it's earlier than the selected Start Time
+          let isInvalid = false;
+          
+          // 1. Check past time
+          if (isToday && slotHour <= now.getHours()) isInvalid = true;
+
+          // 2. Check logic: End time must be after Start time
+          if (newBooking.startTime) {
+             const startHour = parseInt(newBooking.startTime.split(':')[0], 10);
+             if (slotHour <= startHour) isInvalid = true;
+          }
+
+          return (
+            <SelectItem key={t} value={t} disabled={isInvalid}>
+              {t}
+            </SelectItem>
+          );
+        })}
+      </SelectContent>
+    </Select>
                 </div>
               </div>
               <div className="space-y-2">

@@ -224,10 +224,29 @@ export default function ResidentSportFacilityBooking({ user }) {
               </div>
               <div className="space-y-2">
                 <Label>Time</Label>
-                <Select onValueChange={(val) => setNewBooking({ ...newBooking, time: val })} required>
-                  <SelectTrigger><SelectValue placeholder="Select time" /></SelectTrigger>
-                  <SelectContent>{timeSlots.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-                </Select>
+  <Select onValueChange={(val) => setNewBooking({ ...newBooking, time: val })} required>
+    <SelectTrigger><SelectValue placeholder="Select time" /></SelectTrigger>
+    <SelectContent>
+      {timeSlots.map(t => {
+        // Calculate current date/time strings for comparison
+        const now = new Date();
+        const localToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        
+        // Check if the selected date is "Today"
+        const isToday = selectedDate === localToday;
+        
+        // Check if the slot hour has passed (e.g. if now is 10:00, 10:00 slot is disabled)
+        const slotHour = parseInt(t.split(':')[0], 10);
+        const isPastTime = isToday && slotHour <= now.getHours();
+
+        return (
+          <SelectItem key={t} value={t} disabled={isPastTime}>
+            {t}
+          </SelectItem>
+        );
+      })}
+    </SelectContent>
+  </Select>
               </div>
               <div className="space-y-2">
                 <Label>Duration</Label>
