@@ -297,7 +297,8 @@ function ResidentManagementFee({ user }) {
 
       {/* Stripe Dialog */}
       <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        {/* [FIXED] Added max-h-[85vh] and overflow-y-auto to allow scrolling if content overflows */}
+        <DialogContent className="sm:max-w-[500px] max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Make Payment</DialogTitle>
             <DialogDescription>
