@@ -11,8 +11,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { DatePicker } from './ui/date-picker';
 import { Plus, Send, Bell, Megaphone, Calendar, AlertCircle, Info, CheckCircle, Trash2, Edit } from 'lucide-react';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
 
 const API_URL = 'http://localhost:5016/api/Announcements';
 
@@ -64,7 +66,7 @@ export default function CommunicationManagement({ user }) {
       message: newAnnouncement.message,
       type: newAnnouncement.type,
       audience: newAnnouncement.audience,
-      scheduledDate: newAnnouncement.scheduledDate || new Date().toISOString(),
+      scheduledDate: newAnnouncement.scheduledDate ? format(newAnnouncement.scheduledDate, 'yyyy-MM-dd') : new Date().toISOString(),
       createdBy: user.name
     };
 
@@ -133,7 +135,7 @@ export default function CommunicationManagement({ user }) {
       message: announcement.message,
       type: announcement.type,
       audience: announcement.audience,
-      scheduledDate: announcement.scheduledDate.split('T')[0], // Format for date input
+      scheduledDate: new Date(announcement.scheduledDate), // Format for DatePicker
     });
     setIsAnnouncementDialogOpen(true);
   };
@@ -161,6 +163,15 @@ export default function CommunicationManagement({ user }) {
     }
   };
 
+  // Helper for Gradient Cards
+  const GradientCard = ({ children, className }) => (
+    <div className={`relative rounded-xl p-[1px] bg-gradient-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
+      <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-white/80 backdrop-blur-sm p-6 shadow-inner">
+        {children}
+      </div>
+    </div>
+  );
+
   // --- UI RENDER ---
 
   if (isLoading) return <div className="p-8 text-center">Loading announcements...</div>;
@@ -173,7 +184,7 @@ export default function CommunicationManagement({ user }) {
           <h2>Notifications & Announcements</h2>
           <p className="text-sm text-gray-600">Latest updates from management</p>
         </div>
-        <Card>
+        <Card className="glass !border-0">
           <CardHeader><CardTitle>Recent Announcements</CardTitle></CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -212,7 +223,7 @@ export default function CommunicationManagement({ user }) {
           <h2>Communication Management</h2>
           <p className="text-sm text-gray-600">Manage system-wide announcements</p>
         </div>
-        <Dialog open={isAnnouncementDialogOpen} onOpenChange={(open) => { setIsAnnouncementDialogOpen(open); if(!open) resetForm(); }}>
+        <Dialog open={isAnnouncementDialogOpen} onOpenChange={(open) => { setIsAnnouncementDialogOpen(open); if (!open) resetForm(); }}>
           <DialogTrigger asChild>
             <Button><Plus className="mr-2 h-4 w-4" /> Create Announcement</Button>
           </DialogTrigger>
@@ -224,7 +235,7 @@ export default function CommunicationManagement({ user }) {
             <form onSubmit={handleSaveAnnouncement} className="space-y-4">
               <div className="space-y-2">
                 <Label>Type</Label>
-                <Select value={newAnnouncement.type} onValueChange={(val) => setNewAnnouncement({...newAnnouncement, type: val})}>
+                <Select value={newAnnouncement.type} onValueChange={(val) => setNewAnnouncement({ ...newAnnouncement, type: val })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="info">Information</SelectItem>
@@ -236,7 +247,7 @@ export default function CommunicationManagement({ user }) {
               </div>
               <div className="space-y-2">
                 <Label>Audience</Label>
-                <Select value={newAnnouncement.audience} onValueChange={(val) => setNewAnnouncement({...newAnnouncement, audience: val})}>
+                <Select value={newAnnouncement.audience} onValueChange={(val) => setNewAnnouncement({ ...newAnnouncement, audience: val })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Residents</SelectItem>
@@ -247,15 +258,19 @@ export default function CommunicationManagement({ user }) {
               </div>
               <div className="space-y-2">
                 <Label>Title</Label>
-                <Input value={newAnnouncement.title} onChange={(e) => setNewAnnouncement({...newAnnouncement, title: e.target.value})} required />
+                <Input value={newAnnouncement.title} onChange={(e) => setNewAnnouncement({ ...newAnnouncement, title: e.target.value })} required />
               </div>
               <div className="space-y-2">
                 <Label>Message</Label>
-                <Textarea value={newAnnouncement.message} onChange={(e) => setNewAnnouncement({...newAnnouncement, message: e.target.value})} required rows={5} />
+                <Textarea value={newAnnouncement.message} onChange={(e) => setNewAnnouncement({ ...newAnnouncement, message: e.target.value })} required rows={5} />
               </div>
               <div className="space-y-2">
                 <Label>Scheduled Date</Label>
-                <Input type="date" value={newAnnouncement.scheduledDate} onChange={(e) => setNewAnnouncement({...newAnnouncement, scheduledDate: e.target.value})} required />
+                <DatePicker
+                  date={newAnnouncement.scheduledDate}
+                  setDate={(date) => setNewAnnouncement({ ...newAnnouncement, scheduledDate: date })}
+                  fromDate={new Date()}
+                />
                 <p className="text-xs text-gray-500">If date is today or earlier, it sends immediately.</p>
               </div>
               <Button type="submit" className="w-full">
@@ -268,28 +283,28 @@ export default function CommunicationManagement({ user }) {
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardContent className="p-6 flex items-center justify-between">
+        <GradientCard>
+          <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-600">Sent</p><p className="text-2xl font-bold text-green-600">{sentCount}</p></div>
-            <div className="bg-green-50 p-3 rounded"><CheckCircle className="h-6 w-6 text-green-600"/></div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6 flex items-center justify-between">
+            <div className="bg-green-50 p-3 rounded"><CheckCircle className="h-6 w-6 text-green-600" /></div>
+          </div>
+        </GradientCard>
+        <GradientCard>
+          <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-600">Scheduled</p><p className="text-2xl font-bold text-yellow-600">{scheduledCount}</p></div>
-            <div className="bg-yellow-50 p-3 rounded"><Calendar className="h-6 w-6 text-yellow-600"/></div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6 flex items-center justify-between">
+            <div className="bg-yellow-50 p-3 rounded"><Calendar className="h-6 w-6 text-yellow-600" /></div>
+          </div>
+        </GradientCard>
+        <GradientCard>
+          <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-600">Total</p><p className="text-2xl font-bold text-purple-600">{announcements.length}</p></div>
-            <div className="bg-purple-50 p-3 rounded"><Megaphone className="h-6 w-6 text-purple-600"/></div>
-          </CardContent>
-        </Card>
+            <div className="bg-purple-50 p-3 rounded"><Megaphone className="h-6 w-6 text-purple-600" /></div>
+          </div>
+        </GradientCard>
       </div>
 
       {/* Table */}
-      <Card>
+      <Card className="glass !border-0">
         <CardHeader><CardTitle>Announcements</CardTitle></CardHeader>
         <CardContent>
           <Tabs defaultValue="all">
@@ -299,30 +314,30 @@ export default function CommunicationManagement({ user }) {
               <TabsTrigger value="sent">Sent</TabsTrigger>
             </TabsList>
             <TabsContent value="all" className="mt-4">
-              <AnnouncementTable 
-                data={announcements} 
-                onSend={handleSendNow} 
-                onEdit={openEditDialog} 
+              <AnnouncementTable
+                data={announcements}
+                onSend={handleSendNow}
+                onEdit={openEditDialog}
                 onDelete={handleDeleteAnnouncement}
                 getTypeBadge={getTypeBadge}
                 getStatusBadge={getStatusBadge}
               />
             </TabsContent>
             <TabsContent value="scheduled" className="mt-4">
-              <AnnouncementTable 
-                data={announcements.filter(a => a.status === 'scheduled')} 
-                onSend={handleSendNow} 
-                onEdit={openEditDialog} 
+              <AnnouncementTable
+                data={announcements.filter(a => a.status === 'scheduled')}
+                onSend={handleSendNow}
+                onEdit={openEditDialog}
                 onDelete={handleDeleteAnnouncement}
                 getTypeBadge={getTypeBadge}
                 getStatusBadge={getStatusBadge}
               />
             </TabsContent>
             <TabsContent value="sent" className="mt-4">
-              <AnnouncementTable 
-                data={announcements.filter(a => a.status === 'sent')} 
-                onSend={handleSendNow} 
-                onEdit={openEditDialog} 
+              <AnnouncementTable
+                data={announcements.filter(a => a.status === 'sent')}
+                onSend={handleSendNow}
+                onEdit={openEditDialog}
                 onDelete={handleDeleteAnnouncement}
                 getTypeBadge={getTypeBadge}
                 getStatusBadge={getStatusBadge}

@@ -32,7 +32,7 @@ export default function ComplaintMaintenanceManagement({ user }) {
 
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterType, setFilterType] = useState('all');
@@ -41,7 +41,7 @@ export default function ComplaintMaintenanceManagement({ user }) {
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   const [isResolveDialogOpen, setIsResolveDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  
+
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [assignedContractor, setAssignedContractor] = useState('');
   const [resolutionNotes, setResolutionNotes] = useState('');
@@ -52,16 +52,16 @@ export default function ComplaintMaintenanceManagement({ user }) {
     subject: '',
     description: '',
     priority: 'medium',
-    photo: '', 
+    photo: '',
   });
 
   // [FIX 1] Wrap fetchRequests in useCallback to fix exhaustive-deps warning
   const fetchRequests = useCallback(async () => {
     setLoading(true);
     try {
-      const url = isAdmin ? API_URL : `${API_URL}/user/${user.id}`; 
+      const url = isAdmin ? API_URL : `${API_URL}/user/${user.id}`;
       const response = await fetch(url);
-      
+
       if (!response.ok) throw new Error('Failed to fetch requests');
       const data = await response.json();
       setRequests(data);
@@ -81,7 +81,7 @@ export default function ComplaintMaintenanceManagement({ user }) {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) { 
+      if (file.size > 2 * 1024 * 1024) {
         toast.error("File size too large (Max 2MB)");
         return;
       }
@@ -95,10 +95,10 @@ export default function ComplaintMaintenanceManagement({ user }) {
 
   const handleSubmitRequest = async (e) => {
     e.preventDefault();
-    
+
     const payload = {
       ...newRequest,
-      userId: user.id 
+      userId: user.id
     };
 
     try {
@@ -113,7 +113,7 @@ export default function ComplaintMaintenanceManagement({ user }) {
       toast.success('Request submitted successfully!');
       setNewRequest({ type: 'maintenance', category: '', subject: '', description: '', priority: 'medium', photo: '' });
       setIsRequestDialogOpen(false);
-      fetchRequests(); 
+      fetchRequests();
     } catch (error) {
       toast.error(error.message);
     }
@@ -127,9 +127,9 @@ export default function ComplaintMaintenanceManagement({ user }) {
       const response = await fetch(`${API_URL}/${selectedRequest.id}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          status: 'in-progress', 
-          assignedTo: assignedContractor 
+        body: JSON.stringify({
+          status: 'in-progress',
+          assignedTo: assignedContractor
         }),
       });
 
@@ -153,9 +153,9 @@ export default function ComplaintMaintenanceManagement({ user }) {
       const response = await fetch(`${API_URL}/${selectedRequest.id}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          status: 'resolved', 
-          resolutionNotes: resolutionNotes 
+        body: JSON.stringify({
+          status: 'resolved',
+          resolutionNotes: resolutionNotes
         }),
       });
 
@@ -172,7 +172,7 @@ export default function ComplaintMaintenanceManagement({ user }) {
   };
 
   const handleRejectRequest = async (request) => {
-    if(!window.confirm("Are you sure you want to reject this request?")) return;
+    if (!window.confirm("Are you sure you want to reject this request?")) return;
 
     try {
       const response = await fetch(`${API_URL}/${request.id}/status`, {
@@ -198,10 +198,10 @@ export default function ComplaintMaintenanceManagement({ user }) {
       req.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (req.residentName && req.residentName.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (req.unit && req.unit.toLowerCase().includes(searchTerm.toLowerCase()));
-    
+
     const matchesStatus = filterStatus === 'all' || req.status === filterStatus;
     const matchesType = filterType === 'all' || req.type === filterType;
-    
+
     return matchesSearch && matchesStatus && matchesType;
   });
 
@@ -228,6 +228,15 @@ export default function ComplaintMaintenanceManagement({ user }) {
       default: return null;
     }
   };
+
+  // Helper for Gradient Cards
+  const GradientCard = ({ children, className }) => (
+    <div className={`relative rounded-xl p-[1px] bg-gradient-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
+      <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-white/80 backdrop-blur-sm p-6 shadow-inner">
+        {children}
+      </div>
+    </div>
+  );
 
   if (loading) return <div className="p-8 text-center">Loading requests...</div>;
 
@@ -319,9 +328,9 @@ export default function ComplaintMaintenanceManagement({ user }) {
 
               <div className="space-y-2">
                 <Label htmlFor="photo">Attach Photo (Optional)</Label>
-                <Input 
-                  id="photo" 
-                  type="file" 
+                <Input
+                  id="photo"
+                  type="file"
                   accept="image/*"
                   onChange={handleFileChange}
                 />
@@ -337,57 +346,49 @@ export default function ComplaintMaintenanceManagement({ user }) {
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Pending</p>
-                <p className="mt-1 text-2xl text-yellow-600">{pendingCount}</p>
-                <p className="mt-1 text-xs text-gray-500">Awaiting action</p>
-              </div>
-              <div className="rounded-lg bg-yellow-50 p-3"><Clock className="h-6 w-6 text-yellow-600" /></div>
+        <GradientCard>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Pending</p>
+              <p className="mt-1 text-2xl text-yellow-600 font-bold">{pendingCount}</p>
+              <p className="mt-1 text-xs text-gray-500">Awaiting action</p>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">In Progress</p>
-                <p className="mt-1 text-2xl text-blue-600">{inProgressCount}</p>
-                <p className="mt-1 text-xs text-gray-500">Being handled</p>
-              </div>
-              <div className="rounded-lg bg-blue-50 p-3"><Wrench className="h-6 w-6 text-blue-600" /></div>
+            <div className="rounded-lg bg-yellow-50 p-3"><Clock className="h-6 w-6 text-yellow-600" /></div>
+          </div>
+        </GradientCard>
+        <GradientCard>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">In Progress</p>
+              <p className="mt-1 text-2xl text-blue-600 font-bold">{inProgressCount}</p>
+              <p className="mt-1 text-xs text-gray-500">Being handled</p>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Resolved</p>
-                <p className="mt-1 text-2xl text-green-600">{resolvedCount}</p>
-                <p className="mt-1 text-xs text-gray-500">Completed</p>
-              </div>
-              <div className="rounded-lg bg-green-50 p-3"><CheckCircle className="h-6 w-6 text-green-600" /></div>
+            <div className="rounded-lg bg-blue-50 p-3"><Wrench className="h-6 w-6 text-blue-600" /></div>
+          </div>
+        </GradientCard>
+        <GradientCard>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Resolved</p>
+              <p className="mt-1 text-2xl text-green-600 font-bold">{resolvedCount}</p>
+              <p className="mt-1 text-xs text-gray-500">Completed</p>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">High Priority</p>
-                <p className="mt-1 text-2xl text-red-600">{highPriorityCount}</p>
-                <p className="mt-1 text-xs text-gray-500">Urgent attention</p>
-              </div>
-              <div className="rounded-lg bg-red-50 p-3"><MessageSquare className="h-6 w-6 text-red-600" /></div>
+            <div className="rounded-lg bg-green-50 p-3"><CheckCircle className="h-6 w-6 text-green-600" /></div>
+          </div>
+        </GradientCard>
+        <GradientCard>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">High Priority</p>
+              <p className="mt-1 text-2xl text-red-600 font-bold">{highPriorityCount}</p>
+              <p className="mt-1 text-xs text-gray-500">Urgent attention</p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="rounded-lg bg-red-50 p-3"><MessageSquare className="h-6 w-6 text-red-600" /></div>
+          </div>
+        </GradientCard>
       </div>
 
-      <Card>
+      <Card className="glass !border-0">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Request Management</CardTitle>
@@ -447,43 +448,43 @@ export default function ComplaintMaintenanceManagement({ user }) {
                     {filteredRequests
                       .filter(req => tabValue === 'all' || req.status === (tabValue === 'inprogress' ? 'in-progress' : tabValue))
                       .map((request) => (
-                      <TableRow key={request.id}>
-                        <TableCell>{request.id}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">
-                            {request.type === 'maintenance' ? <Wrench className="mr-1 h-3 w-3" /> : <MessageSquare className="mr-1 h-3 w-3" />}
-                            {request.type === 'maintenance' ? 'Maintenance' : 'Complaint'}
-                          </Badge>
-                        </TableCell>
-                        {isAdmin && <TableCell>{request.residentName}</TableCell>}
-                        {isAdmin && <TableCell>{request.unit}</TableCell>}
-                        <TableCell>{request.category}</TableCell>
-                        <TableCell>{request.subject}</TableCell>
-                        <TableCell>{getPriorityBadge(request.priority)}</TableCell>
-                        <TableCell>{getStatusBadge(request.status)}</TableCell>
-                        <TableCell>{new Date(request.submittedDate).toLocaleDateString()}</TableCell>
-                        {isAdmin && <TableCell>{request.assignedTo || '-'}</TableCell>}
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button size="sm" variant="outline" onClick={() => { setSelectedRequest(request); setIsViewDialogOpen(true); }} title="View Details">
-                              <Eye className="h-4 w-4" />
-                            </Button>
-
-                            {isAdmin && request.status === 'pending' && (
-                              <>
-                                <Button size="sm" onClick={() => { setSelectedRequest(request); setIsAssignDialogOpen(true); }}>Assign</Button>
-                                <Button size="sm" variant="outline" onClick={() => handleRejectRequest(request)}><XCircle className="h-4 w-4" /></Button>
-                              </>
-                            )}
-                            {isAdmin && request.status === 'in-progress' && (
-                              <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => { setSelectedRequest(request); setIsResolveDialogOpen(true); }}>
-                                <CheckCircle className="mr-1 h-3 w-3" /> Resolve
+                        <TableRow key={request.id}>
+                          <TableCell>{request.id}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">
+                              {request.type === 'maintenance' ? <Wrench className="mr-1 h-3 w-3" /> : <MessageSquare className="mr-1 h-3 w-3" />}
+                              {request.type === 'maintenance' ? 'Maintenance' : 'Complaint'}
+                            </Badge>
+                          </TableCell>
+                          {isAdmin && <TableCell>{request.residentName}</TableCell>}
+                          {isAdmin && <TableCell>{request.unit}</TableCell>}
+                          <TableCell>{request.category}</TableCell>
+                          <TableCell>{request.subject}</TableCell>
+                          <TableCell>{getPriorityBadge(request.priority)}</TableCell>
+                          <TableCell>{getStatusBadge(request.status)}</TableCell>
+                          <TableCell>{new Date(request.submittedDate).toLocaleDateString()}</TableCell>
+                          {isAdmin && <TableCell>{request.assignedTo || '-'}</TableCell>}
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Button size="sm" variant="outline" onClick={() => { setSelectedRequest(request); setIsViewDialogOpen(true); }} title="View Details">
+                                <Eye className="h-4 w-4" />
                               </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+
+                              {isAdmin && request.status === 'pending' && (
+                                <>
+                                  <Button size="sm" onClick={() => { setSelectedRequest(request); setIsAssignDialogOpen(true); }}>Assign</Button>
+                                  <Button size="sm" variant="outline" onClick={() => handleRejectRequest(request)}><XCircle className="h-4 w-4" /></Button>
+                                </>
+                              )}
+                              {isAdmin && request.status === 'in-progress' && (
+                                <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => { setSelectedRequest(request); setIsResolveDialogOpen(true); }}>
+                                  <CheckCircle className="mr-1 h-3 w-3" /> Resolve
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
                   </TableBody>
                 </Table>
               </TabsContent>
@@ -500,14 +501,14 @@ export default function ComplaintMaintenanceManagement({ user }) {
           </DialogHeader>
           {selectedRequest && (
             <div className="space-y-4">
-               <div className="flex justify-between border-b pb-2">
+              <div className="flex justify-between border-b pb-2">
                 <h3 className="text-lg font-semibold">{selectedRequest.subject}</h3>
                 <div className="space-x-2">
                   {getStatusBadge(selectedRequest.status)}
                   {getPriorityBadge(selectedRequest.priority)}
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div><span className="font-semibold">Type:</span> {selectedRequest.type}</div>
                 <div><span className="font-semibold">Category:</span> {selectedRequest.category}</div>
@@ -525,21 +526,21 @@ export default function ComplaintMaintenanceManagement({ user }) {
               </div>
 
               {selectedRequest.photo && (
-                 <div>
-                   <h4 className="font-semibold mb-2">Attached Photo:</h4>
-                   <div className="relative border rounded-lg overflow-hidden">
-                     {/* [FIX 2] Disabled ESLint warning for img tag to allow dynamic photos without layout issues */}
-                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                     <img src={selectedRequest.photo} alt="Request attachment" className="w-full max-h-[400px] object-contain bg-black/5" />
-                   </div>
-                 </div>
+                <div>
+                  <h4 className="font-semibold mb-2">Attached Photo:</h4>
+                  <div className="relative border rounded-lg overflow-hidden">
+                    {/* [FIX 2] Disabled ESLint warning for img tag to allow dynamic photos without layout issues */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={selectedRequest.photo} alt="Request attachment" className="w-full max-h-[400px] object-contain bg-black/5" />
+                  </div>
+                </div>
               )}
 
               {selectedRequest.resolutionNotes && (
-                 <div className="border-t pt-4">
-                   <h4 className="font-semibold mb-1 text-green-700">Resolution Notes:</h4>
-                   <p className="p-3 bg-green-50 rounded-md">{selectedRequest.resolutionNotes}</p>
-                 </div>
+                <div className="border-t pt-4">
+                  <h4 className="font-semibold mb-1 text-green-700">Resolution Notes:</h4>
+                  <p className="p-3 bg-green-50 rounded-md">{selectedRequest.resolutionNotes}</p>
+                </div>
               )}
             </div>
           )}

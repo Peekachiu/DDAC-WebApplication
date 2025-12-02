@@ -9,8 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Badge } from './ui/badge';
-import { DollarSign, Plus, AlertCircle, Receipt, Trash2, Calendar, Clock, Download } from 'lucide-react'; // [CHANGED] Removed Filter/Search/CheckCircle to clean up imports if unused, kept necessary ones
+import { DatePicker } from './ui/date-picker';
+import { DollarSign, Plus, AlertCircle, Receipt, Trash2, Calendar, Clock, Download } from 'lucide-react';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
 
 const API_URL = 'http://localhost:5016/api/Financial';
 
@@ -19,18 +21,11 @@ export default function FinancialManagement({ user }) {
 
   const [invoices, setInvoices] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  
+
   const [isGenerateDialogOpen, setIsGenerateDialogOpen] = useState(false);
-  
-  // [CHANGED] Removed Manual Payment State & Functions (No longer needed)
-  /* const [isRecordPaymentDialogOpen, setIsRecordPaymentDialogOpen] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState('');
-  const [paymentDate, setPaymentDate] = useState('');
-  */
 
   const [newInvoice, setNewInvoice] = useState({
     block: '',
@@ -69,7 +64,7 @@ export default function FinancialManagement({ user }) {
       unit: newInvoice.unit,
       month: newInvoice.month,
       amount: parseFloat(newInvoice.amount),
-      dueDate: newInvoice.dueDate || new Date().toISOString()
+      dueDate: newInvoice.dueDate ? format(newInvoice.dueDate, 'yyyy-MM-dd') : new Date().toISOString()
     };
 
     try {
@@ -85,28 +80,26 @@ export default function FinancialManagement({ user }) {
       toast.success('Invoice generated successfully!');
       setIsGenerateDialogOpen(false);
       setNewInvoice({ block: '', floor: '', unit: '', month: '', amount: '450.00', dueDate: '' });
-      fetchInvoices(); 
+      fetchInvoices();
     } catch (error) {
       toast.error(error.message);
     }
   };
 
-  // [CHANGED] Removed handleRecordPayment function
-
   const handleDeleteInvoice = async (id) => {
     if (!window.confirm('Are you sure you want to delete this invoice?')) return;
 
     try {
-        const response = await fetch(`${API_URL}/${id}`, {
-            method: 'DELETE',
-        });
+      const response = await fetch(`${API_URL}/${id}`, {
+        method: 'DELETE',
+      });
 
-        if (!response.ok) throw new Error('Failed to delete invoice');
+      if (!response.ok) throw new Error('Failed to delete invoice');
 
-        toast.success('Invoice deleted successfully');
-        setInvoices(invoices.filter(inv => inv.id !== id));
+      toast.success('Invoice deleted successfully');
+      setInvoices(invoices.filter(inv => inv.id !== id));
     } catch (error) {
-        toast.error(error.message);
+      toast.error(error.message);
     }
   };
 
@@ -151,7 +144,7 @@ ResidentPro Management System
       (inv.residentName && inv.residentName.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (fullUnit.toLowerCase().includes(searchTerm.toLowerCase())) ||
       inv.id.toString().includes(searchTerm);
-    
+
     const matchesStatus = filterStatus === 'all' || inv.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
@@ -160,7 +153,7 @@ ResidentPro Management System
   const totalRevenue = invoices.filter((i) => i.status === 'paid').reduce((sum, i) => sum + i.amount, 0);
   const totalOutstanding = invoices.filter((i) => i.status !== 'paid').reduce((sum, i) => sum + i.amount, 0);
   const pendingAmount = invoices.filter((i) => i.status === 'pending').reduce((sum, i) => sum + i.amount, 0);
-  
+
   const currentMonthRevenue = invoices
     .filter((i) => {
       if (i.status !== 'paid' || !i.paidDate) return false;
@@ -181,10 +174,19 @@ ResidentPro Management System
 
   const residentInvoices = invoices.filter((inv) => {
     const invFull = `${inv.block}-${inv.floor}-${inv.unit}`;
-    return invFull === user.unit; 
+    return invFull === user.unit;
   });
-  
+
   const displayInvoices = isAdmin ? filteredInvoices : residentInvoices;
+
+  // Helper for Gradient Cards
+  const GradientCard = ({ children, className }) => (
+    <div className={`relative rounded-xl p-[1px] bg-gradient-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
+      <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-white/80 backdrop-blur-sm p-6 shadow-inner">
+        {children}
+      </div>
+    </div>
+  );
 
   if (isLoading) return <div className="p-8 text-center">Loading financial records...</div>;
 
@@ -196,7 +198,7 @@ ResidentPro Management System
           <h2>Invoices & Receipts</h2>
           <p className="text-sm text-gray-600">View your maintenance fee invoices</p>
         </div>
-        <Card>
+        <Card className="glass !border-0">
           <CardHeader><CardTitle>My Invoices</CardTitle></CardHeader>
           <CardContent>
             <Table>
@@ -212,9 +214,9 @@ ResidentPro Management System
               </TableHeader>
               <TableBody>
                 {residentInvoices.length === 0 ? (
-                   <TableRow><TableCell colSpan={6} className="text-center py-4">No invoices found.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-center py-4">No invoices found.</TableCell></TableRow>
                 ) : (
-                   residentInvoices.map((invoice) => (
+                  residentInvoices.map((invoice) => (
                     <TableRow key={invoice.id}>
                       <TableCell>#{invoice.id}</TableCell>
                       <TableCell>{invoice.month}</TableCell>
@@ -227,10 +229,9 @@ ResidentPro Management System
                             <Download className="mr-2 h-4 w-4" /> Receipt
                           </Button>
                         )}
-                        {/* Note: Residents pay via automatic/external means, so no manual Pay button here unless Stripe integration is added */}
                       </TableCell>
                     </TableRow>
-                   ))
+                  ))
                 )}
               </TableBody>
             </Table>
@@ -283,7 +284,11 @@ ResidentPro Management System
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="dueDate">Due Date</Label>
-                  <Input id="dueDate" type="date" value={newInvoice.dueDate} onChange={(e) => setNewInvoice({ ...newInvoice, dueDate: e.target.value })} required />
+                  <DatePicker
+                    date={newInvoice.dueDate}
+                    setDate={(date) => setNewInvoice({ ...newInvoice, dueDate: date })}
+                    fromDate={new Date()}
+                  />
                 </div>
                 <Button type="submit" className="w-full">Generate</Button>
               </form>
@@ -293,48 +298,48 @@ ResidentPro Management System
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardContent className="p-6 flex items-center justify-between">
+        <GradientCard>
+          <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Revenue</p>
               <p className="text-2xl text-green-600 font-bold">${totalRevenue.toFixed(2)}</p>
             </div>
-            <div className="bg-green-50 p-3 rounded-lg"><DollarSign className="h-6 w-6 text-green-600"/></div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-6 flex items-center justify-between">
+            <div className="bg-green-50 p-3 rounded-lg"><DollarSign className="h-6 w-6 text-green-600" /></div>
+          </div>
+        </GradientCard>
+
+        <GradientCard>
+          <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Revenue (This Month)</p>
               <p className="text-2xl text-blue-600 font-bold">${currentMonthRevenue.toFixed(2)}</p>
             </div>
-            <div className="bg-blue-50 p-3 rounded-lg"><Calendar className="h-6 w-6 text-blue-600"/></div>
-          </CardContent>
-        </Card>
+            <div className="bg-blue-50 p-3 rounded-lg"><Calendar className="h-6 w-6 text-blue-600" /></div>
+          </div>
+        </GradientCard>
 
-        <Card>
-          <CardContent className="p-6 flex items-center justify-between">
+        <GradientCard>
+          <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Outstanding</p>
               <p className="text-2xl text-orange-600 font-bold">${totalOutstanding.toFixed(2)}</p>
             </div>
-            <div className="bg-orange-50 p-3 rounded-lg"><AlertCircle className="h-6 w-6 text-orange-600"/></div>
-          </CardContent>
-        </Card>
+            <div className="bg-orange-50 p-3 rounded-lg"><AlertCircle className="h-6 w-6 text-orange-600" /></div>
+          </div>
+        </GradientCard>
 
-        <Card>
-          <CardContent className="p-6 flex items-center justify-between">
-             <div>
+        <GradientCard>
+          <div className="flex items-center justify-between">
+            <div>
               <p className="text-sm text-gray-600">Pending Amount</p>
               <p className="text-2xl text-yellow-600 font-bold">${pendingAmount.toFixed(2)}</p>
             </div>
-            <div className="bg-yellow-50 p-3 rounded-lg"><Clock className="h-6 w-6 text-yellow-600"/></div>
-          </CardContent>
-        </Card>
+            <div className="bg-yellow-50 p-3 rounded-lg"><Clock className="h-6 w-6 text-yellow-600" /></div>
+          </div>
+        </GradientCard>
       </div>
 
-      <Card>
+      <Card className="glass !border-0">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Invoice List</CardTitle>
@@ -380,20 +385,19 @@ ResidentPro Management System
                   <TableCell>{getStatusBadge(invoice.status)}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                        {/* [CHANGED] Removed "Pay" button. Only show Receipt if paid. */}
-                        {invoice.status === 'paid' && (
-                          <Button size="sm" variant="outline" onClick={() => handleDownloadReceipt(invoice)}>
-                              <Receipt className="mr-2 h-4 w-4" />
-                          </Button>
-                        )}
-                        
-                        <Button 
-                            size="sm" 
-                            variant="destructive" 
-                            onClick={() => handleDeleteInvoice(invoice.id)}
-                        >
-                            <Trash2 className="h-4 w-4" />
+                      {invoice.status === 'paid' && (
+                        <Button size="sm" variant="outline" onClick={() => handleDownloadReceipt(invoice)}>
+                          <Receipt className="mr-2 h-4 w-4" />
                         </Button>
+                      )}
+
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleDeleteInvoice(invoice.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -402,8 +406,6 @@ ResidentPro Management System
           </Table>
         </CardContent>
       </Card>
-
-      {/* [CHANGED] Removed Record Payment Dialog */}
     </div>
   );
 }

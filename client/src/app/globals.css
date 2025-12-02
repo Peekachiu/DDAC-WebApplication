@@ -47,7 +47,7 @@
     --card: rgba(242, 237, 237, 0.75);
     /* #F2EDED at 75% */
     --card-foreground: #030213;
-    --popover: rgba(255, 255, 255, 0.8);
+    --popover: rgba(255, 255, 255, 0.95);
     --popover-foreground: #030213;
 
     /* Brand Colors */
@@ -103,7 +103,7 @@
 
     --card: rgba(30, 30, 30, 0.75);
     --card-foreground: #ededed;
-    --popover: rgba(30, 30, 30, 0.8);
+    --popover: rgba(30, 30, 30, 0.95);
     --popover-foreground: #ededed;
 
     --primary: #F37021;

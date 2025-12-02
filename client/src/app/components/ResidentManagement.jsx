@@ -14,11 +14,11 @@ import { Label } from './ui/label';
 const API_URL = 'http://localhost:5016';
 
 export default function ResidentManagement({ user }) {
-  const [residents, setResidents] = useState([]); 
+  const [residents, setResidents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingResident, setEditingResident] = useState(null);
 
@@ -62,8 +62,8 @@ export default function ResidentManagement({ user }) {
 
   const handleAddResident = async (e) => {
     e.preventDefault();
-    
-    const defaultPassword = "Resident123!"; 
+
+    const defaultPassword = "Resident123!";
 
     // [CHANGED] Payload matches new DTO structure
     const residentToAdd = {
@@ -72,7 +72,7 @@ export default function ResidentManagement({ user }) {
       block: newResident.block,
       floor: newResident.floor,
       unit: newResident.unit,
-      password: defaultPassword, 
+      password: defaultPassword,
     };
 
     try {
@@ -89,7 +89,7 @@ export default function ResidentManagement({ user }) {
 
       const addedResident = await response.json();
       setResidents((prev) => [...prev, addedResident]);
-      
+
       handleOpenChange(false);
       toast.success(`Resident added! Default password is: ${defaultPassword}`);
     } catch (e) {
@@ -154,9 +154,18 @@ export default function ResidentManagement({ user }) {
     }
   };
 
-  const filteredResidents = residents.filter(r => 
-    r.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+  const filteredResidents = residents.filter(r =>
+    r.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     r.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Helper for Gradient Cards
+  const GradientCard = ({ children, className }) => (
+    <div className={`relative rounded-xl p-[1px] bg-gradient-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
+      <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-white/80 backdrop-blur-sm p-6 shadow-inner">
+        {children}
+      </div>
+    </div>
   );
 
   if (isLoading) return <div className="p-6">Loading...</div>;
@@ -169,7 +178,7 @@ export default function ResidentManagement({ user }) {
           <h2>Resident Management</h2>
           <p className="text-sm text-gray-600">Manage all residents in the community</p>
         </div>
-        
+
         <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
           <DialogTrigger asChild>
             <Button>
@@ -206,7 +215,7 @@ export default function ResidentManagement({ user }) {
                   required
                 />
               </div>
-              
+
               {/* [CHANGED] 3 Separate Inputs for Block, Floor, Unit */}
               <div className="grid grid-cols-3 gap-2">
                 <div className="space-y-2">
@@ -250,38 +259,34 @@ export default function ResidentManagement({ user }) {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Residents</p>
-                <p className="mt-1 text-2xl">{residents.length}</p>
-              </div>
-              <div className="rounded-lg bg-blue-50 p-3">
-                <UserCheck className="h-6 w-6 text-blue-600" />
-              </div>
+        <GradientCard>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Total Residents</p>
+              <p className="mt-1 text-2xl font-bold">{residents.length}</p>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Occupied Units</p>
-                {/* [CHANGED] Calculate unique units based on combo of block-floor-unit */}
-                <p className="mt-1 text-2xl">
-                  {new Set(residents.map(r => `${r.block}-${r.floor}-${r.unit}`)).size}
-                </p>
-              </div>
-              <div className="rounded-lg bg-orange-50 p-3">
-                <Home className="h-6 w-6 text-orange-600" />
-              </div>
+            <div className="rounded-lg bg-blue-50 p-3">
+              <UserCheck className="h-6 w-6 text-blue-600" />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </GradientCard>
+        <GradientCard>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Occupied Units</p>
+              {/* [CHANGED] Calculate unique units based on combo of block-floor-unit */}
+              <p className="mt-1 text-2xl font-bold">
+                {new Set(residents.map(r => `${r.block}-${r.floor}-${r.unit}`)).size}
+              </p>
+            </div>
+            <div className="rounded-lg bg-orange-50 p-3">
+              <Home className="h-6 w-6 text-orange-600" />
+            </div>
+          </div>
+        </GradientCard>
       </div>
 
-      <Card>
+      <Card className="glass !border-0">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>All Residents</CardTitle>

@@ -9,9 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Badge } from './ui/badge';
-import { Calendar } from './ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { Plus, CalendarIcon, Dumbbell, Users, Activity, AlertTriangle } from 'lucide-react';
+import { DatePicker } from './ui/date-picker';
+import { Plus, Dumbbell, Users, Activity, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -91,7 +90,7 @@ export default function ResidentSportFacilityBooking({ user }) {
 
     const payload = {
       sportName: newBooking.facility,
-      date: selectedDate,
+      date: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '',
       startTime: newBooking.time,
       duration: parseInt(newBooking.duration),
       userId: user.id,
@@ -215,13 +214,10 @@ export default function ResidentSportFacilityBooking({ user }) {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="date">Date</Label>
-                <Input
-                  id="date"
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  required
-                  min={new Date().toISOString().split('T')[0]}
+                <DatePicker
+                  date={selectedDate}
+                  setDate={setSelectedDate}
+                  disabled={(date) => date < new Date().setHours(0, 0, 0, 0)}
                 />
               </div>
               <div className="space-y-2">
@@ -235,7 +231,7 @@ export default function ResidentSportFacilityBooking({ user }) {
                       const localToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
                       // Check if the selected date is "Today"
-                      const isToday = selectedDate === localToday;
+                      const isToday = selectedDate && format(selectedDate, 'yyyy-MM-dd') === localToday;
 
                       // Check if the slot hour has passed (e.g. if now is 10:00, 10:00 slot is disabled)
                       const slotHour = parseInt(t.split(':')[0], 10);

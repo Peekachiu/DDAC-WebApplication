@@ -11,9 +11,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Calendar } from './ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { Plus, Edit, Trash2, CheckCircle, XCircle, Calendar as CalendarIcon, Users, Clock, Ban } from 'lucide-react';
+import { DatePicker } from './ui/date-picker';
+import { Plus, Edit, Trash2, CheckCircle, XCircle, Users, Clock, Ban } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -190,7 +189,7 @@ export default function FacilityBookingManagement({ user }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           facilityName: blockDate.facility,
-          date: selectedDate,
+          date: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '',
           reason: blockDate.reason
         }),
       });
@@ -198,7 +197,7 @@ export default function FacilityBookingManagement({ user }) {
       if (response.ok) {
         toast.success('Date blocked successfully!');
         setBlockDate({ facility: '', reason: '' });
-        setSelectedDate('');
+        setSelectedDate(undefined);
         setIsBlockDateDialogOpen(false);
         fetchData(); // Refresh list
       } else {
@@ -238,6 +237,15 @@ export default function FacilityBookingManagement({ user }) {
   const pendingBookings = bookings.filter((b) => b.status === 'pending');
   const approvedBookings = bookings.filter((b) => b.status === 'approved');
 
+  // Helper for Gradient Cards
+  const GradientCard = ({ children, className }) => (
+    <div className={`relative rounded-xl p-[1px] bg-gradient-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
+      <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-white/80 backdrop-blur-sm p-6 shadow-inner">
+        {children}
+      </div>
+    </div>
+  );
+
   if (loading) return <div className="p-8 text-center">Loading...</div>;
 
   if (!isAdmin) {
@@ -249,7 +257,7 @@ export default function FacilityBookingManagement({ user }) {
           <h2>My Bookings</h2>
           <p className="text-sm text-gray-600">View your facility bookings</p>
         </div>
-        <Card>
+        <Card className="glass !border-0">
           <CardHeader>
             <CardTitle>My Bookings</CardTitle>
           </CardHeader>
@@ -344,7 +352,7 @@ export default function FacilityBookingManagement({ user }) {
                     rows={3}
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="capacity">Capacity</Label>
                   <Input
@@ -394,13 +402,10 @@ export default function FacilityBookingManagement({ user }) {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="blockDate">Date to Block</Label>
-                  <Input
-                    id="blockDate"
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    required
-                    min={new Date().toISOString().split('T')[0]}
+                  <DatePicker
+                    date={selectedDate}
+                    setDate={setSelectedDate}
+                    disabled={(date) => date < new Date().setHours(0, 0, 0, 0)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -424,10 +429,10 @@ export default function FacilityBookingManagement({ user }) {
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
-        <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Total Facilities</p><p className="mt-1 text-2xl">{facilities.length}</p></div><div className="rounded-lg bg-blue-50 p-3"><Users className="h-6 w-6 text-blue-600" /></div></div></CardContent></Card>
-        <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Pending Requests</p><p className="mt-1 text-2xl">{pendingBookings.length}</p></div><div className="rounded-lg bg-yellow-50 p-3"><Clock className="h-6 w-6 text-yellow-600" /></div></div></CardContent></Card>
-        <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Approved Bookings</p><p className="mt-1 text-2xl">{approvedBookings.length}</p></div><div className="rounded-lg bg-green-50 p-3"><CheckCircle className="h-6 w-6 text-green-600" /></div></div></CardContent></Card>
-        <Card><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Blocked Dates</p><p className="mt-1 text-2xl">{blockedDates.length}</p></div><div className="rounded-lg bg-red-50 p-3"><Ban className="h-6 w-6 text-red-600" /></div></div></CardContent></Card>
+        <GradientCard><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Total Facilities</p><p className="mt-1 text-2xl font-bold">{facilities.length}</p></div><div className="rounded-lg bg-blue-50 p-3"><Users className="h-6 w-6 text-blue-600" /></div></div></GradientCard>
+        <GradientCard><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Pending Requests</p><p className="mt-1 text-2xl font-bold">{pendingBookings.length}</p></div><div className="rounded-lg bg-yellow-50 p-3"><Clock className="h-6 w-6 text-yellow-600" /></div></div></GradientCard>
+        <GradientCard><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Approved Bookings</p><p className="mt-1 text-2xl font-bold">{approvedBookings.length}</p></div><div className="rounded-lg bg-green-50 p-3"><CheckCircle className="h-6 w-6 text-green-600" /></div></div></GradientCard>
+        <GradientCard><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Blocked Dates</p><p className="mt-1 text-2xl font-bold">{blockedDates.length}</p></div><div className="rounded-lg bg-red-50 p-3"><Ban className="h-6 w-6 text-red-600" /></div></div></GradientCard>
       </div>
 
       <Tabs defaultValue="facilities">
@@ -439,7 +444,7 @@ export default function FacilityBookingManagement({ user }) {
         </TabsList>
 
         <TabsContent value="facilities" className="mt-4">
-          <Card>
+          <Card className="glass !border-0">
             <CardHeader>
               <CardTitle>Facility Management</CardTitle>
             </CardHeader>
@@ -480,7 +485,7 @@ export default function FacilityBookingManagement({ user }) {
 
         {/* All Bookings Tab */}
         <TabsContent value="bookings" className="mt-4">
-          <Card>
+          <Card className="glass !border-0">
             <CardHeader>
               <CardTitle>All Bookings</CardTitle>
             </CardHeader>
@@ -517,18 +522,18 @@ export default function FacilityBookingManagement({ user }) {
                         <div className="flex gap-2">
                           {booking.status === 'pending' && (
                             <>
-                              <Button 
-                                size="sm" 
-                                className="bg-green-600 hover:bg-green-700 h-8 w-8 p-0" 
+                              <Button
+                                size="sm"
+                                className="bg-green-600 hover:bg-green-700 h-8 w-8 p-0"
                                 onClick={() => handleApproveBooking(booking.id)}
                                 title="Approve"
                               >
                                 <CheckCircle className="h-4 w-4" />
                               </Button>
-                              <Button 
-                                size="sm" 
-                                variant="outline" 
-                                className="h-8 w-8 p-0 border-red-200 text-red-600 hover:bg-red-50" 
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-8 w-8 p-0 border-red-200 text-red-600 hover:bg-red-50"
                                 onClick={() => handleRejectBooking(booking.id)}
                                 title="Reject"
                               >
@@ -537,10 +542,10 @@ export default function FacilityBookingManagement({ user }) {
                             </>
                           )}
                           {booking.status === 'approved' && (
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              className="text-red-600 hover:bg-red-50" 
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-red-600 hover:bg-red-50"
                               onClick={() => handleCancelBooking(booking.id)}
                             >
                               Cancel
@@ -559,7 +564,7 @@ export default function FacilityBookingManagement({ user }) {
 
         {/* Pending Bookings Tab */}
         <TabsContent value="pending" className="mt-4">
-          <Card>
+          <Card className="glass !border-0">
             <CardHeader>
               <CardTitle>Pending Approvals</CardTitle>
             </CardHeader>
@@ -611,7 +616,7 @@ export default function FacilityBookingManagement({ user }) {
 
         {/* Blocked Dates Tab */}
         <TabsContent value="blocked" className="mt-4">
-          <Card>
+          <Card className="glass !border-0">
             <CardHeader>
               <CardTitle>Blocked Dates</CardTitle>
             </CardHeader>

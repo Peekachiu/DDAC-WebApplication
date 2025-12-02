@@ -10,9 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Badge } from './ui/badge';
-import { Calendar } from './ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { Plus, CalendarIcon, Building, AlertTriangle, Clock, CheckCircle, XCircle, Ban } from 'lucide-react';
+import { DatePicker } from './ui/date-picker';
+import { Plus, Building, AlertTriangle, Clock, CheckCircle, XCircle, Ban } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -78,7 +77,7 @@ function ResidentEventHallBooking({ user }) {
     const payload = {
       hallName: newBooking.hall,
       eventType: newBooking.event,
-      date: selectedDate,
+      date: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '',
       startTime: newBooking.startTime,
       endTime: newBooking.endTime,
       guests: parseInt(newBooking.guests),
@@ -198,13 +197,10 @@ function ResidentEventHallBooking({ user }) {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="eventDate">Event Date</Label>
-                <Input
-                  id="eventDate"
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  required
-                  min={new Date().toISOString().split('T')[0]}
+                <DatePicker
+                  date={selectedDate}
+                  setDate={setSelectedDate}
+                  disabled={(date) => date < new Date().setHours(0, 0, 0, 0)}
                 />
               </div>
               <div className="space-y-2">
@@ -221,7 +217,7 @@ function ResidentEventHallBooking({ user }) {
                         const now = new Date();
                         const localToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
-                        const isToday = selectedDate === localToday;
+                        const isToday = selectedDate && format(selectedDate, 'yyyy-MM-dd') === localToday;
                         const slotHour = parseInt(t.split(':')[0], 10);
 
                         // Disable if it's today and the time has passed
@@ -245,7 +241,7 @@ function ResidentEventHallBooking({ user }) {
                         const now = new Date();
                         const localToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
-                        const isToday = selectedDate === localToday;
+                        const isToday = selectedDate && format(selectedDate, 'yyyy-MM-dd') === localToday;
                         const slotHour = parseInt(t.split(':')[0], 10);
 
                         // Disable if past time OR if it's earlier than the selected Start Time
