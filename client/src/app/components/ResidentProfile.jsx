@@ -65,6 +65,15 @@ export default function ResidentProfile({ user }) {
     }
   };
 
+  // Helper component for Gradient Border Input Display
+  const GradientBorderDisplay = ({ children, className }) => (
+    <div className={`relative rounded-lg p-[1px] bg-gradient-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
+      <div className="relative rounded-[calc(0.5rem-1px)] bg-white/80 backdrop-blur-sm p-2.5 text-sm text-gray-700 shadow-inner">
+        {children}
+      </div>
+    </div>
+  );
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
@@ -90,27 +99,27 @@ export default function ResidentProfile({ user }) {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Full Name</Label>
-                <div className="p-2 bg-gray-50 rounded border text-sm text-gray-700">
+                <GradientBorderDisplay>
                   {user.name}
-                </div>
+                </GradientBorderDisplay>
               </div>
               <div className="space-y-2">
                 <Label>Email Address</Label>
-                <div className="p-2 bg-gray-50 rounded border text-sm text-gray-700">
+                <GradientBorderDisplay>
                   {user.email}
-                </div>
+                </GradientBorderDisplay>
               </div>
               <div className="space-y-2">
                 <Label>Unit Number</Label>
-                <div className="p-2 bg-gray-50 rounded border text-sm text-gray-700 font-semibold">
+                <GradientBorderDisplay className="font-semibold">
                   {user.unit}
-                </div>
+                </GradientBorderDisplay>
               </div>
               <div className="space-y-2">
                 <Label>Role</Label>
-                <div className="p-2 bg-gray-50 rounded border text-sm text-gray-700">
+                <GradientBorderDisplay>
                   {user.role}
-                </div>
+                </GradientBorderDisplay>
               </div>
             </CardContent>
           </Card>
@@ -134,49 +143,58 @@ export default function ResidentProfile({ user }) {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="oldPassword">Current Password</Label>
-                  <div className="relative">
-                    <KeyRound className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="oldPassword"
-                      type="password"
-                      placeholder="Enter current password"
-                      className="pl-9"
-                      value={passwords.oldPassword}
-                      onChange={handleChange}
-                      required
-                    />
+                  <div className="relative group">
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-300 to-purple-300 rounded-lg blur opacity-0 group-focus-within:opacity-30 transition duration-200"></div>
+                    <div className="relative">
+                      <KeyRound className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="oldPassword"
+                        type="password"
+                        placeholder="Enter current password"
+                        className="pl-9 bg-white/50 border-gray-200 focus:border-blue-400 focus:ring-blue-400/20"
+                        value={passwords.oldPassword}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="newPassword">New Password</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="newPassword"
-                      type="password"
-                      placeholder="Enter new password"
-                      className="pl-9"
-                      value={passwords.newPassword}
-                      onChange={handleChange}
-                      required
-                    />
+                  <div className="relative group">
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-300 to-purple-300 rounded-lg blur opacity-0 group-focus-within:opacity-30 transition duration-200"></div>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="newPassword"
+                        type="password"
+                        placeholder="Enter new password"
+                        className="pl-9 bg-white/50 border-gray-200 focus:border-blue-400 focus:ring-blue-400/20"
+                        value={passwords.newPassword}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      placeholder="Confirm new password"
-                      className="pl-9"
-                      value={passwords.confirmPassword}
-                      onChange={handleChange}
-                      required
-                    />
+                  <div className="relative group">
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-300 to-purple-300 rounded-lg blur opacity-0 group-focus-within:opacity-30 transition duration-200"></div>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="confirmPassword"
+                        type="password"
+                        placeholder="Confirm new password"
+                        className="pl-9 bg-white/50 border-gray-200 focus:border-blue-400 focus:ring-blue-400/20"
+                        value={passwords.confirmPassword}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
                   </div>
                 </div>
 

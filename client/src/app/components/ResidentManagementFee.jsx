@@ -154,6 +154,15 @@ function ResidentManagementFee({ user }) {
   const paidInvoices = invoices.filter(inv => inv.status === 'paid');
   const totalDue = pendingInvoices.reduce((sum, inv) => sum + inv.amount, 0);
 
+  // Helper for Gradient Cards
+  const GradientCard = ({ children, className }) => (
+    <div className={`relative rounded-xl p-[1px] bg-gradient-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
+      <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-white/80 backdrop-blur-sm p-6 shadow-inner">
+        {children}
+      </div>
+    </div>
+  );
+
   if (isLoading)
     return <div className="p-8 text-center text-gray-500">Loading payment details...</div>;
 
@@ -169,49 +178,43 @@ function ResidentManagementFee({ user }) {
         </Button>
       </div>
 
-      {/* Summary Cards */}
+      {/* Summary Cards with Gradient Borders */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Due</p>
-                <p className="mt-1 text-2xl text-red-600">RM {totalDue.toFixed(2)}</p>
-              </div>
-              <div className="rounded-lg bg-red-50 p-3">
-                <DollarSign className="h-6 w-6 text-red-600" />
-              </div>
+        <GradientCard>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Total Due</p>
+              <p className="mt-1 text-2xl text-red-600 font-bold">RM {totalDue.toFixed(2)}</p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="rounded-lg bg-red-50 p-3">
+              <DollarSign className="h-6 w-6 text-red-600" />
+            </div>
+          </div>
+        </GradientCard>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Pending Payments</p>
-                <p className="mt-1 text-2xl">{pendingInvoices.length}</p>
-              </div>
-              <div className="rounded-lg bg-yellow-50 p-3">
-                <Calendar className="h-6 w-6 text-yellow-600" />
-              </div>
+        <GradientCard>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Pending Payments</p>
+              <p className="mt-1 text-2xl font-bold">{pendingInvoices.length}</p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="rounded-lg bg-yellow-50 p-3">
+              <Calendar className="h-6 w-6 text-yellow-600" />
+            </div>
+          </div>
+        </GradientCard>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Paid This Year</p>
-                <p className="mt-1 text-2xl">{paidInvoices.length}</p>
-              </div>
-              <div className="rounded-lg bg-green-50 p-3">
-                <CreditCard className="h-6 w-6 text-green-600" />
-              </div>
+        <GradientCard>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Paid This Year</p>
+              <p className="mt-1 text-2xl font-bold">{paidInvoices.length}</p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="rounded-lg bg-green-50 p-3">
+              <CreditCard className="h-6 w-6 text-green-600" />
+            </div>
+          </div>
+        </GradientCard>
       </div>
 
       <Tabs defaultValue="pending" value={activeTab} onValueChange={setActiveTab} className="w-full">
