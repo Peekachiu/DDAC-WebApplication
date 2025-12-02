@@ -20,9 +20,9 @@ export default function Dashboard({ user }) {
       try {
         // Append user ID to the endpoint
         const response = await fetch(`${API_URL}/${user.id}`);
-        
+
         if (!response.ok) {
-           throw new Error(`Server Error: ${response.status}`);
+          throw new Error(`Server Error: ${response.status}`);
         }
 
         const result = await response.json();
@@ -41,9 +41,9 @@ export default function Dashboard({ user }) {
     }
   }, [user]);
 
-  if (loading) return <div className="p-8 text-center text-gray-500">Loading dashboard...</div>;
-  if (error) return <div className="p-8 text-center text-red-500">Error loading dashboard data.</div>;
-  if (!data) return <div className="p-8 text-center">No data found.</div>;
+  if (loading) return <div className="p-8 text-center text-muted-foreground">Loading dashboard...</div>;
+  if (error) return <div className="p-8 text-center text-destructive">Error loading dashboard data.</div>;
+  if (!data) return <div className="p-8 text-center text-muted-foreground">No data found.</div>;
 
   const stats = [
     {
@@ -92,22 +92,22 @@ export default function Dashboard({ user }) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="mb-1 text-2xl font-semibold tracking-tight">Welcome back, {user.name}!</h2>
-        <p className="text-gray-600">Here what happening with your residence</p>
+        <h2 className="mb-1 text-2xl font-semibold tracking-tight text-foreground">Welcome back, {user.name}!</h2>
+        <p className="text-muted-foreground">Here is what's happening with your residence</p>
       </div>
 
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
-          <Card key={stat.title}>
+          <Card key={stat.title} className="glass border-0">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">{stat.title}</p>
-                  <p className="mt-1 text-2xl font-bold">{stat.value}</p>
-                  <p className="mt-1 text-xs text-gray-500">{stat.description}</p>
+                  <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
+                  <p className="mt-1 text-2xl font-bold text-foreground">{stat.value}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{stat.description}</p>
                 </div>
-                <div className={`${stat.bgColor} rounded-lg p-3`}>
+                <div className={`${stat.bgColor} rounded-lg p-3 bg-opacity-50`}>
                   <stat.icon className={`h-6 w-6 ${stat.color}`} />
                 </div>
               </div>
@@ -118,23 +118,23 @@ export default function Dashboard({ user }) {
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Recent Activities */}
-        <Card>
+        <Card className="glass border-0">
           <CardHeader>
             <CardTitle>Recent Activities</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {data.recentActivities.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-4">No recent activity found.</p>
+                <p className="text-sm text-muted-foreground text-center py-4">No recent activity found.</p>
               ) : (
                 data.recentActivities.map((activity, index) => (
-                  <div key={index} className="flex items-start gap-4 border-b pb-3 last:border-0">
+                  <div key={index} className="flex items-start gap-4 border-b border-white/10 pb-3 last:border-0">
                     <div className="mt-1">{getStatusIcon(activity.status)}</div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium">{activity.title}</p>
-                      <p className="text-xs text-gray-500">{activity.description}</p>
+                      <p className="text-sm font-medium text-foreground">{activity.title}</p>
+                      <p className="text-xs text-muted-foreground">{activity.description}</p>
                     </div>
-                    <p className="text-xs text-gray-400 whitespace-nowrap">
+                    <p className="text-xs text-muted-foreground whitespace-nowrap">
                       {formatDistanceToNow(new Date(activity.time), { addSuffix: true })}
                     </p>
                   </div>
@@ -145,28 +145,28 @@ export default function Dashboard({ user }) {
         </Card>
 
         {/* Upcoming Events */}
-        <Card>
+        <Card className="glass border-0">
           <CardHeader>
             <CardTitle>Upcoming Events</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {data.upcomingEvents.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-4">No upcoming bookings or events.</p>
+                <p className="text-sm text-muted-foreground text-center py-4">No upcoming bookings or events.</p>
               ) : (
                 data.upcomingEvents.map((event, index) => (
-                  <div key={index} className="rounded-lg border p-4">
+                  <div key={index} className="rounded-lg border border-white/20 bg-white/5 p-4">
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="text-sm font-medium">{event.title}</p>
-                        <p className="mt-1 text-xs text-gray-500 flex items-center gap-1">
+                        <p className="text-sm font-medium text-foreground">{event.title}</p>
+                        <p className="mt-1 text-xs text-muted-foreground flex items-center gap-1">
                           <Calendar className="inline h-3 w-3" /> {event.date}
                         </p>
-                        <p className="mt-1 text-xs text-gray-500 flex items-center gap-1">
+                        <p className="mt-1 text-xs text-muted-foreground flex items-center gap-1">
                           <Clock className="inline h-3 w-3" /> {event.time}
                         </p>
                       </div>
-                      <Badge variant="outline">{event.location}</Badge>
+                      <Badge variant="outline" className="border-white/20 text-foreground">{event.location}</Badge>
                     </div>
                   </div>
                 ))
@@ -177,27 +177,27 @@ export default function Dashboard({ user }) {
       </div>
 
       {/* Quick Actions */}
-      <Card>
+      <Card className="glass border-0">
         <CardHeader>
           <CardTitle>Quick Actions</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <button onClick={() => window.location.href = '/resident/visitors'} className="rounded-lg border border-gray-200 p-4 text-left transition hover:border-blue-500 hover:bg-blue-50">
-              <Users className="mb-2 h-5 w-5 text-blue-600" />
-              <p className="text-sm font-medium">Register Visitor</p>
+            <button onClick={() => window.location.href = '/resident/visitors'} className="rounded-lg border border-white/20 bg-white/5 p-4 text-left transition hover:bg-white/10 hover:border-blue-500/50">
+              <Users className="mb-2 h-5 w-5 text-blue-500" />
+              <p className="text-sm font-medium text-foreground">Register Visitor</p>
             </button>
-            <button onClick={() => window.location.href = '/resident/sports'} className="rounded-lg border border-gray-200 p-4 text-left transition hover:border-green-500 hover:bg-green-50">
-              <Calendar className="mb-2 h-5 w-5 text-green-600" />
-              <p className="text-sm font-medium">Book Facility</p>
+            <button onClick={() => window.location.href = '/resident/sports'} className="rounded-lg border border-white/20 bg-white/5 p-4 text-left transition hover:bg-white/10 hover:border-green-500/50">
+              <Calendar className="mb-2 h-5 w-5 text-green-500" />
+              <p className="text-sm font-medium text-foreground">Book Facility</p>
             </button>
-            <button onClick={() => window.location.href = '/resident/management'} className="rounded-lg border border-gray-200 p-4 text-left transition hover:border-purple-500 hover:bg-purple-50">
-              <DollarSign className="mb-2 h-5 w-5 text-purple-600" />
-              <p className="text-sm font-medium">Pay Fees</p>
+            <button onClick={() => window.location.href = '/resident/management'} className="rounded-lg border border-white/20 bg-white/5 p-4 text-left transition hover:bg-white/10 hover:border-purple-500/50">
+              <DollarSign className="mb-2 h-5 w-5 text-purple-500" />
+              <p className="text-sm font-medium text-foreground">Pay Fees</p>
             </button>
-            <button onClick={() => window.location.href = '/resident/complaints'} className="rounded-lg border border-gray-200 p-4 text-left transition hover:border-orange-500 hover:bg-orange-50">
-              <MessageSquare className="mb-2 h-5 w-5 text-orange-600" />
-              <p className="text-sm font-medium">Submit Request</p>
+            <button onClick={() => window.location.href = '/resident/complaints'} className="rounded-lg border border-white/20 bg-white/5 p-4 text-left transition hover:bg-white/10 hover:border-orange-500/50">
+              <MessageSquare className="mb-2 h-5 w-5 text-orange-500" />
+              <p className="text-sm font-medium text-foreground">Submit Request</p>
             </button>
           </div>
         </CardContent>
