@@ -34,7 +34,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend",
         policy =>
         {
-            policy.WithOrigins("http://localhost:3000") // This matches your frontend URL
+            policy.WithOrigins("http://localhost:3000", "https://residentpro.click", "http://residentpro.click")
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
@@ -65,5 +65,19 @@ app.UseAuthorization();
 // --- 5. Map Controllers ---
 // This tells .NET to use your Controller files (e.g., ResidentsController.cs)
 app.MapControllers();
+
+// Health Check Endpoint
+app.MapGet("/health", async (ResidentProDbContext db) =>
+{
+    try
+    {
+        await db.Database.CanConnectAsync();
+        return Results.Ok(new { status = "Healthy", database = "Connected" });
+    }
+    catch (Exception ex)
+    {
+        return Results.Json(new { status = "Unhealthy", database = "Disconnected", error = ex.Message }, statusCode: 500);
+    }
+});
 
 app.Run();
