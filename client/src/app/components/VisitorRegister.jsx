@@ -13,7 +13,7 @@ import { Plus, Search, UserCheck, UserX, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 
-const API_URL = 'http://localhost:5016/api/Visitors';
+const API_URL = '/api/Visitors';
 
 export default function VisitorRegister({ user }) {
   const isAdmin = user.role === 'Admin';

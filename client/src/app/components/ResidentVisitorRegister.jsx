@@ -13,7 +13,7 @@ import { Plus, Search, UserCheck, UserX, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const API_URL = 'http://localhost:5016/api/Visitors';
+const API_URL = '/api/Visitors';
 
 function ResidentVisitorRegister({ user }) {
   // State

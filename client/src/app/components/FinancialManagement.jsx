@@ -14,7 +14,7 @@ import { DollarSign, Plus, AlertCircle, Receipt, Trash2, Calendar, Clock, Downlo
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
-const API_URL = 'http://localhost:5016/api/Financial';
+const API_URL = '/api/Financial';
 
 export default function FinancialManagement({ user }) {
   const isAdmin = user.role === 'Admin';
