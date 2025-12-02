@@ -9,6 +9,7 @@ import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Download, Search, RefreshCcw } from 'lucide-react';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const API_URL = 'http://localhost:5016/api/Financial';
 
@@ -16,6 +17,7 @@ function ResidentInvoiceReceipt({ user }) {
   const [invoices, setInvoices] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState('all');
 
   const fetchInvoices = useCallback(async () => {
     if (!user?.unit) return;
@@ -24,15 +26,15 @@ function ResidentInvoiceReceipt({ user }) {
     try {
       const response = await fetch(API_URL);
       if (!response.ok) throw new Error('Failed to fetch invoices');
-      
+
       const data = await response.json();
-      
+
       // [FIXED] Filter using combined unit string
       const myInvoices = data.filter(inv => {
         const fullUnit = `${inv.block}-${inv.floor}-${inv.unit}`;
         return fullUnit.toLowerCase() === user.unit.toLowerCase();
       });
-      
+
       setInvoices(myInvoices);
     } catch (error) {
       console.error("Fetch error:", error);
@@ -149,7 +151,7 @@ ResidentPro Management
         </Button>
       </div>
 
-      <Card>
+      <Card className="glass !border-0">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>My Documents</CardTitle>
@@ -165,7 +167,7 @@ ResidentPro Management
           </div>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="all">
+          <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="all">All ({invoices.length})</TabsTrigger>
               <TabsTrigger value="pending">Pending ({pendingInvoices.length})</TabsTrigger>
@@ -174,64 +176,70 @@ ResidentPro Management
 
             {['all', 'pending', 'paid'].map((tabValue) => (
               <TabsContent key={tabValue} value={tabValue} className="mt-4">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Invoice ID</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Issue Date</TableHead>
-                      <TableHead>Due Date</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {(tabValue === 'all' ? filteredInvoices : tabValue === 'pending' ? pendingInvoices : paidInvoices).length === 0 ? (
+                <motion.div
+                  initial={{ x: 20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Table>
+                    <TableHeader>
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                          No records found.
-                        </TableCell>
+                        <TableHead>Invoice ID</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Issue Date</TableHead>
+                        <TableHead>Due Date</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
-                    ) : (
-                      (tabValue === 'all' ? filteredInvoices : tabValue === 'pending' ? pendingInvoices : paidInvoices).map((invoice) => (
-                        <TableRow key={invoice.id}>
-                          <TableCell>#{invoice.id}</TableCell>
-                          <TableCell>{invoice.month}</TableCell>
-                          <TableCell>RM {invoice.amount.toFixed(2)}</TableCell>
-                          <TableCell>{new Date(invoice.issueDate).toLocaleDateString()}</TableCell>
-                          <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
-                          <TableCell>{getStatusBadge(invoice.status)}</TableCell>
-                          <TableCell>
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleDownloadInvoice(invoice)}
-                                title="Download Invoice"
-                              >
-                                <Download className="mr-1 h-3 w-3" />
-                                Inv.
-                              </Button>
-
-                              {invoice.status === 'paid' && (
-                                <Button
-                                  size="sm"
-                                  variant="default"
-                                  onClick={() => handleDownloadReceipt(invoice)}
-                                  title="Download Receipt"
-                                >
-                                  <Download className="mr-1 h-3 w-3" />
-                                  Rcpt.
-                                </Button>
-                              )}
-                            </div>
+                    </TableHeader>
+                    <TableBody>
+                      {(tabValue === 'all' ? filteredInvoices : tabValue === 'pending' ? pendingInvoices : paidInvoices).length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                            No records found.
                           </TableCell>
                         </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
+                      ) : (
+                        (tabValue === 'all' ? filteredInvoices : tabValue === 'pending' ? pendingInvoices : paidInvoices).map((invoice) => (
+                          <TableRow key={invoice.id}>
+                            <TableCell>#{invoice.id}</TableCell>
+                            <TableCell>{invoice.month}</TableCell>
+                            <TableCell>RM {invoice.amount.toFixed(2)}</TableCell>
+                            <TableCell>{new Date(invoice.issueDate).toLocaleDateString()}</TableCell>
+                            <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
+                            <TableCell>{getStatusBadge(invoice.status)}</TableCell>
+                            <TableCell>
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleDownloadInvoice(invoice)}
+                                  title="Download Invoice"
+                                >
+                                  <Download className="mr-1 h-3 w-3" />
+                                  Inv.
+                                </Button>
+
+                                {invoice.status === 'paid' && (
+                                  <Button
+                                    size="sm"
+                                    variant="default"
+                                    onClick={() => handleDownloadReceipt(invoice)}
+                                    title="Download Receipt"
+                                  >
+                                    <Download className="mr-1 h-3 w-3" />
+                                    Rcpt.
+                                  </Button>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </motion.div>
               </TabsContent>
             ))}
           </Tabs>

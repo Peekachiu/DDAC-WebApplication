@@ -7,6 +7,7 @@ import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Bell, AlertCircle, Info, Calendar, Trash2, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Ensure this matches your backend port
 const API_URL = 'http://localhost:5016/api/Announcements';
@@ -14,6 +15,7 @@ const API_URL = 'http://localhost:5016/api/Announcements';
 function ResidentNotifications({ user }) {
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('all');
 
   // --- 1. Fetch Data from Backend ---
   const fetchNotifications = useCallback(async () => {
@@ -22,9 +24,9 @@ function ResidentNotifications({ user }) {
       // Fetch only 'sent' announcements for residents
       const response = await fetch(`${API_URL}/resident`);
       if (!response.ok) throw new Error('Failed to fetch notifications');
-      
+
       const data = await response.json();
-      
+
       // Transform backend data to frontend structure
       // Note: DB doesn't persist 'read' status per user yet, so we default to false
       const formattedData = data.map(item => ({
@@ -33,7 +35,7 @@ function ResidentNotifications({ user }) {
         message: item.message,
         type: item.type.toLowerCase(),
         date: item.sentDate || item.scheduledDate,
-        read: false 
+        read: false
       }));
 
       setNotifications(formattedData);
@@ -95,7 +97,7 @@ function ResidentNotifications({ user }) {
   const readNotifications = notifications.filter((n) => n.read);
 
   const renderNotification = (notification) => (
-    <Card key={notification.id} className={!notification.read ? 'border-l-4 border-l-blue-500' : ''}>
+    <Card key={notification.id} className={`glass !border-0 mb-4 ${!notification.read ? 'border-l-4 border-l-blue-500' : ''}`}>
       <CardContent className="p-6">
         <div className="flex items-start gap-4">
           <div className="mt-1 rounded-lg bg-gray-50 p-3">
@@ -183,45 +185,31 @@ function ResidentNotifications({ user }) {
         </div>
       </div>
 
-      <Tabs defaultValue="all">
+      <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="all">All ({notifications.length})</TabsTrigger>
           <TabsTrigger value="unread">Unread ({unreadNotifications.length})</TabsTrigger>
           <TabsTrigger value="read">Read ({readNotifications.length})</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="all" className="mt-4 space-y-4">
-          {notifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <Bell className="mb-4 h-12 w-12 text-gray-400" />
-              <p className="text-gray-600">No notifications found</p>
-            </div>
-          ) : (
-            notifications.map((notification) => renderNotification(notification))
-          )}
-        </TabsContent>
-
-        <TabsContent value="unread" className="mt-4 space-y-4">
-          {unreadNotifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <Bell className="mb-4 h-12 w-12 text-gray-400" />
-              <p className="text-gray-600">No unread notifications</p>
-            </div>
-          ) : (
-            unreadNotifications.map((notification) => renderNotification(notification))
-          )}
-        </TabsContent>
-
-        <TabsContent value="read" className="mt-4 space-y-4">
-          {readNotifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <Bell className="mb-4 h-12 w-12 text-gray-400" />
-              <p className="text-gray-600">No read notifications</p>
-            </div>
-          ) : (
-            readNotifications.map((notification) => renderNotification(notification))
-          )}
-        </TabsContent>
+        {['all', 'unread', 'read'].map((tabValue) => (
+          <TabsContent key={tabValue} value={tabValue} className="mt-4 space-y-4">
+            <motion.div
+              initial={{ x: 20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.2 }}
+            >
+              {(tabValue === 'all' ? notifications : tabValue === 'unread' ? unreadNotifications : readNotifications).length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <Bell className="mb-4 h-12 w-12 text-gray-400" />
+                  <p className="text-gray-600">No {tabValue === 'all' ? '' : tabValue} notifications found</p>
+                </div>
+              ) : (
+                (tabValue === 'all' ? notifications : tabValue === 'unread' ? unreadNotifications : readNotifications).map((notification) => renderNotification(notification))
+              )}
+            </motion.div>
+          </TabsContent>
+        ))}
       </Tabs>
     </div>
   );

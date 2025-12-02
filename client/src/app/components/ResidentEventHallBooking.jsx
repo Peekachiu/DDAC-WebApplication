@@ -13,6 +13,7 @@ import { Badge } from './ui/badge';
 import { Calendar } from './ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Plus, CalendarIcon, Building, AlertTriangle, Clock, CheckCircle, XCircle, Ban } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
@@ -26,7 +27,8 @@ function ResidentEventHallBooking({ user }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState();
   const [blockedDates, setBlockedDates] = useState([]);
-  
+  const [activeTab, setActiveTab] = useState('upcoming');
+
   const [newBooking, setNewBooking] = useState({
     hall: '', event: '', startTime: '', endTime: '', guests: '10', description: '',
   });
@@ -45,9 +47,9 @@ function ResidentEventHallBooking({ user }) {
         const bookResponse = await fetch(`${API_URL}/all`);
         if (bookResponse.ok) {
           const data = await bookResponse.json();
-          const myBookings = data.filter(b => 
-    b.userId === user.id && b.facilityType === 'event'
-  );
+          const myBookings = data.filter(b =>
+            b.userId === user.id && b.facilityType === 'event'
+          );
           setBookings(myBookings);
         }
 
@@ -75,17 +77,17 @@ function ResidentEventHallBooking({ user }) {
 
     const payload = {
       hallName: newBooking.hall,
-      eventType: newBooking.event, 
+      eventType: newBooking.event,
       date: selectedDate,
       startTime: newBooking.startTime,
       endTime: newBooking.endTime,
       guests: parseInt(newBooking.guests),
       description: newBooking.description,
-      userId: user.id 
+      userId: user.id
     };
 
-    const isBlocked = blockedDates.some(b => 
-      b.facilityName === newBooking.hall && 
+    const isBlocked = blockedDates.some(b =>
+      b.facilityName === newBooking.hall &&
       new Date(b.date).toDateString() === new Date(selectedDate).toDateString()
     );
 
@@ -110,7 +112,7 @@ function ResidentEventHallBooking({ user }) {
       setIsDialogOpen(false);
       setNewBooking({ hall: '', event: '', startTime: '', endTime: '', guests: '10', description: '' });
       setSelectedDate(undefined);
-      window.location.reload(); 
+      window.location.reload();
     } catch (error) {
       toast.error(error.message);
     }
@@ -135,7 +137,7 @@ function ResidentEventHallBooking({ user }) {
     switch (status.toLowerCase()) {
       case 'approved': return <Badge className="bg-green-100 text-green-800">Confirmed</Badge>;
       case 'pending': return <Badge className="bg-yellow-100 text-yellow-800">Pending Approval</Badge>;
-      case 'rejected': 
+      case 'rejected':
       case 'cancelled': return <Badge className="bg-red-100 text-red-800">Cancelled/Rejected</Badge>;
       default: return <Badge variant="outline">{status}</Badge>;
     }
@@ -207,70 +209,70 @@ function ResidentEventHallBooking({ user }) {
               </div>
               <div className="space-y-2">
                 <Label>Event Type</Label>
-                <Input value={newBooking.event} onChange={(e) => setNewBooking({...newBooking, event: e.target.value})} required placeholder="Wedding, Meeting..." />
+                <Input value={newBooking.event} onChange={(e) => setNewBooking({ ...newBooking, event: e.target.value })} required placeholder="Wedding, Meeting..." />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Start Time</Label>
-    <Select onValueChange={(val) => setNewBooking({ ...newBooking, startTime: val })} required>
-      <SelectTrigger><SelectValue placeholder="Start" /></SelectTrigger>
-      <SelectContent>
-        {timeSlots.map(t => {
-          const now = new Date();
-          const localToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-          
-          const isToday = selectedDate === localToday;
-          const slotHour = parseInt(t.split(':')[0], 10);
-          
-          // Disable if it's today and the time has passed
-          const isPastTime = isToday && slotHour <= now.getHours();
+                  <Select onValueChange={(val) => setNewBooking({ ...newBooking, startTime: val })} required>
+                    <SelectTrigger><SelectValue placeholder="Start" /></SelectTrigger>
+                    <SelectContent>
+                      {timeSlots.map(t => {
+                        const now = new Date();
+                        const localToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
-          return (
-            <SelectItem key={t} value={t} disabled={isPastTime}>
-              {t}
-            </SelectItem>
-          );
-        })}
-      </SelectContent>
-    </Select>
+                        const isToday = selectedDate === localToday;
+                        const slotHour = parseInt(t.split(':')[0], 10);
+
+                        // Disable if it's today and the time has passed
+                        const isPastTime = isToday && slotHour <= now.getHours();
+
+                        return (
+                          <SelectItem key={t} value={t} disabled={isPastTime}>
+                            {t}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>End Time</Label>
-    <Select onValueChange={(val) => setNewBooking({ ...newBooking, endTime: val })} required>
-      <SelectTrigger><SelectValue placeholder="End" /></SelectTrigger>
-      <SelectContent>
-        {timeSlots.map(t => {
-          const now = new Date();
-          const localToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-          
-          const isToday = selectedDate === localToday;
-          const slotHour = parseInt(t.split(':')[0], 10);
+                  <Select onValueChange={(val) => setNewBooking({ ...newBooking, endTime: val })} required>
+                    <SelectTrigger><SelectValue placeholder="End" /></SelectTrigger>
+                    <SelectContent>
+                      {timeSlots.map(t => {
+                        const now = new Date();
+                        const localToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
-          // Disable if past time OR if it's earlier than the selected Start Time
-          let isInvalid = false;
-          
-          // 1. Check past time
-          if (isToday && slotHour <= now.getHours()) isInvalid = true;
+                        const isToday = selectedDate === localToday;
+                        const slotHour = parseInt(t.split(':')[0], 10);
 
-          // 2. Check logic: End time must be after Start time
-          if (newBooking.startTime) {
-             const startHour = parseInt(newBooking.startTime.split(':')[0], 10);
-             if (slotHour <= startHour) isInvalid = true;
-          }
+                        // Disable if past time OR if it's earlier than the selected Start Time
+                        let isInvalid = false;
 
-          return (
-            <SelectItem key={t} value={t} disabled={isInvalid}>
-              {t}
-            </SelectItem>
-          );
-        })}
-      </SelectContent>
-    </Select>
+                        // 1. Check past time
+                        if (isToday && slotHour <= now.getHours()) isInvalid = true;
+
+                        // 2. Check logic: End time must be after Start time
+                        if (newBooking.startTime) {
+                          const startHour = parseInt(newBooking.startTime.split(':')[0], 10);
+                          if (slotHour <= startHour) isInvalid = true;
+                        }
+
+                        return (
+                          <SelectItem key={t} value={t} disabled={isInvalid}>
+                            {t}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <div className="space-y-2">
                 <Label>Guests</Label>
-                <Input type="number" value={newBooking.guests} onChange={(e) => setNewBooking({...newBooking, guests: e.target.value})} required />
+                <Input type="number" value={newBooking.guests} onChange={(e) => setNewBooking({ ...newBooking, guests: e.target.value })} required />
               </div>
               <Button type="submit" className="w-full">Submit Request</Button>
             </form>
@@ -282,9 +284,9 @@ function ResidentEventHallBooking({ user }) {
       {/* Facilities Grid (Added as requested) */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {halls.map((facility) => (
-          <div key={facility.id} className={`flex items-center gap-4 rounded-lg border p-4 ${facility.status === 'maintenance' ? 'bg-gray-50 opacity-75' : 'bg-white'}`}>
+          <div key={facility.id} className={`flex items-center gap-4 rounded-lg p-4 transition-all duration-300 glass !border-0 ${facility.status === 'maintenance' ? 'opacity-75' : 'hover:shadow-lg hover:-translate-y-1 cursor-pointer'}`}>
             <div className="rounded-full bg-gray-100 p-2">
-              {facility.status === 'maintenance' ? <AlertTriangle className="h-6 w-6 text-yellow-600"/> : getFacilityIcon(facility.name)}
+              {facility.status === 'maintenance' ? <AlertTriangle className="h-6 w-6 text-yellow-600" /> : getFacilityIcon(facility.name)}
             </div>
             <div>
               <p className="text-sm font-medium">{facility.name}</p>
@@ -299,84 +301,108 @@ function ResidentEventHallBooking({ user }) {
         ))}
       </div>
 
-      <Tabs defaultValue="upcoming" className="w-full">
+      <Tabs defaultValue="upcoming" value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="upcoming">Upcoming Events</TabsTrigger>
           <TabsTrigger value="history">Event History</TabsTrigger>
         </TabsList>
 
         <TabsContent value="upcoming">
-          <Card>
-            <CardHeader><CardTitle>Upcoming</CardTitle></CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Hall</TableHead>
-                    <TableHead>Event</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Time</TableHead>
-                    <TableHead>Guests</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {upcomingBookings.length === 0 ? (
-                    <TableRow><TableCell colSpan={7} className="text-center">No upcoming events</TableCell></TableRow>
-                  ) : (
-                    upcomingBookings.map((b) => (
-                      <TableRow key={b.id}>
-                        <TableCell>{b.facilityName}</TableCell>
-                        <TableCell>{b.purpose}</TableCell>
-                        <TableCell>{format(new Date(b.date), 'MMM dd, yyyy')}</TableCell>
-                        <TableCell>{b.startTime} - {b.endTime}</TableCell>
-                        <TableCell>{b.guests}</TableCell>
-                        <TableCell>{getStatusBadge(b.status)}</TableCell>
-                        <TableCell>
-                          {b.status === 'pending' && (
-                            <Button size="sm" variant="outline" onClick={() => handleCancelBooking(b.id)}>Cancel</Button>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+          <AnimatePresence mode="wait">
+            {activeTab === 'upcoming' && (
+              <motion.div
+                key="upcoming"
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: 20, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Card className="glass !border-0">
+                  <CardHeader><CardTitle>Upcoming</CardTitle></CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Hall</TableHead>
+                          <TableHead>Event</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Time</TableHead>
+                          <TableHead>Guests</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Action</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {upcomingBookings.length === 0 ? (
+                          <TableRow><TableCell colSpan={7} className="text-center">No upcoming events</TableCell></TableRow>
+                        ) : (
+                          upcomingBookings.map((b) => (
+                            <TableRow key={b.id}>
+                              <TableCell>{b.facilityName}</TableCell>
+                              <TableCell>{b.purpose}</TableCell>
+                              <TableCell>{format(new Date(b.date), 'MMM dd, yyyy')}</TableCell>
+                              <TableCell>{b.startTime} - {b.endTime}</TableCell>
+                              <TableCell>{b.guests}</TableCell>
+                              <TableCell>{getStatusBadge(b.status)}</TableCell>
+                              <TableCell>
+                                {b.status === 'pending' && (
+                                  <Button size="sm" variant="outline" onClick={() => handleCancelBooking(b.id)}>Cancel</Button>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </TabsContent>
 
         <TabsContent value="history">
-          <Card>
-            <CardHeader><CardTitle>History</CardTitle></CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Hall</TableHead>
-                    <TableHead>Event</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {pastBookings.length === 0 ? (
-                     <TableRow><TableCell colSpan={4} className="text-center">No history</TableCell></TableRow>
-                  ) : (
-                    pastBookings.map((b) => (
-                      <TableRow key={b.id} className="opacity-70">
-                        <TableCell>{b.facilityName}</TableCell>
-                        <TableCell>{b.purpose}</TableCell>
-                        <TableCell>{format(new Date(b.date), 'MMM dd, yyyy')}</TableCell>
-                        <TableCell>{getStatusBadge(b.status)}</TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+          <AnimatePresence mode="wait">
+            {activeTab === 'history' && (
+              <motion.div
+                key="history"
+                initial={{ x: 20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: -20, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Card className="glass !border-0">
+                  <CardHeader><CardTitle>History</CardTitle></CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Hall</TableHead>
+                          <TableHead>Event</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {pastBookings.length === 0 ? (
+                          <TableRow><TableCell colSpan={4} className="text-center">No history</TableCell></TableRow>
+                        ) : (
+                          pastBookings.map((b) => (
+                            <TableRow key={b.id} className="opacity-70">
+                              <TableCell>{b.facilityName}</TableCell>
+                              <TableCell>{b.purpose}</TableCell>
+                              <TableCell>{format(new Date(b.date), 'MMM dd, yyyy')}</TableCell>
+                              <TableCell>{getStatusBadge(b.status)}</TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </TabsContent>
       </Tabs>
     </div>
