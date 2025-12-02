@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 const AuthContext = createContext(null);
-const API_URL = 'http://localhost:5016'; // Check that this matches your dotnet run port
+const API_URL = ''; // Check that this matches your dotnet run port
 
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
@@ -37,20 +37,20 @@ export function AuthProvider({ children }) {
 
       // Success
       toast.success('Login successful!');
-      
+
       const userData = {
         id: data.id,
         name: data.name,
         email: data.email,
         unit: data.unit,
-        role: data.role, 
+        role: data.role,
       };
 
       setCurrentUser(userData);
       localStorage.setItem('currentUser', JSON.stringify(userData));
-      
-      router.push('/'); 
-      
+
+      router.push('/');
+
     } catch (error) {
       console.error("Login Error:", error);
       toast.error(error.message || 'Invalid email or password');

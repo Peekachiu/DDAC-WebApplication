@@ -11,7 +11,7 @@ import { Download, Search, RefreshCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const API_URL = 'http://localhost:5016/api/Financial';
+const API_URL = '/api/Financial';
 
 function ResidentInvoiceReceipt({ user }) {
   const [invoices, setInvoices] = useState([]);

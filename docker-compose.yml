@@ -10,7 +10,7 @@ services:
       MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
       MYSQL_DATABASE: residentprodb
     ports:
-      - "3307:3306"
+      - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
 
@@ -33,7 +33,7 @@ services:
 
   # 3. Frontend
   frontend:
-    build: 
+    build:
       context: ./client
       args:
         PUBLISHABLE_KEY: ${PUBLISHABLE_KEY}
@@ -44,7 +44,7 @@ services:
     ports:
       - "3000:3000" # Map localhost:3000 to container port 3000
     environment:
-    - WATCHPACK_POLLING=true
+      - WATCHPACK_POLLING=true
 
 volumes:
   mysql_data:

@@ -13,7 +13,7 @@ import CheckoutForm from './CheckoutForm';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 
-const BASE_API_URL = 'http://localhost:5016/api';
+const BASE_API_URL = '/api';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_PUBLISHABLE_KEY);
 
