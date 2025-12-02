@@ -64,8 +64,8 @@ function AppContent({ children }) {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-gradient-to-br from-secondary via-white to-secondary">
-        <Sidebar className="glass border-r-0">
+      <div className="flex min-h-screen w-full bg-gradient-to-br from-primary/20 via-secondary to-primary/20">
+        <Sidebar variant="floating" className="border-r-0">
           <SidebarHeader className="border-b border-white/20 p-4">
             <div className="flex items-center gap-2">
               <Building2 className="h-6 w-6 text-primary" />
