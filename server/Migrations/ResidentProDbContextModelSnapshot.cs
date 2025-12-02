@@ -74,22 +74,63 @@ namespace server.Migrations
                     b.ToTable("announcement", (string)null);
                 });
 
-            modelBuilder.Entity("server.Models.EventHall", b =>
+            modelBuilder.Entity("server.Models.BlockedDate", b =>
                 {
-                    b.Property<int>("HBookingID")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasColumnName("hBookingID");
+                        .HasColumnName("id");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("HBookingID"));
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("date");
+
+                    b.Property<string>("FacilityName")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("facility_name");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("reason");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("blocked_date", (string)null);
+                });
+
+            modelBuilder.Entity("server.Models.Booking", b =>
+                {
+                    b.Property<int>("BookingID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("bookingID");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("BookingID"));
 
                     b.Property<DateTime>("BookingDate")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("bookingDate");
 
-                    b.Property<int>("Duration")
+                    b.Property<TimeSpan>("EndTime")
+                        .HasColumnType("time(6)")
+                        .HasColumnName("endTime");
+
+                    b.Property<int>("FacilityID")
                         .HasColumnType("int")
-                        .HasColumnName("duration");
+                        .HasColumnName("facilityID");
+
+                    b.Property<int>("Guests")
+                        .HasColumnType("int")
+                        .HasColumnName("guests");
+
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("purpose");
 
                     b.Property<TimeSpan>("StartTime")
                         .HasColumnType("time(6)")
@@ -103,17 +144,13 @@ namespace server.Migrations
                         .HasColumnType("int")
                         .HasColumnName("userID");
 
-                    b.Property<int>("VenueID")
-                        .HasColumnType("int")
-                        .HasColumnName("venueID");
+                    b.HasKey("BookingID");
 
-                    b.HasKey("HBookingID");
+                    b.HasIndex("FacilityID");
 
                     b.HasIndex("UserID");
 
-                    b.HasIndex("VenueID");
-
-                    b.ToTable("event_hall", (string)null);
+                    b.ToTable("booking", (string)null);
                 });
 
             modelBuilder.Entity("server.Models.Facility", b =>
@@ -133,10 +170,6 @@ namespace server.Migrations
                         .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("description");
-
-                    b.Property<decimal>("HourlyRate")
-                        .HasColumnType("decimal(65,30)")
-                        .HasColumnName("hourlyRate");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -167,8 +200,8 @@ namespace server.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("InvoiceID"));
 
-                    b.Property<int>("Amount")
-                        .HasColumnType("int")
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18, 2)")
                         .HasColumnName("amount");
 
                     b.Property<DateTime>("InvoiceDate")
@@ -219,8 +252,8 @@ namespace server.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("PaymentID"));
 
-                    b.Property<int>("Amount")
-                        .HasColumnType("int")
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18, 2)")
                         .HasColumnName("amount");
 
                     b.Property<DateTime>("DueDate")
@@ -357,51 +390,6 @@ namespace server.Migrations
                     b.ToTable("report", (string)null);
                 });
 
-            modelBuilder.Entity("server.Models.SportFacility", b =>
-                {
-                    b.Property<int>("SBookingID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("sBookingID");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("SBookingID"));
-
-                    b.Property<DateTime>("BookingDate")
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("bookingDate");
-
-                    b.Property<int>("Court")
-                        .HasColumnType("int")
-                        .HasColumnName("court");
-
-                    b.Property<int>("Duration")
-                        .HasColumnType("int")
-                        .HasColumnName("duration");
-
-                    b.Property<string>("SportName")
-                        .IsRequired()
-                        .HasColumnType("longtext")
-                        .HasColumnName("sportName");
-
-                    b.Property<TimeSpan>("StartTime")
-                        .HasColumnType("time(6)")
-                        .HasColumnName("startTime");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int")
-                        .HasColumnName("status");
-
-                    b.Property<int>("UserID")
-                        .HasColumnType("int")
-                        .HasColumnName("userID");
-
-                    b.HasKey("SBookingID");
-
-                    b.HasIndex("UserID");
-
-                    b.ToTable("sport_facility", (string)null);
-                });
-
             modelBuilder.Entity("server.Models.User", b =>
                 {
                     b.Property<int>("UserID")
@@ -441,29 +429,6 @@ namespace server.Migrations
                     b.HasIndex("PropertyID");
 
                     b.ToTable("user", (string)null);
-                });
-
-            modelBuilder.Entity("server.Models.Venue", b =>
-                {
-                    b.Property<int>("VenueID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("venueID");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("VenueID"));
-
-                    b.Property<string>("VenueDescription")
-                        .IsRequired()
-                        .HasColumnType("longtext")
-                        .HasColumnName("venueDescription");
-
-                    b.Property<byte[]>("VenueImg")
-                        .HasColumnType("longblob")
-                        .HasColumnName("venueImg");
-
-                    b.HasKey("VenueID");
-
-                    b.ToTable("venue", (string)null);
                 });
 
             modelBuilder.Entity("server.Models.Visitor", b =>
@@ -521,23 +486,23 @@ namespace server.Migrations
                     b.ToTable("visitor", (string)null);
                 });
 
-            modelBuilder.Entity("server.Models.EventHall", b =>
+            modelBuilder.Entity("server.Models.Booking", b =>
                 {
+                    b.HasOne("server.Models.Facility", "Facility")
+                        .WithMany()
+                        .HasForeignKey("FacilityID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("server.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("server.Models.Venue", "Venue")
-                        .WithMany()
-                        .HasForeignKey("VenueID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Navigation("Facility");
 
                     b.Navigation("User");
-
-                    b.Navigation("Venue");
                 });
 
             modelBuilder.Entity("server.Models.Invoice", b =>
@@ -574,17 +539,6 @@ namespace server.Migrations
                 });
 
             modelBuilder.Entity("server.Models.Report", b =>
-                {
-                    b.HasOne("server.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("server.Models.SportFacility", b =>
                 {
                     b.HasOne("server.Models.User", "User")
                         .WithMany()

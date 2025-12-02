@@ -13,6 +13,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Badge } from './ui/badge';
 import { Plus, Eye, X, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 
 const API_URL = 'http://localhost:5016/api/Reports';
 
@@ -24,6 +26,7 @@ function ResidentComplaintRequest({ user }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedComplaint, setSelectedComplaint] = useState(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('all');
 
   // Form State
   const [newComplaint, setNewComplaint] = useState({
@@ -32,7 +35,7 @@ function ResidentComplaintRequest({ user }) {
     subject: '',
     description: '',
     priority: 'medium',
-    photos: [], 
+    photos: [],
   });
 
   const categories = {
@@ -60,7 +63,7 @@ function ResidentComplaintRequest({ user }) {
         date: item.submittedDate,
         assignedTo: item.assignedTo,
         resolutionNotes: item.resolutionNotes,
-        photos: item.photo ? [item.photo] : [] 
+        photos: item.photo ? [item.photo] : []
       }));
 
       setComplaints(mappedData);
@@ -70,7 +73,7 @@ function ResidentComplaintRequest({ user }) {
     } finally {
       setLoading(false);
     }
-  }, [user.id]); 
+  }, [user.id]);
 
   useEffect(() => {
     if (user?.id) {
@@ -102,17 +105,17 @@ function ResidentComplaintRequest({ user }) {
       if (!response.ok) throw new Error('Failed to submit request');
 
       toast.success('Request submitted successfully!');
-      
-      setNewComplaint({ 
-        type: 'maintenance', 
-        category: '', 
-        subject: '', 
-        description: '', 
-        priority: 'medium', 
-        photos: [] 
+
+      setNewComplaint({
+        type: 'maintenance',
+        category: '',
+        subject: '',
+        description: '',
+        priority: 'medium',
+        photos: []
       });
       setIsDialogOpen(false);
-      
+
       fetchComplaints();
     } catch (error) {
       toast.error(error.message);
@@ -152,6 +155,9 @@ function ResidentComplaintRequest({ user }) {
         return <Badge>Unknown</Badge>;
     }
   };
+
+  const pendingComplaints = complaints.filter(c => c.status === 'pending');
+  const resolvedComplaints = complaints.filter(c => c.status === 'resolved');
 
   if (loading) return <div className="p-8 text-center">Loading your requests...</div>;
 
@@ -301,59 +307,77 @@ function ResidentComplaintRequest({ user }) {
         </Dialog>
       </div>
 
-      <Card>
+      <Card className="glass !border-0">
         <CardHeader>
           <CardTitle>My Requests</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Type</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Subject</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {complaints.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-4 text-gray-500">
-                    No requests found.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                complaints.map((complaint) => (
-                  <TableRow key={complaint.id}>
-                    <TableCell>
-                      <Badge variant="outline">
-                        {complaint.type === 'maintenance' ? 'Maintenance' : 'Complaint'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{complaint.category}</TableCell>
-                    <TableCell>{complaint.subject}</TableCell>
-                    <TableCell>{new Date(complaint.date).toLocaleDateString()}</TableCell>
-                    <TableCell>{getStatusBadge(complaint.status)}</TableCell>
-                    <TableCell>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setSelectedComplaint(complaint);
-                          setIsViewDialogOpen(true);
-                        }}
-                      >
-                        <Eye className="mr-1 h-3 w-3" />
-                        View
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+          <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="all">All ({complaints.length})</TabsTrigger>
+              <TabsTrigger value="pending">Pending ({pendingComplaints.length})</TabsTrigger>
+              <TabsTrigger value="resolved">Resolved ({resolvedComplaints.length})</TabsTrigger>
+            </TabsList>
+
+            {['all', 'pending', 'resolved'].map((tabValue) => (
+              <TabsContent key={tabValue} value={tabValue} className="mt-4">
+                <motion.div
+                  initial={{ x: 20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Category</TableHead>
+                        <TableHead>Subject</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {(tabValue === 'all' ? complaints : tabValue === 'pending' ? pendingComplaints : resolvedComplaints).length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center py-4 text-gray-500">
+                            No requests found.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        (tabValue === 'all' ? complaints : tabValue === 'pending' ? pendingComplaints : resolvedComplaints).map((complaint) => (
+                          <TableRow key={complaint.id}>
+                            <TableCell>
+                              <Badge variant="outline">
+                                {complaint.type === 'maintenance' ? 'Maintenance' : 'Complaint'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>{complaint.category}</TableCell>
+                            <TableCell>{complaint.subject}</TableCell>
+                            <TableCell>{new Date(complaint.date).toLocaleDateString()}</TableCell>
+                            <TableCell>{getStatusBadge(complaint.status)}</TableCell>
+                            <TableCell>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setSelectedComplaint(complaint);
+                                  setIsViewDialogOpen(true);
+                                }}
+                              >
+                                <Eye className="mr-1 h-3 w-3" />
+                                View
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </motion.div>
+              </TabsContent>
+            ))}
+          </Tabs>
         </CardContent>
       </Card>
 
@@ -387,7 +411,7 @@ function ResidentComplaintRequest({ user }) {
                   <p className="text-sm">{new Date(selectedComplaint.date).toLocaleDateString()}</p>
                 </div>
               </div>
-              
+
               <div>
                 <Label>Subject</Label>
                 <p className="text-sm font-medium">{selectedComplaint.subject}</p>
@@ -400,22 +424,22 @@ function ResidentComplaintRequest({ user }) {
 
               <div className="grid grid-cols-2 gap-4 border-t pt-4">
                 <div>
-                    <Label>Status</Label>
-                    <div className="mt-1">{getStatusBadge(selectedComplaint.status)}</div>
+                  <Label>Status</Label>
+                  <div className="mt-1">{getStatusBadge(selectedComplaint.status)}</div>
                 </div>
                 <div>
-                    <Label>Assigned To</Label>
-                    <p className="text-sm text-gray-600">{selectedComplaint.assignedTo || 'Not assigned yet'}</p>
+                  <Label>Assigned To</Label>
+                  <p className="text-sm text-gray-600">{selectedComplaint.assignedTo || 'Not assigned yet'}</p>
                 </div>
               </div>
 
               {selectedComplaint.status === 'resolved' && selectedComplaint.resolutionNotes && (
                 <div className="rounded-md bg-green-50 p-3 border border-green-100">
-                    <div className="flex items-center gap-2 mb-1">
-                        <CheckCircle className="h-4 w-4 text-green-600"/>
-                        <Label className="text-green-800">Resolution Notes</Label>
-                    </div>
-                    <p className="text-sm text-green-700">{selectedComplaint.resolutionNotes}</p>
+                  <div className="flex items-center gap-2 mb-1">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <Label className="text-green-800">Resolution Notes</Label>
+                  </div>
+                  <p className="text-sm text-green-700">{selectedComplaint.resolutionNotes}</p>
                 </div>
               )}
 

@@ -12,7 +12,10 @@ namespace server.Controllers
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
-        public string UnitNumber { get; set; } = string.Empty;
+        // [CHANGED] Split into Block, Floor, Unit to match DB
+        public string Block { get; set; } = string.Empty;
+        public string Floor { get; set; } = string.Empty;
+        public string Unit { get; set; } = string.Empty;
         public string Role { get; set; } = "Resident";
     }
 
@@ -20,7 +23,10 @@ namespace server.Controllers
     {
         public string Name { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
-        public string UnitNumber { get; set; } = string.Empty;
+        // [CHANGED] Split into Block, Floor, Unit to match DB
+        public string Block { get; set; } = string.Empty;
+        public string Floor { get; set; } = string.Empty;
+        public string Unit { get; set; } = string.Empty;
         public string? Password { get; set; } 
     }
 
@@ -28,7 +34,10 @@ namespace server.Controllers
     {
         public string Name { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
-        public string UnitNumber { get; set; } = string.Empty;
+        // [CHANGED] Split into Block, Floor, Unit to match DB
+        public string Block { get; set; } = string.Empty;
+        public string Floor { get; set; } = string.Empty;
+        public string Unit { get; set; } = string.Empty;
     }
 
     [Route("api/[controller]")]
@@ -56,7 +65,10 @@ namespace server.Controllers
                 Id = u.UserID,
                 Name = $"{u.FirstName} {u.LastName}",
                 Email = u.Email,
-                UnitNumber = u.Property != null ? $"{u.Property.Block}-{u.Property.Floor}-{u.Property.Unit}" : "Unassigned",
+                // [CHANGED] Map individual fields safely
+                Block = u.Property?.Block ?? "N/A",
+                Floor = u.Property?.Floor ?? "N/A",
+                Unit = u.Property?.Unit ?? "N/A",
                 Role = "Resident"
             }).ToList();
 
@@ -67,13 +79,15 @@ namespace server.Controllers
         [HttpPost]
         public async Task<ActionResult<ResidentDto>> CreateResident(CreateResidentRequest request)
         {
-            // 1. Check if the Unit exists
+            // 1. Check if the Unit exists based on Block, Floor, AND Unit
             var property = await _context.Properties
-                .FirstOrDefaultAsync(p => p.Unit == request.UnitNumber);
+                .FirstOrDefaultAsync(p => p.Block == request.Block 
+                                       && p.Floor == request.Floor 
+                                       && p.Unit == request.Unit);
 
             if (property == null)
             {
-                return BadRequest(new { message = $"Unit Number '{request.UnitNumber}' not found. Please verify the unit exists." });
+                return BadRequest(new { message = $"Property not found. Please verify Block '{request.Block}', Floor '{request.Floor}', and Unit '{request.Unit}' exist." });
             }
 
             // 2. Check if Email is taken
@@ -115,13 +129,15 @@ namespace server.Controllers
             _context.Logins.Add(newLogin);
             await _context.SaveChangesAsync();
 
-            // 5. Prepare Response DTO (CRITICAL FIX: Include the new ID)
+            // 5. Prepare Response DTO
             var responseDto = new ResidentDto
             {
-                Id = newUser.UserID, // valid ID from DB
+                Id = newUser.UserID,
                 Name = request.Name,
                 Email = request.Email,
-                UnitNumber = request.UnitNumber,
+                Block = property.Block,
+                Floor = property.Floor,
+                Unit = property.Unit,
                 Role = "Resident"
             };
 
@@ -140,12 +156,23 @@ namespace server.Controllers
             user.LastName = names.Length > 1 ? names[1] : "";
             user.Email = request.Email;
 
-            if (!string.IsNullOrEmpty(request.UnitNumber))
+            // [CHANGED] Update logic to handle Block, Floor, Unit update
+            if (!string.IsNullOrEmpty(request.Block) && 
+                !string.IsNullOrEmpty(request.Floor) && 
+                !string.IsNullOrEmpty(request.Unit))
             {
-                var property = await _context.Properties.FirstOrDefaultAsync(p => p.Unit == request.UnitNumber);
+                var property = await _context.Properties
+                    .FirstOrDefaultAsync(p => p.Block == request.Block 
+                                           && p.Floor == request.Floor 
+                                           && p.Unit == request.Unit);
+                
                 if (property != null)
                 {
                     user.PropertyID = property.PropertyID;
+                }
+                else
+                {
+                    return BadRequest(new { message = "The specified property details (Block/Floor/Unit) do not exist." });
                 }
             }
 

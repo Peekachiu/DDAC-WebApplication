@@ -32,11 +32,11 @@ export default function AdminDashboard({ user }) {
   }, []);
 
   if (loading) {
-    return <div className="p-8 text-center">Loading dashboard...</div>;
+    return <div className="p-8 text-center text-muted-foreground">Loading dashboard...</div>;
   }
 
   if (!data) {
-    return <div className="p-8 text-center text-red-500">Error loading data.</div>;
+    return <div className="p-8 text-center text-destructive">Error loading data.</div>;
   }
 
   const stats = [
@@ -86,32 +86,32 @@ export default function AdminDashboard({ user }) {
 
   const getPriorityBadge = (priority) => {
     switch (priority.toLowerCase()) {
-      case 'high': return <Badge className="bg-red-100 text-red-800">High Priority</Badge>;
-      case 'medium': return <Badge className="bg-orange-100 text-orange-800">Medium</Badge>;
-      case 'low': return <Badge className="bg-gray-100 text-gray-800">Low</Badge>;
-      default: return <Badge variant="outline">{priority}</Badge>;
+      case 'high': return <Badge className="bg-red-100 text-red-800 border-red-200">High Priority</Badge>;
+      case 'medium': return <Badge className="bg-orange-100 text-orange-800 border-orange-200">Medium</Badge>;
+      case 'low': return <Badge className="bg-gray-100 text-gray-800 border-gray-200">Low</Badge>;
+      default: return <Badge variant="outline" className="border-white/20 text-foreground">{priority}</Badge>;
     }
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <h2>Admin Dashboard</h2>
-        <p className="text-gray-600">Overview of {new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}</p>
+        <h2 className="text-2xl font-semibold tracking-tight text-foreground">Admin Dashboard</h2>
+        <p className="text-muted-foreground">Overview of {new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}</p>
       </div>
 
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
-          <Card key={stat.title}>
+          <Card key={stat.title} className="glass border-0">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">{stat.title}</p>
-                  <p className="mt-1 text-2xl font-bold">{stat.value}</p>
-                  <p className="mt-1 text-xs text-gray-500">{stat.description}</p>
+                  <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
+                  <p className="mt-1 text-2xl font-bold text-foreground">{stat.value}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{stat.description}</p>
                 </div>
-                <div className={`${stat.bgColor} rounded-lg p-3`}>
+                <div className={`${stat.bgColor} rounded-lg p-3 bg-opacity-50`}>
                   <stat.icon className={`h-6 w-6 ${stat.color}`} />
                 </div>
               </div>
@@ -122,24 +122,24 @@ export default function AdminDashboard({ user }) {
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Recent Activities */}
-        <Card>
+        <Card className="glass border-0">
           <CardHeader>
             <CardTitle>Recent Activities</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {data.recentActivities.length === 0 ? (
-                <p className="text-sm text-gray-500">No recent activities.</p>
+                <p className="text-sm text-muted-foreground">No recent activities.</p>
               ) : (
                 data.recentActivities.map((activity, index) => (
-                  <div key={index} className="flex items-start gap-4">
+                  <div key={index} className="flex items-start gap-4 border-b border-white/10 pb-3 last:border-0">
                     <div className="mt-1">{getStatusIcon(activity.status)}</div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium">{activity.title}</p>
-                      <p className="text-xs text-gray-500">{activity.description}</p>
+                      <p className="text-sm font-medium text-foreground">{activity.title}</p>
+                      <p className="text-xs text-muted-foreground">{activity.description}</p>
                     </div>
                     {/* If you get an invalid date error here, verify backend returns valid ISO string */}
-                    <p className="text-xs text-gray-400 whitespace-nowrap">
+                    <p className="text-xs text-muted-foreground whitespace-nowrap">
                       {formatDistanceToNow(new Date(activity.time), { addSuffix: true })}
                     </p>
                   </div>
@@ -150,29 +150,29 @@ export default function AdminDashboard({ user }) {
         </Card>
 
         {/* Building Occupancy */}
-        <Card>
+        <Card className="glass border-0">
           <CardHeader>
             <CardTitle>Building Occupancy</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {data.occupancy.length === 0 ? (
-                <p className="text-sm text-gray-500">No building data available.</p>
+                <p className="text-sm text-muted-foreground">No building data available.</p>
               ) : (
                 data.occupancy.map((building, index) => (
                   <div key={index} className="space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Building2 className="h-4 w-4 text-gray-500" />
-                        <span className="text-sm">{building.building}</span>
+                        <Building2 className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm text-foreground">{building.building}</span>
                       </div>
-                      <span className="text-sm">
+                      <span className="text-sm text-muted-foreground">
                         {building.occupied}/{building.total} units ({building.percentage}%)
                       </span>
                     </div>
-                    <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-secondary/50">
                       <div
-                        className="h-full bg-blue-600 transition-all"
+                        className="h-full bg-primary transition-all"
                         style={{ width: `${building.percentage}%` }}
                       />
                     </div>
@@ -185,26 +185,26 @@ export default function AdminDashboard({ user }) {
       </div>
 
       {/* Pending Approvals */}
-      <Card>
+      <Card className="glass border-0">
         <CardHeader>
           <CardTitle>Pending Approvals</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             {data.pendingApprovals.length === 0 ? (
-              <p className="text-sm text-gray-500">No pending approvals.</p>
+              <p className="text-sm text-muted-foreground">No pending approvals.</p>
             ) : (
               data.pendingApprovals.map((approval, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between rounded-lg border p-4"
+                  className="flex items-center justify-between rounded-lg border border-white/20 bg-white/5 p-4"
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-3">
-                      <Badge variant="outline">{approval.type}</Badge>
-                      <p className="text-sm font-medium">{approval.item}</p>
+                      <Badge variant="outline" className="border-white/20 text-foreground">{approval.type}</Badge>
+                      <p className="text-sm font-medium text-foreground">{approval.item}</p>
                     </div>
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-1 text-xs text-muted-foreground">
                       {approval.requester} • {approval.date}
                     </p>
                   </div>
@@ -219,27 +219,27 @@ export default function AdminDashboard({ user }) {
       </Card>
 
       {/* Quick Actions */}
-      <Card>
+      <Card className="glass border-0">
         <CardHeader>
           <CardTitle>Quick Actions</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <button onClick={() => window.location.href='/admin/residents'} className="rounded-lg border border-gray-200 p-4 text-left transition hover:border-blue-500 hover:bg-blue-50">
-              <Users className="mb-2 h-5 w-5 text-blue-600" />
-              <p className="text-sm">Manage Residents</p>
+            <button onClick={() => window.location.href = '/admin/residents'} className="rounded-lg border border-white/20 bg-white/5 p-4 text-left transition hover:bg-white/10 hover:border-blue-500/50">
+              <Users className="mb-2 h-5 w-5 text-blue-500" />
+              <p className="text-sm font-medium text-foreground">Manage Residents</p>
             </button>
-            <button onClick={() => window.location.href='/admin/complaints'} className="rounded-lg border border-gray-200 p-4 text-left transition hover:border-green-500 hover:bg-green-50">
-              <MessageSquare className="mb-2 h-5 w-5 text-green-600" />
-              <p className="text-sm">Review Requests</p>
+            <button onClick={() => window.location.href = '/admin/complaints'} className="rounded-lg border border-white/20 bg-white/5 p-4 text-left transition hover:bg-white/10 hover:border-green-500/50">
+              <MessageSquare className="mb-2 h-5 w-5 text-green-500" />
+              <p className="text-sm font-medium text-foreground">Review Requests</p>
             </button>
-            <button onClick={() => window.location.href='/admin/financial'} className="rounded-lg border border-gray-200 p-4 text-left transition hover:border-purple-500 hover:bg-purple-50">
-              <DollarSign className="mb-2 h-5 w-5 text-purple-600" />
-              <p className="text-sm">Financial Reports</p>
+            <button onClick={() => window.location.href = '/admin/financial'} className="rounded-lg border border-white/20 bg-white/5 p-4 text-left transition hover:bg-white/10 hover:border-purple-500/50">
+              <DollarSign className="mb-2 h-5 w-5 text-purple-500" />
+              <p className="text-sm font-medium text-foreground">Financial Reports</p>
             </button>
-            <button onClick={() => window.location.href='/admin/bookings'} className="rounded-lg border border-gray-200 p-4 text-left transition hover:border-orange-500 hover:bg-orange-50">
-              <Calendar className="mb-2 h-5 w-5 text-orange-600" />
-              <p className="text-sm">View All Bookings</p>
+            <button onClick={() => window.location.href = '/admin/bookings'} className="rounded-lg border border-white/20 bg-white/5 p-4 text-left transition hover:bg-white/10 hover:border-orange-500/50">
+              <Calendar className="mb-2 h-5 w-5 text-orange-500" />
+              <p className="text-sm font-medium text-foreground">View All Bookings</p>
             </button>
           </div>
         </CardContent>

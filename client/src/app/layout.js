@@ -1,4 +1,3 @@
-// peekachiu/ddac-webapplication/DDAC-WebApplication-jiayuan/client/src/app/layout.js
 'use client'
 
 import { usePathname } from 'next/navigation';
@@ -15,7 +14,7 @@ import { Badge } from './components/ui/badge';
 import { Toaster } from './components/ui/sonner';
 
 // Import AuthProvider
-import { AuthProvider, useAuth } from './AuthContext'; 
+import { AuthProvider, useAuth } from './AuthContext';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -64,15 +63,18 @@ function AppContent({ children }) {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full">
-        <Sidebar>
-          <SidebarHeader className="border-b p-4">
-            <div className="flex items-center gap-2">
-              <Building2 className="h-6 w-6 text-blue-600" />
-              <div>
-                <h2 className="font-semibold">ResidentPro</h2>
-                <p className="text-xs text-gray-500">{currentUser.unit}</p>
+      <div className="flex min-h-screen w-full bg-gradient-to-br from-primary/20 via-secondary to-primary/20">
+        <Sidebar variant="floating" collapsible="icon" className="border-r-0">
+          <SidebarHeader className="border-b border-white/20 p-4">
+            <div className="flex items-center justify-between group-data-[collapsible=icon]:justify-center">
+              <div className="flex items-center gap-2 group-data-[collapsible=icon]:hidden">
+                <Building2 className="h-6 w-6 text-primary" />
+                <div>
+                  <h2 className="font-semibold">ResidentPro</h2>
+                  <p className="text-xs text-muted-foreground">{currentUser.unit}</p>
+                </div>
               </div>
+              <SidebarTrigger />
             </div>
           </SidebarHeader>
           <SidebarContent>
@@ -82,9 +84,12 @@ function AppContent({ children }) {
                   <Link href={item.href} passHref>
                     <SidebarMenuButton
                       isActive={pathname === item.href}
-                      className="w-full"
+                      tooltip={item.label}
+                      className="w-full hover:bg-primary/10 hover:text-primary data-[active=true]:bg-primary/20 data-[active=true]:text-primary"
                     >
-                      <item.icon className="h-4 w-4" />
+                      <div className="flex items-center justify-center rounded-lg bg-black/5 p-2 transition-colors group-hover:bg-black/10">
+                        <item.icon className="h-5 w-5" />
+                      </div>
                       <span>{item.label}</span>
                     </SidebarMenuButton>
                   </Link>
@@ -92,32 +97,30 @@ function AppContent({ children }) {
               ))}
             </SidebarMenu>
           </SidebarContent>
-          <div className="mt-auto border-t p-4">
+          <div className="mt-auto border-t border-white/20 p-4 group-data-[collapsible=icon]:p-2">
             <Button
               variant="ghost"
-              className="w-full justify-start"
+              className="w-full justify-start hover:bg-destructive/10 hover:text-destructive group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
               onClick={handleLogout}
             >
-              <LogOut className="mr-2 h-4 w-4" />
-              Logout
+              <LogOut className="mr-2 h-4 w-4 group-data-[collapsible=icon]:mr-0" />
+              <span className="group-data-[collapsible=icon]:hidden">Logout</span>
             </Button>
           </div>
         </Sidebar>
 
-        <main className="flex-1 overflow-auto bg-gray-50">
-          <div className="border-b bg-white p-4">
+        <main className="flex-1 overflow-auto">
+          <div className="glass sticky top-4 z-10 mx-4 rounded-xl border-white/20 p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <SidebarTrigger>
-                  <Button variant="ghost" size="icon">
-                    <Menu className="h-5 w-5" />
-                  </Button>
-                </SidebarTrigger>
-                <h1 className="text-xl">{currentPageLabel}</h1>
+                <div className="md:hidden">
+                  <SidebarTrigger />
+                </div>
+                <h1 className="text-xl font-semibold text-foreground">{currentPageLabel}</h1>
               </div>
               <div className="flex items-center gap-4">
-                <p className="text-sm text-gray-600">Welcome, {currentUser.name}</p>
-                <Badge variant={currentUser.role === 'Admin' ? 'default' : 'secondary'}>
+                <p className="text-sm text-muted-foreground">Welcome, {currentUser.name}</p>
+                <Badge variant={currentUser.role === 'Admin' ? 'default' : 'secondary'} className="glass">
                   {currentUser.role}
                 </Badge>
               </div>

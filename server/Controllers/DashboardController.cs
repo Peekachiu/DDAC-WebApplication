@@ -141,14 +141,24 @@ namespace server.Controllers
                 Time = r.SubmittedDate, Status = r.Priority == "high" ? "urgent" : "info"
             }));
 
-            // 4. Pending Approvals
+            // 4. Pending Approvals (UPDATED TO USE BOOKINGS)
             var approvals = new List<PendingApprovalDto>();
 
-            var bookings = await _context.SportFacilities.Include(s => s.User).ThenInclude(u => u!.Property)
-                .Where(s => s.Status == 0).Take(3).ToListAsync();
+            var bookings = await _context.Bookings
+                .Include(b => b.User).ThenInclude(u => u!.Property)
+                .Include(b => b.Facility)
+                .Where(b => b.Status == 0) // 0 = Pending
+                .OrderByDescending(b => b.BookingDate)
+                .Take(3)
+                .ToListAsync();
+
             approvals.AddRange(bookings.Select(b => new PendingApprovalDto {
-                Id = b.SBookingID, Type = "Booking", Item = b.SportName,
-                Requester = b.User?.FirstName ?? "Unknown", Date = b.BookingDate.ToShortDateString(), Priority = "medium"
+                Id = b.BookingID, 
+                Type = "Booking", 
+                Item = b.Facility?.Name ?? "Unknown Facility",
+                Requester = b.User?.FirstName ?? "Unknown", 
+                Date = b.BookingDate.ToShortDateString(), 
+                Priority = "medium"
             }));
 
             var reqs = await _context.Reports.Include(r => r.User).ThenInclude(u => u!.Property)
@@ -180,10 +190,8 @@ namespace server.Controllers
             // 1. Calculate Stats
             var today = DateTime.Today;
             
-            // Count future sport + event bookings
-            var sportCount = await _context.SportFacilities.CountAsync(s => s.UserID == userId && s.BookingDate >= today);
-            var eventCount = await _context.EventHalls.CountAsync(e => e.UserID == userId && e.BookingDate >= today);
-            var upcomingBookings = sportCount + eventCount;
+            // Count future bookings (UPDATED TO USE BOOKINGS)
+            var upcomingBookings = await _context.Bookings.CountAsync(b => b.UserID == userId && b.BookingDate >= today && b.Status != 2 && b.Status != 3);
 
             // Sum unpaid fees
             var pendingPayments = 0m;
@@ -236,30 +244,21 @@ namespace server.Controllers
                 Description = v.VisitorName, Time = v.VisitDate.Add(v.VisitTime), Status = "info"
             }));
 
-            // 3. Upcoming Events (User bookings + General Announcements)
+            // 3. Upcoming Events (User bookings + General Announcements) (UPDATED TO USE BOOKINGS)
             var eventsList = new List<UpcomingEventDto>();
 
-            // Add User's Sport Bookings
-            var mySportBookings = await _context.SportFacilities
-                .Where(s => s.UserID == userId && s.BookingDate >= today)
-                .OrderBy(s => s.BookingDate).Take(2).ToListAsync();
+            // Add User's Bookings
+            var myBookings = await _context.Bookings
+                .Include(b => b.Facility)
+                .Where(b => b.UserID == userId && b.BookingDate >= today && b.Status != 2 && b.Status != 3)
+                .OrderBy(b => b.BookingDate).Take(3).ToListAsync();
             
-            eventsList.AddRange(mySportBookings.Select(s => new UpcomingEventDto {
-                Id = s.SBookingID, Title = s.SportName, Location = "Sports Center",
-                Date = s.BookingDate.ToString("MMM dd, yyyy"),
-                Time = DateTime.Today.Add(s.StartTime).ToString("h:mm tt")
-            }));
-
-            // Add User's Event Hall Bookings
-            var myEventBookings = await _context.EventHalls
-                .Include(e => e.Venue)
-                .Where(e => e.UserID == userId && e.BookingDate >= today)
-                .OrderBy(e => e.BookingDate).Take(2).ToListAsync();
-
-            eventsList.AddRange(myEventBookings.Select(e => new UpcomingEventDto {
-                Id = e.HBookingID, Title = "Hall Booking", Location = e.Venue?.VenueDescription ?? "Event Hall",
-                Date = e.BookingDate.ToString("MMM dd, yyyy"),
-                Time = DateTime.Today.Add(e.StartTime).ToString("h:mm tt")
+            eventsList.AddRange(myBookings.Select(b => new UpcomingEventDto {
+                Id = b.BookingID, 
+                Title = b.Facility?.Type == "sport" ? b.Facility.Name : "Hall Booking", 
+                Location = b.Facility?.Name ?? "Facility",
+                Date = b.BookingDate.ToString("MMM dd, yyyy"),
+                Time = DateTime.Today.Add(b.StartTime).ToString("h:mm tt")
             }));
 
             // Add Public Event Announcements

@@ -11,9 +11,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Calendar } from './ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { Plus, Edit, Trash2, CheckCircle, XCircle, Calendar as CalendarIcon, Users, Clock, Ban } from 'lucide-react';
+import { DatePicker } from './ui/date-picker';
+import { Plus, Edit, Trash2, CheckCircle, XCircle, Users, Clock, Ban } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -45,6 +44,9 @@ export default function FacilityBookingManagement({ user }) {
       const bookData = await bookResponse.json();
       if (bookResponse.ok) setBookings(bookData);
 
+      const blockResponse = await fetch(`${API_URL}/blocked-dates`);
+      if (blockResponse.ok) setBlockedDates(await blockResponse.json());
+
     } catch (error) {
       console.error("Error fetching data:", error);
       toast.error("Failed to load data. Check backend connection.");
@@ -53,14 +55,7 @@ export default function FacilityBookingManagement({ user }) {
     }
   };
 
-  const [blockedDates, setBlockedDates] = useState([
-    {
-      id: '1',
-      facilityName: 'Tennis Court',
-      date: '2025-11-15',
-      reason: 'Court resurfacing maintenance',
-    },
-  ]);
+  const [blockedDates, setBlockedDates] = useState([]);
 
   const [isFacilityDialogOpen, setIsFacilityDialogOpen] = useState(false);
   const [isBlockDateDialogOpen, setIsBlockDateDialogOpen] = useState(false);
@@ -72,7 +67,6 @@ export default function FacilityBookingManagement({ user }) {
     type: 'sport',
     description: '',
     capacity: '',
-    hourlyRate: '',
   });
 
   const [blockDate, setBlockDate] = useState({
@@ -91,7 +85,6 @@ export default function FacilityBookingManagement({ user }) {
       type: newFacility.type,
       description: newFacility.description,
       capacity: parseInt(newFacility.capacity),
-      hourlyRate: parseFloat(newFacility.hourlyRate),
     };
 
     try {
@@ -115,7 +108,7 @@ export default function FacilityBookingManagement({ user }) {
         fetchData(); // Refresh list
         setIsFacilityDialogOpen(false);
         setEditingFacility(null);
-        setNewFacility({ name: '', type: 'sport', description: '', capacity: '', hourlyRate: '' });
+        setNewFacility({ name: '', type: 'sport', description: '', capacity: '' });
       } else {
         toast.error('Failed to save facility');
       }
@@ -131,7 +124,6 @@ export default function FacilityBookingManagement({ user }) {
       type: facility.type,
       description: facility.description,
       capacity: facility.capacity.toString(),
-      hourlyRate: facility.hourlyRate.toString(),
     });
     setIsFacilityDialogOpen(true);
   };
@@ -182,8 +174,8 @@ export default function FacilityBookingManagement({ user }) {
   const handleRejectBooking = (id) => updateBookingStatus(id, 'rejected');
   const handleCancelBooking = (id) => updateBookingStatus(id, 'cancelled');
 
-  // Block Date (Mock for now, unless you create a BlockedDate table)
-  const handleBlockDate = (e) => {
+  // Block Date
+  const handleBlockDate = async (e) => {
     e.preventDefault();
 
     if (!selectedDate) {
@@ -191,23 +183,40 @@ export default function FacilityBookingManagement({ user }) {
       return;
     }
 
-    const blocked = {
-      id: Date.now().toString(),
-      facilityName: blockDate.facility,
-      date: format(selectedDate, 'yyyy-MM-dd'),
-      reason: blockDate.reason,
-    };
+    try {
+      const response = await fetch(`${API_URL}/block-date`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          facilityName: blockDate.facility,
+          date: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '',
+          reason: blockDate.reason
+        }),
+      });
 
-    setBlockedDates([...blockedDates, blocked]);
-    setBlockDate({ facility: '', reason: '' });
-    setSelectedDate(undefined);
-    setIsBlockDateDialogOpen(false);
-    toast.success('Date blocked successfully!');
+      if (response.ok) {
+        toast.success('Date blocked successfully!');
+        setBlockDate({ facility: '', reason: '' });
+        setSelectedDate(undefined);
+        setIsBlockDateDialogOpen(false);
+        fetchData(); // Refresh list
+      } else {
+        const error = await response.text();
+        toast.error(error || 'Failed to block date');
+      }
+    } catch (error) {
+      toast.error('Error blocking date');
+    }
   };
 
-  const handleUnblockDate = (id) => {
-    setBlockedDates(blockedDates.filter((b) => b.id !== id));
-    toast.success('Date unblocked!');
+  const handleUnblockDate = async (id) => {
+    try {
+      await fetch(`${API_URL}/unblock-date/${id}`, { method: 'DELETE' });
+      toast.success('Date unblocked!');
+      fetchData(); // Refresh
+    } catch (error) {
+      toast.error('Failed to unblock date');
+    }
   };
 
   const getStatusBadge = (status) => {
@@ -228,6 +237,15 @@ export default function FacilityBookingManagement({ user }) {
   const pendingBookings = bookings.filter((b) => b.status === 'pending');
   const approvedBookings = bookings.filter((b) => b.status === 'approved');
 
+  // Helper for Gradient Cards
+  const GradientCard = ({ children, className }) => (
+    <div className={`relative rounded-xl p-[1px] bg-gradient-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
+      <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-white/80 backdrop-blur-sm p-6 shadow-inner">
+        {children}
+      </div>
+    </div>
+  );
+
   if (loading) return <div className="p-8 text-center">Loading...</div>;
 
   if (!isAdmin) {
@@ -239,7 +257,7 @@ export default function FacilityBookingManagement({ user }) {
           <h2>My Bookings</h2>
           <p className="text-sm text-gray-600">View your facility bookings</p>
         </div>
-        <Card>
+        <Card className="glass !border-0">
           <CardHeader>
             <CardTitle>My Bookings</CardTitle>
           </CardHeader>
@@ -334,31 +352,19 @@ export default function FacilityBookingManagement({ user }) {
                     rows={3}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="capacity">Capacity</Label>
-                    <Input
-                      id="capacity"
-                      type="number"
-                      value={newFacility.capacity}
-                      onChange={(e) => setNewFacility({ ...newFacility, capacity: e.target.value })}
-                      placeholder="Max people"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="hourlyRate">Hourly Rate ($)</Label>
-                    <Input
-                      id="hourlyRate"
-                      type="number"
-                      step="0.01"
-                      value={newFacility.hourlyRate}
-                      onChange={(e) => setNewFacility({ ...newFacility, hourlyRate: e.target.value })}
-                      placeholder="0.00"
-                      required
-                    />
-                  </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="capacity">Capacity</Label>
+                  <Input
+                    id="capacity"
+                    type="number"
+                    value={newFacility.capacity}
+                    onChange={(e) => setNewFacility({ ...newFacility, capacity: e.target.value })}
+                    placeholder="Max people"
+                    required
+                  />
                 </div>
+
                 <Button type="submit" className="w-full">
                   {editingFacility ? 'Update Facility' : 'Add Facility'}
                 </Button>
@@ -395,18 +401,12 @@ export default function FacilityBookingManagement({ user }) {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Date to Block</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full justify-start">
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {selectedDate ? format(selectedDate, 'PPP') : 'Pick a date'}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} initialFocus />
-                    </PopoverContent>
-                  </Popover>
+                  <Label htmlFor="blockDate">Date to Block</Label>
+                  <DatePicker
+                    date={selectedDate}
+                    setDate={setSelectedDate}
+                    disabled={(date) => date < new Date().setHours(0, 0, 0, 0)}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="reason">Reason</Label>
@@ -428,67 +428,11 @@ export default function FacilityBookingManagement({ user }) {
         </div>
       </div>
 
-      {/* Statistics Cards */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Facilities</p>
-                <p className="mt-1 text-2xl">{facilities.length}</p>
-                <p className="mt-1 text-xs text-gray-500">{facilities.filter((f) => f.status === 'available').length} available</p>
-              </div>
-              <div className="rounded-lg bg-blue-50 p-3">
-                <Users className="h-6 w-6 text-blue-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Pending Requests</p>
-                <p className="mt-1 text-2xl">{pendingBookings.length}</p>
-                <p className="mt-1 text-xs text-gray-500">Awaiting approval</p>
-              </div>
-              <div className="rounded-lg bg-yellow-50 p-3">
-                <Clock className="h-6 w-6 text-yellow-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Approved Bookings</p>
-                <p className="mt-1 text-2xl">{approvedBookings.length}</p>
-                <p className="mt-1 text-xs text-gray-500">Upcoming</p>
-              </div>
-              <div className="rounded-lg bg-green-50 p-3">
-                <CheckCircle className="h-6 w-6 text-green-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Blocked Dates</p>
-                <p className="mt-1 text-2xl">{blockedDates.length}</p>
-                <p className="mt-1 text-xs text-gray-500">Maintenance/Events</p>
-              </div>
-              <div className="rounded-lg bg-red-50 p-3">
-                <Ban className="h-6 w-6 text-red-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <GradientCard><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Total Facilities</p><p className="mt-1 text-2xl font-bold">{facilities.length}</p></div><div className="rounded-lg bg-blue-50 p-3"><Users className="h-6 w-6 text-blue-600" /></div></div></GradientCard>
+        <GradientCard><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Pending Requests</p><p className="mt-1 text-2xl font-bold">{pendingBookings.length}</p></div><div className="rounded-lg bg-yellow-50 p-3"><Clock className="h-6 w-6 text-yellow-600" /></div></div></GradientCard>
+        <GradientCard><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Approved Bookings</p><p className="mt-1 text-2xl font-bold">{approvedBookings.length}</p></div><div className="rounded-lg bg-green-50 p-3"><CheckCircle className="h-6 w-6 text-green-600" /></div></div></GradientCard>
+        <GradientCard><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Blocked Dates</p><p className="mt-1 text-2xl font-bold">{blockedDates.length}</p></div><div className="rounded-lg bg-red-50 p-3"><Ban className="h-6 w-6 text-red-600" /></div></div></GradientCard>
       </div>
 
       <Tabs defaultValue="facilities">
@@ -499,9 +443,8 @@ export default function FacilityBookingManagement({ user }) {
           <TabsTrigger value="blocked">Blocked Dates ({blockedDates.length})</TabsTrigger>
         </TabsList>
 
-        {/* Facilities Tab */}
         <TabsContent value="facilities" className="mt-4">
-          <Card>
+          <Card className="glass !border-0">
             <CardHeader>
               <CardTitle>Facility Management</CardTitle>
             </CardHeader>
@@ -513,7 +456,6 @@ export default function FacilityBookingManagement({ user }) {
                     <TableHead>Type</TableHead>
                     <TableHead>Description</TableHead>
                     <TableHead>Capacity</TableHead>
-                    <TableHead>Hourly Rate</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -522,30 +464,15 @@ export default function FacilityBookingManagement({ user }) {
                   {facilities.map((facility) => (
                     <TableRow key={facility.id}>
                       <TableCell>{facility.name}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{facility.type === 'sport' ? 'Sports' : 'Event Hall'}</Badge>
-                      </TableCell>
+                      <TableCell><Badge variant="outline">{facility.type}</Badge></TableCell>
                       <TableCell className="max-w-xs truncate">{facility.description}</TableCell>
                       <TableCell>{facility.capacity} people</TableCell>
-                      <TableCell>${facility.hourlyRate}/hr</TableCell>
-                      <TableCell>
-                        {facility.status === 'available' ? (
-                          <Badge className="bg-green-100 text-green-800">Available</Badge>
-                        ) : (
-                          <Badge className="bg-red-100 text-red-800">Maintenance</Badge>
-                        )}
-                      </TableCell>
+                      <TableCell>{facility.status === 'available' ? <Badge className="bg-green-100 text-green-800">Available</Badge> : <Badge className="bg-red-100 text-red-800">Maintenance</Badge>}</TableCell>
                       <TableCell>
                         <div className="flex gap-2">
-                          <Button size="sm" variant="outline" onClick={() => handleEditFacility(facility)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => handleToggleFacilityStatus(facility.id)}>
-                            {facility.status === 'available' ? 'Set Maintenance' : 'Set Available'}
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => handleDeleteFacility(facility.id)}>
-                            <Trash2 className="h-4 w-4 text-red-600" />
-                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => handleEditFacility(facility)}><Edit className="h-4 w-4" /></Button>
+                          <Button size="sm" variant="outline" onClick={() => handleToggleFacilityStatus(facility.id)}>{facility.status === 'available' ? 'Set Maintenance' : 'Set Available'}</Button>
+                          <Button size="sm" variant="outline" onClick={() => handleDeleteFacility(facility.id)}><Trash2 className="h-4 w-4 text-red-600" /></Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -558,7 +485,7 @@ export default function FacilityBookingManagement({ user }) {
 
         {/* All Bookings Tab */}
         <TabsContent value="bookings" className="mt-4">
-          <Card>
+          <Card className="glass !border-0">
             <CardHeader>
               <CardTitle>All Bookings</CardTitle>
             </CardHeader>
@@ -572,6 +499,7 @@ export default function FacilityBookingManagement({ user }) {
                     <TableHead>Date</TableHead>
                     <TableHead>Time</TableHead>
                     <TableHead>Guests</TableHead>
+                    <TableHead>Purpose</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -587,16 +515,45 @@ export default function FacilityBookingManagement({ user }) {
                         {booking.startTime} - {booking.endTime}
                       </TableCell>
                       <TableCell>{booking.guests}</TableCell>
+                      <TableCell>{booking.purpose || '-'}</TableCell>
                       <TableCell>{getStatusBadge(booking.status)}</TableCell>
+                      {/* [FIX START]: Added controls for Pending bookings */}
                       <TableCell>
                         <div className="flex gap-2">
+                          {booking.status === 'pending' && (
+                            <>
+                              <Button
+                                size="sm"
+                                className="bg-green-600 hover:bg-green-700 h-8 w-8 p-0"
+                                onClick={() => handleApproveBooking(booking.id)}
+                                title="Approve"
+                              >
+                                <CheckCircle className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-8 w-8 p-0 border-red-200 text-red-600 hover:bg-red-50"
+                                onClick={() => handleRejectBooking(booking.id)}
+                                title="Reject"
+                              >
+                                <XCircle className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
                           {booking.status === 'approved' && (
-                            <Button size="sm" variant="outline" onClick={() => handleCancelBooking(booking.id)}>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-red-600 hover:bg-red-50"
+                              onClick={() => handleCancelBooking(booking.id)}
+                            >
                               Cancel
                             </Button>
                           )}
                         </div>
                       </TableCell>
+                      {/* [FIX END] */}
                     </TableRow>
                   ))}
                 </TableBody>
@@ -607,7 +564,7 @@ export default function FacilityBookingManagement({ user }) {
 
         {/* Pending Bookings Tab */}
         <TabsContent value="pending" className="mt-4">
-          <Card>
+          <Card className="glass !border-0">
             <CardHeader>
               <CardTitle>Pending Approvals</CardTitle>
             </CardHeader>
@@ -659,7 +616,7 @@ export default function FacilityBookingManagement({ user }) {
 
         {/* Blocked Dates Tab */}
         <TabsContent value="blocked" className="mt-4">
-          <Card>
+          <Card className="glass !border-0">
             <CardHeader>
               <CardTitle>Blocked Dates</CardTitle>
             </CardHeader>
