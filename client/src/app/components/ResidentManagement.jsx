@@ -10,6 +10,14 @@ import { Search, Plus, UserCheck, Home, Edit, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { Label } from './ui/label';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "./ui/pagination";
 
 const API_URL = 'http://localhost:5016';
 
@@ -18,6 +26,8 @@ export default function ResidentManagement({ user }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingResident, setEditingResident] = useState(null);
@@ -171,6 +181,12 @@ export default function ResidentManagement({ user }) {
   if (isLoading) return <div className="p-6">Loading...</div>;
   if (error) return <div className="p-6 text-red-500">Error: {error}</div>;
 
+  const totalPages = Math.ceil(filteredResidents.length / itemsPerPage);
+  const paginatedResidents = filteredResidents.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -308,23 +324,65 @@ export default function ResidentManagement({ user }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredResidents.map((resident, index) => (
-                <TableRow key={resident.id || index}>
-                  <TableCell>{resident.name}</TableCell>
-                  <TableCell>{resident.email}</TableCell>
-                  {/* [CHANGED] Display formatted unit string */}
-                  <TableCell>{`${resident.block}-${resident.floor}-${resident.unit}`}</TableCell>
-                  <TableCell><Badge variant="secondary">{resident.role}</Badge></TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => handleEditResident(resident)}><Edit className="h-4 w-4" /></Button>
-                      <Button size="sm" variant="outline" onClick={() => handleDeleteResident(resident.id)}><Trash2 className="h-4 w-4 text-red-600" /></Button>
-                    </div>
+              {paginatedResidents.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-4 text-gray-500">
+                    No residents found.
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                paginatedResidents.map((resident, index) => (
+                  <TableRow key={resident.id || index}>
+                    <TableCell>{resident.name}</TableCell>
+                    <TableCell>{resident.email}</TableCell>
+                    {/* [CHANGED] Display formatted unit string */}
+                    <TableCell>{`${resident.block}-${resident.floor}-${resident.unit}`}</TableCell>
+                    <TableCell><Badge variant="secondary">{resident.role}</Badge></TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" onClick={() => handleEditResident(resident)}><Edit className="h-4 w-4" /></Button>
+                        <Button size="sm" variant="outline" onClick={() => handleDeleteResident(resident.id)}><Trash2 className="h-4 w-4 text-red-600" /></Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
+
+          {totalPages > 1 && (
+            <div className="mt-4">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+
+                  {[...Array(totalPages)].map((_, i) => (
+                    <PaginationItem key={i + 1}>
+                      <PaginationLink
+                        isActive={currentPage === i + 1}
+                        onClick={() => setCurrentPage(i + 1)}
+                        className="cursor-pointer"
+                      >
+                        {i + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

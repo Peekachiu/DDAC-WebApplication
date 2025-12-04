@@ -15,6 +15,14 @@ import { DatePicker } from './ui/date-picker';
 import { Plus, Send, Bell, Megaphone, Calendar, AlertCircle, Info, CheckCircle, Trash2, Edit } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "./ui/pagination";
 
 const API_URL = 'http://localhost:5016/api/Announcements';
 
@@ -351,44 +359,88 @@ export default function CommunicationManagement({ user }) {
 }
 
 function AnnouncementTable({ data, onSend, onEdit, onDelete, getTypeBadge, getStatusBadge }) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+  const totalPages = Math.ceil(data.length / itemsPerPage);
+  const paginatedData = data.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Title</TableHead>
-          <TableHead>Type</TableHead>
-          <TableHead>Audience</TableHead>
-          <TableHead>Schedule Date</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {data.map((announcement) => (
-          <TableRow key={announcement.announcementID}>
-            <TableCell className="font-medium">{announcement.title}</TableCell>
-            <TableCell>{getTypeBadge(announcement.type)}</TableCell>
-            <TableCell className="capitalize">{announcement.audience}</TableCell>
-            <TableCell>{new Date(announcement.scheduledDate).toLocaleDateString()}</TableCell>
-            <TableCell>{getStatusBadge(announcement.status)}</TableCell>
-            <TableCell>
-              <div className="flex gap-2">
-                {announcement.status === 'scheduled' && (
-                  <Button size="sm" onClick={() => onSend(announcement.announcementID)}>
-                    <Send className="mr-1 h-3 w-3" /> Send
-                  </Button>
-                )}
-                <Button size="sm" variant="outline" onClick={() => onEdit(announcement)}>
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button size="sm" variant="outline" className="text-red-600" onClick={() => onDelete(announcement.announcementID)}>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </TableCell>
+    <>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Title</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>Audience</TableHead>
+            <TableHead>Schedule Date</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Actions</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {paginatedData.map((announcement) => (
+            <TableRow key={announcement.announcementID}>
+              <TableCell className="font-medium">{announcement.title}</TableCell>
+              <TableCell>{getTypeBadge(announcement.type)}</TableCell>
+              <TableCell className="capitalize">{announcement.audience}</TableCell>
+              <TableCell>{new Date(announcement.scheduledDate).toLocaleDateString()}</TableCell>
+              <TableCell>{getStatusBadge(announcement.status)}</TableCell>
+              <TableCell>
+                <div className="flex gap-2">
+                  {announcement.status === 'scheduled' && (
+                    <Button size="sm" onClick={() => onSend(announcement.announcementID)}>
+                      <Send className="mr-1 h-3 w-3" /> Send
+                    </Button>
+                  )}
+                  <Button size="sm" variant="outline" onClick={() => onEdit(announcement)}>
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" variant="outline" className="text-red-600" onClick={() => onDelete(announcement.announcementID)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
+      {totalPages > 1 && (
+        <div className="mt-4">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+
+              {[...Array(totalPages)].map((_, i) => (
+                <PaginationItem key={i + 1}>
+                  <PaginationLink
+                    isActive={currentPage === i + 1}
+                    onClick={() => setCurrentPage(i + 1)}
+                    className="cursor-pointer"
+                  >
+                    {i + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
+    </>
   );
 }

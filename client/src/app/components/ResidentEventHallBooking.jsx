@@ -16,6 +16,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "./ui/pagination";
 
 const API_URL = 'http://localhost:5016/api/Bookings';
 
@@ -27,6 +35,8 @@ function ResidentEventHallBooking({ user }) {
   const [selectedDate, setSelectedDate] = useState();
   const [blockedDates, setBlockedDates] = useState([]);
   const [activeTab, setActiveTab] = useState('upcoming');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   const [newBooking, setNewBooking] = useState({
     hall: '', event: '', startTime: '', endTime: '', guests: '10', description: '',
@@ -308,103 +318,106 @@ function ResidentEventHallBooking({ user }) {
           <TabsTrigger value="history">Event History</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="upcoming">
-          <AnimatePresence mode="wait">
-            {activeTab === 'upcoming' && (
-              <motion.div
-                key="upcoming"
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: 20, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <Card className="glass !border-0">
-                  <CardHeader><CardTitle>Upcoming</CardTitle></CardHeader>
-                  <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Hall</TableHead>
-                          <TableHead>Event</TableHead>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Time</TableHead>
-                          <TableHead>Guests</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Action</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {upcomingBookings.length === 0 ? (
-                          <TableRow><TableCell colSpan={7} className="text-center">No upcoming events</TableCell></TableRow>
-                        ) : (
-                          upcomingBookings.map((b) => (
-                            <TableRow key={b.id}>
-                              <TableCell>{b.facilityName}</TableCell>
-                              <TableCell>{b.purpose}</TableCell>
-                              <TableCell>{format(new Date(b.date), 'MMM dd, yyyy')}</TableCell>
-                              <TableCell>{b.startTime} - {b.endTime}</TableCell>
-                              <TableCell>{b.guests}</TableCell>
-                              <TableCell>{getStatusBadge(b.status)}</TableCell>
-                              <TableCell>
-                                {b.status === 'pending' && (
-                                  <Button size="sm" variant="outline" onClick={() => handleCancelBooking(b.id)}>Cancel</Button>
-                                )}
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </TabsContent>
+        {['upcoming', 'history'].map((tabValue) => {
+          const currentList = tabValue === 'upcoming' ? upcomingBookings : pastBookings;
+          const totalPages = Math.ceil(currentList.length / itemsPerPage);
+          const paginatedList = currentList.slice(
+            (currentPage - 1) * itemsPerPage,
+            currentPage * itemsPerPage
+          );
 
-        <TabsContent value="history">
-          <AnimatePresence mode="wait">
-            {activeTab === 'history' && (
-              <motion.div
-                key="history"
-                initial={{ x: 20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: -20, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <Card className="glass !border-0">
-                  <CardHeader><CardTitle>History</CardTitle></CardHeader>
-                  <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Hall</TableHead>
-                          <TableHead>Event</TableHead>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Status</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {pastBookings.length === 0 ? (
-                          <TableRow><TableCell colSpan={4} className="text-center">No history</TableCell></TableRow>
-                        ) : (
-                          pastBookings.map((b) => (
-                            <TableRow key={b.id} className="opacity-70">
-                              <TableCell>{b.facilityName}</TableCell>
-                              <TableCell>{b.purpose}</TableCell>
-                              <TableCell>{format(new Date(b.date), 'MMM dd, yyyy')}</TableCell>
-                              <TableCell>{getStatusBadge(b.status)}</TableCell>
+          return (
+            <TabsContent key={tabValue} value={tabValue}>
+              <AnimatePresence mode="wait">
+                {activeTab === tabValue && (
+                  <motion.div
+                    key={tabValue}
+                    initial={{ x: tabValue === 'upcoming' ? -20 : 20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    exit={{ x: tabValue === 'upcoming' ? 20 : -20, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Card className="glass !border-0">
+                      <CardHeader><CardTitle>{tabValue === 'upcoming' ? 'Upcoming' : 'History'}</CardTitle></CardHeader>
+                      <CardContent>
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Hall</TableHead>
+                              <TableHead>Event</TableHead>
+                              <TableHead>Date</TableHead>
+                              {tabValue === 'upcoming' && <TableHead>Time</TableHead>}
+                              {tabValue === 'upcoming' && <TableHead>Guests</TableHead>}
+                              <TableHead>Status</TableHead>
+                              {tabValue === 'upcoming' && <TableHead>Action</TableHead>}
                             </TableRow>
-                          ))
+                          </TableHeader>
+                          <TableBody>
+                            {paginatedList.length === 0 ? (
+                              <TableRow><TableCell colSpan={tabValue === 'upcoming' ? 7 : 4} className="text-center">No {tabValue === 'upcoming' ? 'upcoming events' : 'history'}</TableCell></TableRow>
+                            ) : (
+                              paginatedList.map((b) => (
+                                <TableRow key={b.id} className={tabValue === 'history' ? "opacity-70" : ""}>
+                                  <TableCell>{b.facilityName}</TableCell>
+                                  <TableCell>{b.purpose}</TableCell>
+                                  <TableCell>{format(new Date(b.date), 'MMM dd, yyyy')}</TableCell>
+                                  {tabValue === 'upcoming' && <TableCell>{b.startTime} - {b.endTime}</TableCell>}
+                                  {tabValue === 'upcoming' && <TableCell>{b.guests}</TableCell>}
+                                  <TableCell>{getStatusBadge(b.status)}</TableCell>
+                                  {tabValue === 'upcoming' && (
+                                    <TableCell>
+                                      {b.status === 'pending' && (
+                                        <Button size="sm" variant="outline" onClick={() => handleCancelBooking(b.id)}>Cancel</Button>
+                                      )}
+                                    </TableCell>
+                                  )}
+                                </TableRow>
+                              ))
+                            )}
+                          </TableBody>
+                        </Table>
+
+                        {totalPages > 1 && (
+                          <div className="mt-4">
+                            <Pagination>
+                              <PaginationContent>
+                                <PaginationItem>
+                                  <PaginationPrevious
+                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                  />
+                                </PaginationItem>
+
+                                {[...Array(totalPages)].map((_, i) => (
+                                  <PaginationItem key={i + 1}>
+                                    <PaginationLink
+                                      isActive={currentPage === i + 1}
+                                      onClick={() => setCurrentPage(i + 1)}
+                                      className="cursor-pointer"
+                                    >
+                                      {i + 1}
+                                    </PaginationLink>
+                                  </PaginationItem>
+                                ))}
+
+                                <PaginationItem>
+                                  <PaginationNext
+                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                  />
+                                </PaginationItem>
+                              </PaginationContent>
+                            </Pagination>
+                          </div>
                         )}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </TabsContent>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </TabsContent>
+          );
+        })}
       </Tabs>
     </div>
   );
