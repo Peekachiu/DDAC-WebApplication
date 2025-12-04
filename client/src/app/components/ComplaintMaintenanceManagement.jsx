@@ -13,6 +13,7 @@ import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Plus, Search, Filter, MessageSquare, Wrench, CheckCircle, Clock, XCircle, Eye } from 'lucide-react';
 import { toast } from 'sonner';
+import { formatDate } from '../../lib/dateUtils';
 
 const API_URL = 'http://localhost:5016/api/Reports';
 
@@ -462,7 +463,7 @@ export default function ComplaintMaintenanceManagement({ user }) {
                           <TableCell>{request.subject}</TableCell>
                           <TableCell>{getPriorityBadge(request.priority)}</TableCell>
                           <TableCell>{getStatusBadge(request.status)}</TableCell>
-                          <TableCell>{new Date(request.submittedDate).toLocaleDateString()}</TableCell>
+                          <TableCell>{formatDate(request.submittedDate)}</TableCell>
                           {isAdmin && <TableCell>{request.assignedTo || '-'}</TableCell>}
                           <TableCell>
                             <div className="flex gap-2">
@@ -514,7 +515,7 @@ export default function ComplaintMaintenanceManagement({ user }) {
                 <div><span className="font-semibold">Category:</span> {selectedRequest.category}</div>
                 <div><span className="font-semibold">Submitted By:</span> {selectedRequest.residentName || 'N/A'}</div>
                 <div><span className="font-semibold">Unit:</span> {selectedRequest.unit || 'N/A'}</div>
-                <div><span className="font-semibold">Date:</span> {new Date(selectedRequest.submittedDate).toLocaleString()}</div>
+                <div><span className="font-semibold">Date:</span> {formatDate(selectedRequest.submittedDate)}</div>
                 <div><span className="font-semibold">Assigned To:</span> {selectedRequest.assignedTo || '-'}</div>
               </div>
 

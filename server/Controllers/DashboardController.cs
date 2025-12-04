@@ -90,7 +90,7 @@ namespace server.Controllers
             var activeVisitors = await _context.Visitors.CountAsync(v => v.Status == 0);
             var pendingRequests = await _context.Reports.CountAsync(r => r.ReportStatus == 0);
 
-            var startOfMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+            var startOfMonth = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
             var monthlyRevenue = await _context.ManagementFees
                 .Where(m => m.Status == 1 && m.PaymentDate >= startOfMonth)
                 .SumAsync(m => m.Amount);
@@ -120,7 +120,7 @@ namespace server.Controllers
             activities.AddRange(newUsers.Select(u => new RecentActivityDto {
                 Id = u.UserID, Type = "resident", Title = "New Resident",
                 Description = $"{u.FirstName} {u.LastName} - {u.Property?.Unit ?? "No Unit"}",
-                Time = DateTime.Now, Status = "success"
+                Time = DateTime.UtcNow, Status = "success"
             }));
 
             // Recent Payments
@@ -129,7 +129,7 @@ namespace server.Controllers
             activities.AddRange(payments.Select(p => new RecentActivityDto {
                 Id = p.PaymentID, Type = "payment", Title = "Fee Payment",
                 Description = $"Unit {p.Property?.Unit ?? "Unknown"} - ${p.Amount}",
-                Time = p.PaymentDate ?? DateTime.Now, Status = "success"
+                Time = p.PaymentDate.HasValue ? DateTime.SpecifyKind(p.PaymentDate.Value, DateTimeKind.Utc) : DateTime.UtcNow, Status = "success"
             }));
 
             // Recent Reports
@@ -138,7 +138,7 @@ namespace server.Controllers
             activities.AddRange(reports.Select(r => new RecentActivityDto {
                 Id = r.ReportID, Type = "complaint", Title = r.Subject,
                 Description = r.Description.Length > 30 ? r.Description.Substring(0, 30) + "..." : r.Description,
-                Time = r.SubmittedDate, Status = r.Priority == "high" ? "urgent" : "info"
+                Time = DateTime.SpecifyKind(r.SubmittedDate, DateTimeKind.Utc), Status = r.Priority == "high" ? "urgent" : "info"
             }));
 
             // 4. Pending Approvals (UPDATED TO USE BOOKINGS)
@@ -188,7 +188,7 @@ namespace server.Controllers
             if (user == null) return NotFound("User not found");
 
             // 1. Calculate Stats
-            var today = DateTime.Today;
+            var today = DateTime.UtcNow.Date;
             
             // Count future bookings (UPDATED TO USE BOOKINGS)
             var upcomingBookings = await _context.Bookings.CountAsync(b => b.UserID == userId && b.BookingDate >= today && b.Status != 2 && b.Status != 3);
@@ -220,7 +220,7 @@ namespace server.Controllers
                 
                 activities.AddRange(myPayments.Select(p => new RecentActivityDto {
                     Id = p.PaymentID, Type = "payment", Title = "Fee Paid",
-                    Description = $"Amount: ${p.Amount}", Time = p.PaymentDate ?? DateTime.Now, Status = "success"
+                    Description = $"Amount: ${p.Amount}", Time = p.PaymentDate.HasValue ? DateTime.SpecifyKind(p.PaymentDate.Value, DateTimeKind.Utc) : DateTime.UtcNow, Status = "success"
                 }));
             }
 
@@ -231,7 +231,7 @@ namespace server.Controllers
             
             activities.AddRange(myReports.Select(r => new RecentActivityDto {
                 Id = r.ReportID, Type = "complaint", Title = "Request Update",
-                Description = r.Subject, Time = r.SubmittedDate, Status = "progress"
+                Description = r.Subject, Time = DateTime.SpecifyKind(r.SubmittedDate, DateTimeKind.Utc), Status = "progress"
             }));
 
             // User's recent visitors
@@ -241,7 +241,7 @@ namespace server.Controllers
             
             activities.AddRange(myVisitors.Select(v => new RecentActivityDto {
                 Id = v.VisitorID, Type = "visitor", Title = "Visitor Entry",
-                Description = v.VisitorName, Time = v.VisitDate.Add(v.VisitTime), Status = "info"
+                Description = v.VisitorName, Time = DateTime.SpecifyKind(v.VisitDate.Add(v.VisitTime), DateTimeKind.Utc), Status = "info"
             }));
 
             // 3. Upcoming Events (User bookings + General Announcements) (UPDATED TO USE BOOKINGS)
@@ -258,7 +258,7 @@ namespace server.Controllers
                 Title = b.Facility?.Type == "sport" ? b.Facility.Name : "Hall Booking", 
                 Location = b.Facility?.Name ?? "Facility",
                 Date = b.BookingDate.ToString("MMM dd, yyyy"),
-                Time = DateTime.Today.Add(b.StartTime).ToString("h:mm tt")
+                Time = DateTime.UtcNow.Date.Add(b.StartTime).ToString("h:mm tt")
             }));
 
             // Add Public Event Announcements

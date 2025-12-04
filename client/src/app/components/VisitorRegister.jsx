@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Plus, Search, UserCheck, UserX, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
+import { formatDate } from '../../lib/dateUtils';
 
 const API_URL = 'http://localhost:5016/api/Visitors';
 
@@ -260,8 +261,8 @@ export default function VisitorRegister({ user }) {
                             {isAdmin && <TableCell>{visitor.unit}</TableCell>}
                             <TableCell>{visitor.phone}</TableCell>
                             <TableCell>{visitor.purpose}</TableCell>
-                            <TableCell>{visitor.checkIn}</TableCell>
-                            {tabValue === 'history' && <TableCell>{visitor.checkOut}</TableCell>}
+                            <TableCell>{formatDate(visitor.checkIn)}</TableCell>
+                            {tabValue === 'history' && <TableCell>{formatDate(visitor.checkOut)}</TableCell>}
                             <TableCell>
                               {visitor.status === 'checked-in' ? (
                                 <Badge className="bg-green-100 text-green-800">

@@ -13,6 +13,20 @@ import { Plus, Search, UserCheck, UserX, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const formatDate = (dateString) => {
+  if (!dateString) return 'N/A';
+  const date = new Date(dateString);
+  return date.toLocaleString('en-MY', {
+    timeZone: 'Asia/Kuala_Lumpur',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
+};
+
 const API_URL = 'http://localhost:5016/api/Visitors';
 
 function ResidentVisitorRegister({ user }) {
@@ -247,8 +261,8 @@ function ResidentVisitorRegister({ user }) {
                             <TableCell>{visitor.name}</TableCell>
                             <TableCell>{visitor.phone}</TableCell>
                             <TableCell>{visitor.purpose}</TableCell>
-                            <TableCell>{visitor.checkIn}</TableCell>
-                            {tabValue === 'history' && <TableCell>{visitor.checkOut}</TableCell>}
+                            <TableCell>{formatDate(visitor.checkIn)}</TableCell>
+                            {tabValue === 'history' && <TableCell>{formatDate(visitor.checkOut)}</TableCell>}
                             <TableCell>
                               {visitor.status === 'checked-in' ? (
                                 <Badge className="bg-green-100 text-green-800">
