@@ -19,7 +19,7 @@ import {
   PaginationPrevious,
 } from "./ui/pagination";
 
-const API_URL = 'http://localhost:5016';
+const API_URL = '';
 
 export default function ResidentManagement({ user }) {
   const [residents, setResidents] = useState([]);

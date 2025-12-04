@@ -35,7 +35,7 @@ const formatDate = (dateString) => {
   });
 };
 
-const API_URL = 'http://localhost:5016/api/Visitors';
+const API_URL = '/api/Visitors';
 
 function ResidentVisitorRegister({ user }) {
   // State
