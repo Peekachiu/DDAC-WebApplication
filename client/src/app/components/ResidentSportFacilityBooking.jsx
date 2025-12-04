@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 
-const API_URL = '/api/Bookings';
+const API_URL = 'http://localhost:5016/api/Bookings';
 
 export default function ResidentSportFacilityBooking({ user }) {
   const [facilities, setFacilities] = useState([]);

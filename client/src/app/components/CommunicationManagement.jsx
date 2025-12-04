@@ -16,7 +16,7 @@ import { Plus, Send, Bell, Megaphone, Calendar, AlertCircle, Info, CheckCircle, 
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
-const API_URL = '/api/Announcements';
+const API_URL = 'http://localhost:5016/api/Announcements';
 
 export default function CommunicationManagement({ user }) {
   const isAdmin = user.role === 'Admin';

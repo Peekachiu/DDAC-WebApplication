@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 
 // Assuming your backend is on port 5016
-const API_URL = '/api/Dashboard/resident-stats';
+const API_URL = 'http://localhost:5016/api/Dashboard/resident-stats';
 
 export default function Dashboard({ user }) {
   const [data, setData] = useState(null);

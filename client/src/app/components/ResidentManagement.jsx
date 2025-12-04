@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { Label } from './ui/label';
 
-const API_URL = '';
+const API_URL = 'http://localhost:5016';
 
 export default function ResidentManagement({ user }) {
   const [residents, setResidents] = useState([]);

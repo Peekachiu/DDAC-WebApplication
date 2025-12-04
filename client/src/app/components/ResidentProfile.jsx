@@ -9,7 +9,7 @@ import { User, Lock, ShieldCheck, KeyRound } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 
-const API_URL = '/api/Profile';
+const API_URL = 'http://localhost:5016/api/Profile';
 
 export default function ResidentProfile({ user }) {
   const [passwords, setPasswords] = useState({
