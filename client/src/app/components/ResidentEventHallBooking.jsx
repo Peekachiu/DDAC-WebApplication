@@ -68,6 +68,11 @@ function ResidentEventHallBooking({ user }) {
     e.preventDefault();
     if (!selectedDate) { toast.error('Please select a date'); return; }
 
+    if (parseInt(newBooking.guests) > 90) {
+      toast.error('Maximum guest limit is 90.');
+      return;
+    }
+
     const selectedHall = halls.find(h => h.name === newBooking.hall);
     if (selectedHall?.status === 'maintenance') {
       toast.error('This hall is under maintenance.');
@@ -268,7 +273,7 @@ function ResidentEventHallBooking({ user }) {
               </div>
               <div className="space-y-2">
                 <Label>Guests</Label>
-                <Input type="number" value={newBooking.guests} onChange={(e) => setNewBooking({ ...newBooking, guests: e.target.value })} required />
+                <Input type="number" min="1" max="90" value={newBooking.guests} onChange={(e) => setNewBooking({ ...newBooking, guests: e.target.value })} required />
               </div>
               <Button type="submit" className="w-full">Submit Request</Button>
             </form>
