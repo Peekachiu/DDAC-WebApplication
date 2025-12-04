@@ -39,7 +39,7 @@ function ResidentVisitorRegister({ user }) {
 
   const [newVisitor, setNewVisitor] = useState({
     name: '',
-    phone: '',
+    phone: '+60',
     purpose: '',
   });
 
@@ -74,6 +74,17 @@ function ResidentVisitorRegister({ user }) {
   const handleRegisterVisitor = async (e) => {
     e.preventDefault();
 
+    // Validation
+    const phoneRegex = /^\+60\d{9,10}$/; // +60 followed by 9-10 digits
+    if (!newVisitor.phone.startsWith('+60')) {
+      toast.error('Phone number must start with +60');
+      return;
+    }
+    if (!phoneRegex.test(newVisitor.phone)) {
+      toast.error('Please enter a valid Malaysia phone number (e.g., +60123456789)');
+      return;
+    }
+
     const payload = {
       name: newVisitor.name,
       phone: newVisitor.phone,
@@ -93,7 +104,7 @@ function ResidentVisitorRegister({ user }) {
       const addedVisitor = await response.json();
 
       setVisitors([addedVisitor, ...visitors]);
-      setNewVisitor({ name: '', phone: '', purpose: '' });
+      setNewVisitor({ name: '', phone: '+60', purpose: '' });
       setIsDialogOpen(false);
       toast.success('Visitor registered successfully!');
     } catch (error) {
@@ -180,7 +191,7 @@ function ResidentVisitorRegister({ user }) {
                   onChange={(e) =>
                     setNewVisitor({ ...newVisitor, phone: e.target.value })
                   }
-                  placeholder="+1-555-0100"
+                  placeholder="+60123456789"
                   required
                 />
               </div>
