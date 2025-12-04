@@ -31,8 +31,32 @@ export default function ResidentProfile({ user }) {
       return;
     }
 
-    if (passwords.newPassword.length < 6) {
-      toast.error("Password must be at least 6 characters.");
+    if (passwords.newPassword === passwords.oldPassword) {
+      toast.error("New password cannot be the same as the old password.");
+      return;
+    }
+
+    // Password Complexity Validation
+    const hasUpperCase = /[A-Z]/.test(passwords.newPassword);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(passwords.newPassword);
+    const hasNumber = /\d/.test(passwords.newPassword);
+    const hasLetter = /[a-zA-Z]/.test(passwords.newPassword);
+    const isLengthValid = passwords.newPassword.length >= 10;
+
+    if (!isLengthValid) {
+      toast.error("Password must be at least 10 characters long.");
+      return;
+    }
+    if (!hasUpperCase) {
+      toast.error("Password must contain at least one uppercase letter.");
+      return;
+    }
+    if (!hasSpecialChar) {
+      toast.error("Password must contain at least one special symbol.");
+      return;
+    }
+    if (!hasNumber || !hasLetter) {
+      toast.error("Password must contain a mixture of alphabets and numbers.");
       return;
     }
 
