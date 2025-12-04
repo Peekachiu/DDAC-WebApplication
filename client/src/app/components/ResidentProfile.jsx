@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { User, Lock, ShieldCheck, KeyRound } from 'lucide-react';
+import { User, Lock, ShieldCheck, KeyRound, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 
@@ -18,6 +18,19 @@ export default function ResidentProfile({ user }) {
     confirmPassword: '',
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState({
+    oldPassword: false,
+    newPassword: false,
+    confirmPassword: false,
+  });
+
+  const handleMouseDown = (field) => {
+    setShowPassword((prev) => ({ ...prev, [field]: true }));
+  };
+
+  const handleMouseUp = (field) => {
+    setShowPassword((prev) => ({ ...prev, [field]: false }));
+  };
 
   const handleChange = (e) => {
     setPasswords({ ...passwords, [e.target.id]: e.target.value });
@@ -173,13 +186,24 @@ export default function ResidentProfile({ user }) {
                       <KeyRound className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
                       <Input
                         id="oldPassword"
-                        type="password"
+                        type={showPassword.oldPassword ? "text" : "password"}
                         placeholder="Enter current password"
-                        className="pl-9 bg-white/50 border-gray-200 focus:border-blue-400 focus:ring-blue-400/20"
+                        className="pl-9 pr-10 bg-white/50 border-gray-200 focus:border-blue-400 focus:ring-blue-400/20"
                         value={passwords.oldPassword}
                         onChange={handleChange}
                         required
                       />
+                      <button
+                        type="button"
+                        className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 focus:outline-none"
+                        onMouseDown={() => handleMouseDown('oldPassword')}
+                        onMouseUp={() => handleMouseUp('oldPassword')}
+                        onMouseLeave={() => handleMouseUp('oldPassword')}
+                        onTouchStart={() => handleMouseDown('oldPassword')}
+                        onTouchEnd={() => handleMouseUp('oldPassword')}
+                      >
+                        {showPassword.oldPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -192,13 +216,24 @@ export default function ResidentProfile({ user }) {
                       <Lock className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
                       <Input
                         id="newPassword"
-                        type="password"
+                        type={showPassword.newPassword ? "text" : "password"}
                         placeholder="Enter new password"
-                        className="pl-9 bg-white/50 border-gray-200 focus:border-blue-400 focus:ring-blue-400/20"
+                        className="pl-9 pr-10 bg-white/50 border-gray-200 focus:border-blue-400 focus:ring-blue-400/20"
                         value={passwords.newPassword}
                         onChange={handleChange}
                         required
                       />
+                      <button
+                        type="button"
+                        className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 focus:outline-none"
+                        onMouseDown={() => handleMouseDown('newPassword')}
+                        onMouseUp={() => handleMouseUp('newPassword')}
+                        onMouseLeave={() => handleMouseUp('newPassword')}
+                        onTouchStart={() => handleMouseDown('newPassword')}
+                        onTouchEnd={() => handleMouseUp('newPassword')}
+                      >
+                        {showPassword.newPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -211,13 +246,24 @@ export default function ResidentProfile({ user }) {
                       <Lock className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
                       <Input
                         id="confirmPassword"
-                        type="password"
+                        type={showPassword.confirmPassword ? "text" : "password"}
                         placeholder="Confirm new password"
-                        className="pl-9 bg-white/50 border-gray-200 focus:border-blue-400 focus:ring-blue-400/20"
+                        className="pl-9 pr-10 bg-white/50 border-gray-200 focus:border-blue-400 focus:ring-blue-400/20"
                         value={passwords.confirmPassword}
                         onChange={handleChange}
                         required
                       />
+                      <button
+                        type="button"
+                        className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 focus:outline-none"
+                        onMouseDown={() => handleMouseDown('confirmPassword')}
+                        onMouseUp={() => handleMouseUp('confirmPassword')}
+                        onMouseLeave={() => handleMouseUp('confirmPassword')}
+                        onTouchStart={() => handleMouseDown('confirmPassword')}
+                        onTouchEnd={() => handleMouseUp('confirmPassword')}
+                      >
+                        {showPassword.confirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
                     </div>
                   </div>
                 </div>
