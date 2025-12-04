@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 
-const API_URL = 'http://localhost:5016/api/Reports';
+const API_URL = '/api/Reports';
 
 function ResidentComplaintRequest({ user }) {
   const [complaints, setComplaints] = useState([]);

@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Plus, Search, Filter, MessageSquare, Wrench, CheckCircle, Clock, XCircle, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 
-const API_URL = 'http://localhost:5016/api/Reports';
+const API_URL = '/api/Reports';
 
 export default function ComplaintMaintenanceManagement({ user }) {
   const isAdmin = user.role === 'Admin';

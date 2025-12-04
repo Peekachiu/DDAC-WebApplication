@@ -55,15 +55,22 @@ namespace server.Controllers
         [HttpGet("my-visitors/{userId}")]
         public async Task<ActionResult<IEnumerable<VisitorDto>>> GetMyVisitors(int userId)
         {
-            // Added '!' to suppress CS8602 warning in Includes
-            var visitors = await _context.Visitors
-                .Where(v => v.UserID == userId)
-                .Include(v => v.User!)
-                .ThenInclude(u => u.Property!)
-                .OrderByDescending(v => v.VisitDate)
-                .ToListAsync();
+            try
+            {
+                // Added '!' to suppress CS8602 warning in Includes
+                var visitors = await _context.Visitors
+                    .Where(v => v.UserID == userId)
+                    .Include(v => v.User!)
+                    .ThenInclude(u => u.Property!)
+                    .OrderByDescending(v => v.VisitDate)
+                    .ToListAsync();
 
-            return Ok(visitors.Select(MapToDto));
+                return Ok(visitors.Select(MapToDto));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Internal Server Error", error = ex.Message, stackTrace = ex.StackTrace });
+            }
         }
 
         // POST: api/Visitors
