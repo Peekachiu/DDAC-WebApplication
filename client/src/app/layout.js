@@ -120,7 +120,7 @@ function AppContent({ children }) {
               </div>
               <div className="flex items-center gap-4">
                 <p className="text-sm text-muted-foreground">Welcome, {currentUser.name}</p>
-                <Badge variant={currentUser.role === 'Admin' ? 'default' : 'secondary'} className="glass">
+                <Badge variant="default" className="glass">
                   {currentUser.role}
                 </Badge>
               </div>

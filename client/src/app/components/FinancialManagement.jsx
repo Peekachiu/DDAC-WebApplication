@@ -13,8 +13,16 @@ import { DatePicker } from './ui/date-picker';
 import { DollarSign, Plus, AlertCircle, Receipt, Trash2, Calendar, Clock, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "./ui/pagination";
 
-const API_URL = '/api/Financial';
+const API_URL = 'http://localhost:5016/api/Financial';
 
 export default function FinancialManagement({ user }) {
   const isAdmin = user.role === 'Admin';
@@ -24,6 +32,8 @@ export default function FinancialManagement({ user }) {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   const [isGenerateDialogOpen, setIsGenerateDialogOpen] = useState(false);
 
@@ -192,6 +202,12 @@ ResidentPro Management System
 
   // --- RESIDENT VIEW ---
   if (!isAdmin) {
+    const totalPages = Math.ceil(residentInvoices.length / itemsPerPage);
+    const paginatedList = residentInvoices.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage
+    );
+
     return (
       <div className="space-y-6">
         <div>
@@ -213,10 +229,10 @@ ResidentPro Management System
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {residentInvoices.length === 0 ? (
+                {paginatedList.length === 0 ? (
                   <TableRow><TableCell colSpan={6} className="text-center py-4">No invoices found.</TableCell></TableRow>
                 ) : (
-                  residentInvoices.map((invoice) => (
+                  paginatedList.map((invoice) => (
                     <TableRow key={invoice.id}>
                       <TableCell>#{invoice.id}</TableCell>
                       <TableCell>{invoice.month}</TableCell>
@@ -235,6 +251,40 @@ ResidentPro Management System
                 )}
               </TableBody>
             </Table>
+
+            {totalPages > 1 && (
+              <div className="mt-4">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+
+                    {[...Array(totalPages)].map((_, i) => (
+                      <PaginationItem key={i + 1}>
+                        <PaginationLink
+                          isActive={currentPage === i + 1}
+                          onClick={() => setCurrentPage(i + 1)}
+                          className="cursor-pointer"
+                        >
+                          {i + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -242,6 +292,12 @@ ResidentPro Management System
   }
 
   // --- ADMIN VIEW ---
+  const totalPages = Math.ceil(displayInvoices.length / itemsPerPage);
+  const paginatedList = displayInvoices.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -374,7 +430,7 @@ ResidentPro Management System
               </TableRow>
             </TableHeader>
             <TableBody>
-              {displayInvoices.map((invoice) => (
+              {paginatedList.map((invoice) => (
                 <TableRow key={invoice.id}>
                   <TableCell>#{invoice.id}</TableCell>
                   <TableCell>{invoice.residentName}</TableCell>
@@ -404,6 +460,40 @@ ResidentPro Management System
               ))}
             </TableBody>
           </Table>
+
+          {totalPages > 1 && (
+            <div className="mt-4">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+
+                  {[...Array(totalPages)].map((_, i) => (
+                    <PaginationItem key={i + 1}>
+                      <PaginationLink
+                        isActive={currentPage === i + 1}
+                        onClick={() => setCurrentPage(i + 1)}
+                        className="cursor-pointer"
+                      >
+                        {i + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

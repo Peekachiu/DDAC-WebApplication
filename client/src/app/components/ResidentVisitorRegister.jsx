@@ -9,11 +9,33 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "./ui/pagination";
 import { Plus, Search, UserCheck, UserX, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const API_URL = '/api/Visitors';
+const formatDate = (dateString) => {
+  if (!dateString) return 'N/A';
+  const date = new Date(dateString);
+  return date.toLocaleString('en-MY', {
+    timeZone: 'Asia/Kuala_Lumpur',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
+};
+
+const API_URL = 'http://localhost:5016/api/Visitors';
 
 function ResidentVisitorRegister({ user }) {
   // State
@@ -22,10 +44,12 @@ function ResidentVisitorRegister({ user }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('active');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   const [newVisitor, setNewVisitor] = useState({
     name: '',
-    phone: '',
+    phone: '+60',
     purpose: '',
   });
 
@@ -60,6 +84,17 @@ function ResidentVisitorRegister({ user }) {
   const handleRegisterVisitor = async (e) => {
     e.preventDefault();
 
+    // Validation
+    const phoneRegex = /^\+60\d{9,10}$/; // +60 followed by 9-10 digits
+    if (!newVisitor.phone.startsWith('+60')) {
+      toast.error('Phone number must start with +60');
+      return;
+    }
+    if (!phoneRegex.test(newVisitor.phone)) {
+      toast.error('Please enter a valid Malaysia phone number (e.g., +60123456789)');
+      return;
+    }
+
     const payload = {
       name: newVisitor.name,
       phone: newVisitor.phone,
@@ -79,7 +114,7 @@ function ResidentVisitorRegister({ user }) {
       const addedVisitor = await response.json();
 
       setVisitors([addedVisitor, ...visitors]);
-      setNewVisitor({ name: '', phone: '', purpose: '' });
+      setNewVisitor({ name: '', phone: '+60', purpose: '' });
       setIsDialogOpen(false);
       toast.success('Visitor registered successfully!');
     } catch (error) {
@@ -166,7 +201,7 @@ function ResidentVisitorRegister({ user }) {
                   onChange={(e) =>
                     setNewVisitor({ ...newVisitor, phone: e.target.value })
                   }
-                  placeholder="+1-555-0100"
+                  placeholder="+60123456789"
                   required
                 />
               </div>
@@ -216,71 +251,116 @@ function ResidentVisitorRegister({ user }) {
               </TabsTrigger>
             </TabsList>
 
-            {['active', 'history'].map((tabValue) => (
-              <TabsContent key={tabValue} value={tabValue} className="mt-4">
-                <motion.div
-                  initial={{ x: tabValue === 'active' ? -20 : 20, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  {(tabValue === 'active' ? filteredVisitors(activeVisitors) : filteredVisitors(historicalVisitors)).length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <Clock className="mb-4 h-12 w-12 text-gray-400" />
-                      <p className="text-gray-600">No {tabValue === 'active' ? 'active visitors' : 'visitor history'}</p>
-                    </div>
-                  ) : (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Phone</TableHead>
-                          <TableHead>Purpose</TableHead>
-                          <TableHead>Check-in Time</TableHead>
-                          {tabValue === 'history' && <TableHead>Check-out Time</TableHead>}
-                          <TableHead>Status</TableHead>
-                          {tabValue === 'active' && <TableHead>Action</TableHead>}
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {(tabValue === 'active' ? filteredVisitors(activeVisitors) : filteredVisitors(historicalVisitors)).map((visitor) => (
-                          <TableRow key={visitor.id}>
-                            <TableCell>{visitor.name}</TableCell>
-                            <TableCell>{visitor.phone}</TableCell>
-                            <TableCell>{visitor.purpose}</TableCell>
-                            <TableCell>{visitor.checkIn}</TableCell>
-                            {tabValue === 'history' && <TableCell>{visitor.checkOut}</TableCell>}
-                            <TableCell>
-                              {visitor.status === 'checked-in' ? (
-                                <Badge className="bg-green-100 text-green-800">
-                                  <UserCheck className="mr-1 h-3 w-3" />
-                                  Checked In
-                                </Badge>
-                              ) : (
-                                <Badge variant="outline" className="text-gray-600">
-                                  <UserX className="mr-1 h-3 w-3" />
-                                  Checked Out
-                                </Badge>
-                              )}
-                            </TableCell>
-                            {tabValue === 'active' && (
-                              <TableCell>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleCheckOut(visitor.id)}
-                                >
-                                  Check Out
-                                </Button>
-                              </TableCell>
-                            )}
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  )}
-                </motion.div>
-              </TabsContent>
-            ))}
+            {['active', 'history'].map((tabValue) => {
+              const currentList = tabValue === 'active' ? filteredVisitors(activeVisitors) : filteredVisitors(historicalVisitors);
+              const totalPages = Math.ceil(currentList.length / itemsPerPage);
+              const paginatedList = currentList.slice(
+                (currentPage - 1) * itemsPerPage,
+                currentPage * itemsPerPage
+              );
+
+              return (
+                <TabsContent key={tabValue} value={tabValue} className="mt-4">
+                  <motion.div
+                    initial={{ x: tabValue === 'active' ? -20 : 20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {paginatedList.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-12 text-center">
+                        <Clock className="mb-4 h-12 w-12 text-gray-400" />
+                        <p className="text-gray-600">No {tabValue === 'active' ? 'active visitors' : 'visitor history'}</p>
+                      </div>
+                    ) : (
+                      <>
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Name</TableHead>
+                              <TableHead>Phone</TableHead>
+                              <TableHead>Purpose</TableHead>
+                              <TableHead>Check-in Time</TableHead>
+                              {tabValue === 'history' && <TableHead>Check-out Time</TableHead>}
+                              <TableHead>Status</TableHead>
+                              {tabValue === 'active' && <TableHead>Action</TableHead>}
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {paginatedList.map((visitor) => (
+                              <TableRow key={visitor.id}>
+                                <TableCell>{visitor.name}</TableCell>
+                                <TableCell>{visitor.phone}</TableCell>
+                                <TableCell>{visitor.purpose}</TableCell>
+                                <TableCell>{formatDate(visitor.checkIn)}</TableCell>
+                                {tabValue === 'history' && <TableCell>{formatDate(visitor.checkOut)}</TableCell>}
+                                <TableCell>
+                                  {visitor.status === 'checked-in' ? (
+                                    <Badge className="bg-green-100 text-green-800">
+                                      <UserCheck className="mr-1 h-3 w-3" />
+                                      Checked In
+                                    </Badge>
+                                  ) : (
+                                    <Badge variant="outline" className="text-gray-600">
+                                      <UserX className="mr-1 h-3 w-3" />
+                                      Checked Out
+                                    </Badge>
+                                  )}
+                                </TableCell>
+                                {tabValue === 'active' && (
+                                  <TableCell>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleCheckOut(visitor.id)}
+                                    >
+                                      Check Out
+                                    </Button>
+                                  </TableCell>
+                                )}
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+
+                        {totalPages > 1 && (
+                          <div className="mt-4">
+                            <Pagination>
+                              <PaginationContent>
+                                <PaginationItem>
+                                  <PaginationPrevious
+                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                  />
+                                </PaginationItem>
+
+                                {[...Array(totalPages)].map((_, i) => (
+                                  <PaginationItem key={i + 1}>
+                                    <PaginationLink
+                                      isActive={currentPage === i + 1}
+                                      onClick={() => setCurrentPage(i + 1)}
+                                      className="cursor-pointer"
+                                    >
+                                      {i + 1}
+                                    </PaginationLink>
+                                  </PaginationItem>
+                                ))}
+
+                                <PaginationItem>
+                                  <PaginationNext
+                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                  />
+                                </PaginationItem>
+                              </PaginationContent>
+                            </Pagination>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </motion.div>
+                </TabsContent>
+              );
+            })}
           </Tabs>
         </CardContent>
       </Card>

@@ -94,7 +94,7 @@ namespace server.Controllers
                 PhotoBase64 = request.Photo,
                 UserID = request.UserId,
                 ReportStatus = 0, // Pending
-                SubmittedDate = DateTime.Now
+                SubmittedDate = DateTime.UtcNow
             };
 
             _context.Reports.Add(report);
@@ -122,7 +122,7 @@ namespace server.Controllers
             if (!string.IsNullOrEmpty(request.AssignedTo)) report.AssignedTo = request.AssignedTo;
             if (!string.IsNullOrEmpty(request.ResolutionNotes)) report.ResolutionNotes = request.ResolutionNotes;
             
-            if (request.Status == "resolved") report.ResolvedDate = DateTime.Now;
+            if (request.Status == "resolved") report.ResolvedDate = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
             return Ok(new { message = "Status updated" });
@@ -162,9 +162,9 @@ namespace server.Controllers
                 Unit = unitStr,
                 Status = statusStr,
                 Priority = r.Priority,
-                SubmittedDate = r.SubmittedDate.ToString("yyyy-MM-dd"),
+                SubmittedDate = DateTime.SpecifyKind(r.SubmittedDate, DateTimeKind.Utc).ToString("o"),
                 AssignedTo = r.AssignedTo,
-                ResolvedDate = r.ResolvedDate?.ToString("yyyy-MM-dd"),
+                ResolvedDate = r.ResolvedDate.HasValue ? DateTime.SpecifyKind(r.ResolvedDate.Value, DateTimeKind.Utc).ToString("o") : null,
                 ResolutionNotes = r.ResolutionNotes,
                 Photo = r.PhotoBase64
             };

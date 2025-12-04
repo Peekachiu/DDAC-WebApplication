@@ -15,8 +15,16 @@ import { Plus, Eye, X, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "./ui/pagination";
 
-const API_URL = '/api/Reports';
+const API_URL = 'http://localhost:5016/api/Reports';
 
 function ResidentComplaintRequest({ user }) {
   const [complaints, setComplaints] = useState([]);
@@ -27,6 +35,8 @@ function ResidentComplaintRequest({ user }) {
   const [selectedComplaint, setSelectedComplaint] = useState(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   // Form State
   const [newComplaint, setNewComplaint] = useState({
@@ -319,64 +329,107 @@ function ResidentComplaintRequest({ user }) {
               <TabsTrigger value="resolved">Resolved ({resolvedComplaints.length})</TabsTrigger>
             </TabsList>
 
-            {['all', 'pending', 'resolved'].map((tabValue) => (
-              <TabsContent key={tabValue} value={tabValue} className="mt-4">
-                <motion.div
-                  initial={{ x: 20, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Category</TableHead>
-                        <TableHead>Subject</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Action</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {(tabValue === 'all' ? complaints : tabValue === 'pending' ? pendingComplaints : resolvedComplaints).length === 0 ? (
+            {['all', 'pending', 'resolved'].map((tabValue) => {
+              const currentList = tabValue === 'all' ? complaints : tabValue === 'pending' ? pendingComplaints : resolvedComplaints;
+              const totalPages = Math.ceil(currentList.length / itemsPerPage);
+              const paginatedList = currentList.slice(
+                (currentPage - 1) * itemsPerPage,
+                currentPage * itemsPerPage
+              );
+
+              return (
+                <TabsContent key={tabValue} value={tabValue} className="mt-4">
+                  <motion.div
+                    initial={{ x: 20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Table>
+                      <TableHeader>
                         <TableRow>
-                          <TableCell colSpan={6} className="text-center py-4 text-gray-500">
-                            No requests found.
-                          </TableCell>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Category</TableHead>
+                          <TableHead>Subject</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Action</TableHead>
                         </TableRow>
-                      ) : (
-                        (tabValue === 'all' ? complaints : tabValue === 'pending' ? pendingComplaints : resolvedComplaints).map((complaint) => (
-                          <TableRow key={complaint.id}>
-                            <TableCell>
-                              <Badge variant="outline">
-                                {complaint.type === 'maintenance' ? 'Maintenance' : 'Complaint'}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>{complaint.category}</TableCell>
-                            <TableCell>{complaint.subject}</TableCell>
-                            <TableCell>{new Date(complaint.date).toLocaleDateString()}</TableCell>
-                            <TableCell>{getStatusBadge(complaint.status)}</TableCell>
-                            <TableCell>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  setSelectedComplaint(complaint);
-                                  setIsViewDialogOpen(true);
-                                }}
-                              >
-                                <Eye className="mr-1 h-3 w-3" />
-                                View
-                              </Button>
+                      </TableHeader>
+                      <TableBody>
+                        {paginatedList.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-4 text-gray-500">
+                              No requests found.
                             </TableCell>
                           </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </motion.div>
-              </TabsContent>
-            ))}
+                        ) : (
+                          paginatedList.map((complaint) => (
+                            <TableRow key={complaint.id}>
+                              <TableCell>
+                                <Badge variant="outline">
+                                  {complaint.type === 'maintenance' ? 'Maintenance' : 'Complaint'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>{complaint.category}</TableCell>
+                              <TableCell>{complaint.subject}</TableCell>
+                              <TableCell>{new Date(complaint.date).toLocaleDateString()}</TableCell>
+                              <TableCell>{getStatusBadge(complaint.status)}</TableCell>
+                              <TableCell>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setSelectedComplaint(complaint);
+                                    setIsViewDialogOpen(true);
+                                  }}
+                                >
+                                  <Eye className="mr-1 h-3 w-3" />
+                                  View
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+
+                    {totalPages > 1 && (
+                      <div className="mt-4">
+                        <Pagination>
+                          <PaginationContent>
+                            <PaginationItem>
+                              <PaginationPrevious
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                              />
+                            </PaginationItem>
+
+                            {[...Array(totalPages)].map((_, i) => (
+                              <PaginationItem key={i + 1}>
+                                <PaginationLink
+                                  isActive={currentPage === i + 1}
+                                  onClick={() => setCurrentPage(i + 1)}
+                                  className="cursor-pointer"
+                                >
+                                  {i + 1}
+                                </PaginationLink>
+                              </PaginationItem>
+                            ))}
+
+                            <PaginationItem>
+                              <PaginationNext
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                              />
+                            </PaginationItem>
+                          </PaginationContent>
+                        </Pagination>
+                      </div>
+                    )}
+                  </motion.div>
+                </TabsContent>
+              );
+            })}
           </Tabs>
         </CardContent>
       </Card>
