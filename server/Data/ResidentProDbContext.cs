@@ -30,6 +30,7 @@ namespace server.Data
 
         // Communication
         public DbSet<Announcement> Announcements { get; set; } = default!;
+        public DbSet<UserAnnouncement> UserAnnouncements { get; set; } = default!;
         public DbSet<BlockedDate> BlockedDates { get; set; } = default!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -43,6 +44,7 @@ namespace server.Data
             modelBuilder.Entity<Visitor>().ToTable("visitor");
             modelBuilder.Entity<Report>().ToTable("report");
             modelBuilder.Entity<Announcement>().ToTable("announcement");
+            modelBuilder.Entity<UserAnnouncement>().ToTable("user_announcement");
             modelBuilder.Entity<Booking>().ToTable("booking");
             modelBuilder.Entity<BlockedDate>().ToTable("blocked_date");
         }

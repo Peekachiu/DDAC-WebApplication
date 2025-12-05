@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react';
+import { generateReceiptPDF } from '../../utils/pdfGenerator';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -126,7 +127,7 @@ Description:  ${invoice.month}
 
 PAYMENT DETAILS
 ----------------------------
-Amount Paid:  RM ${invoice.amount.toFixed(2)}
+Amount Paid:  $${invoice.amount.toFixed(2)}
 Payment Date: ${invoice.paidDate ? new Date(invoice.paidDate).toLocaleDateString() : 'N/A'}
 Method:       ${invoice.paymentMethod || 'N/A'}
 Status:       PAID
@@ -191,7 +192,7 @@ ResidentPro Management System
 
   // Helper for Gradient Cards
   const GradientCard = ({ children, className }) => (
-    <div className={`relative rounded-xl p-[1px] bg-gradient-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
+    <div className={`relative rounded-xl p-px bg-linear-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
       <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-white/80 backdrop-blur-sm p-6 shadow-inner">
         {children}
       </div>
@@ -214,7 +215,7 @@ ResidentPro Management System
           <h2>Invoices & Receipts</h2>
           <p className="text-sm text-gray-600">View your maintenance fee invoices</p>
         </div>
-        <Card className="glass !border-0">
+        <Card className="glass border-0!">
           <CardHeader><CardTitle>My Invoices</CardTitle></CardHeader>
           <CardContent>
             <Table>
@@ -236,7 +237,7 @@ ResidentPro Management System
                     <TableRow key={invoice.id}>
                       <TableCell>#{invoice.id}</TableCell>
                       <TableCell>{invoice.month}</TableCell>
-                      <TableCell>RM {invoice.amount.toFixed(2)}</TableCell>
+                      <TableCell>${invoice.amount.toFixed(2)}</TableCell>
                       <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
                       <TableCell>{getStatusBadge(invoice.status)}</TableCell>
                       <TableCell>
@@ -395,7 +396,7 @@ ResidentPro Management System
         </GradientCard>
       </div>
 
-      <Card className="glass !border-0">
+      <Card className="glass border-0!">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Invoice List</CardTitle>
@@ -436,7 +437,7 @@ ResidentPro Management System
                   <TableCell>{invoice.residentName}</TableCell>
                   <TableCell>{`${invoice.block}-${invoice.floor}-${invoice.unit}`}</TableCell>
                   <TableCell>{invoice.month}</TableCell>
-                  <TableCell>RM {invoice.amount.toFixed(2)}</TableCell>
+                  <TableCell>${invoice.amount.toFixed(2)}</TableCell>
                   <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
                   <TableCell>{getStatusBadge(invoice.status)}</TableCell>
                   <TableCell>

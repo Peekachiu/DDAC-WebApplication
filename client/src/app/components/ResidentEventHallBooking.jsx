@@ -295,7 +295,7 @@ function ResidentEventHallBooking({ user }) {
       {/* Facilities Grid (Added as requested) */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {halls.map((facility) => (
-          <div key={facility.id} className={`flex items-center gap-4 rounded-lg p-4 transition-all duration-300 glass !border-0 ${facility.status === 'maintenance' ? 'opacity-75' : 'hover:shadow-lg hover:-translate-y-1 cursor-pointer'}`}>
+          <div key={facility.id} className={`flex items-center gap-4 rounded-lg p-4 transition-all duration-300 glass border-0! ${facility.status === 'maintenance' ? 'opacity-75' : 'hover:shadow-lg hover:-translate-y-1 cursor-pointer'}`}>
             <div className="rounded-full bg-gray-100 p-2">
               {facility.status === 'maintenance' ? <AlertTriangle className="h-6 w-6 text-yellow-600" /> : getFacilityIcon(facility.name)}
             </div>
@@ -337,7 +337,7 @@ function ResidentEventHallBooking({ user }) {
                     exit={{ x: tabValue === 'upcoming' ? 20 : -20, opacity: 0 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <Card className="glass !border-0">
+                    <Card className="glass border-0!">
                       <CardHeader><CardTitle>{tabValue === 'upcoming' ? 'Upcoming' : 'History'}</CardTitle></CardHeader>
                       <CardContent>
                         <Table>
@@ -360,7 +360,7 @@ function ResidentEventHallBooking({ user }) {
                                 <TableRow key={b.id} className={tabValue === 'history' ? "opacity-70" : ""}>
                                   <TableCell>{b.facilityName}</TableCell>
                                   <TableCell>{b.purpose}</TableCell>
-                                  <TableCell>{format(new Date(b.date), 'MMM dd, yyyy')}</TableCell>
+                                  <TableCell>{format(new Date(b.date), 'dd MMM yyyy')}</TableCell>
                                   {tabValue === 'upcoming' && <TableCell>{b.startTime} - {b.endTime}</TableCell>}
                                   {tabValue === 'upcoming' && <TableCell>{b.guests}</TableCell>}
                                   <TableCell>{getStatusBadge(b.status)}</TableCell>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react';
+import { generateInvoicePDF, generateReceiptPDF } from '../../utils/pdfGenerator';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -59,68 +60,27 @@ function ResidentInvoiceReceipt({ user }) {
   }, [fetchInvoices]);
 
   // [FIXED] Updated to use separate Block/Floor/Unit fields
+  // [FIXED] Updated to use PDF Generation
+
+
   const handleDownloadInvoice = (invoice) => {
-    const fullUnit = `${invoice.block}-${invoice.floor}-${invoice.unit}`;
-    const content = `
-OFFICIAL INVOICE
-----------------------------
-Invoice ID:   #${invoice.id}
-Issue Date:   ${new Date(invoice.issueDate).toLocaleDateString()}
-Due Date:     ${new Date(invoice.dueDate).toLocaleDateString()}
-
-BILL TO:
-Resident:     ${invoice.residentName}
-Unit No:      ${fullUnit}
-
-DETAILS:
-Description:  ${invoice.month}
-Amount Due:   RM ${invoice.amount.toFixed(2)}
-Status:       ${invoice.status.toUpperCase()}
-
-----------------------------
-Please make payment before the due date.
-ResidentPro Management
-    `;
-    downloadFile(content, `Invoice_${invoice.id}.txt`);
-    toast.success(`Invoice #${invoice.id} downloaded`);
+    try {
+      generateInvoicePDF(invoice);
+      toast.success(`Invoice #${invoice.id} downloaded as PDF`);
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to generate PDF');
+    }
   };
 
   const handleDownloadReceipt = (invoice) => {
-    const fullUnit = `${invoice.block}-${invoice.floor}-${invoice.unit}`;
-    const content = `
-OFFICIAL PAYMENT RECEIPT
-----------------------------
-Receipt For:  Invoice #${invoice.id}
-Date Paid:    ${invoice.paidDate ? new Date(invoice.paidDate).toLocaleDateString() : 'N/A'}
-Payment Method: ${invoice.paymentMethod || 'N/A'}
-
-RECEIVED FROM:
-Resident:     ${invoice.residentName}
-Unit No:      ${fullUnit}
-
-DETAILS:
-Description:  ${invoice.month}
-Amount Paid:  RM ${invoice.amount.toFixed(2)}
-Status:       PAID
-
-----------------------------
-Thank you for your payment!
-ResidentPro Management
-    `;
-    downloadFile(content, `Receipt_${invoice.id}.txt`);
-    toast.success(`Receipt for #${invoice.id} downloaded`);
-  };
-
-  const downloadFile = (content, filename) => {
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+    try {
+      generateReceiptPDF(invoice);
+      toast.success(`Receipt for #${invoice.id} downloaded as PDF`);
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to generate PDF');
+    }
   };
 
   const filteredInvoices = invoices.filter(
@@ -161,7 +121,7 @@ ResidentPro Management
         </Button>
       </div>
 
-      <Card className="glass !border-0">
+      <Card className="glass border-0!">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>My Documents</CardTitle>
@@ -224,8 +184,8 @@ ResidentPro Management
                               <TableCell>#{invoice.id}</TableCell>
                               <TableCell>{invoice.month}</TableCell>
                               <TableCell>RM {invoice.amount.toFixed(2)}</TableCell>
-                              <TableCell>{new Date(invoice.issueDate).toLocaleDateString()}</TableCell>
-                              <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
+                              <TableCell>{new Date(invoice.issueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</TableCell>
+                              <TableCell>{new Date(invoice.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</TableCell>
                               <TableCell>{getStatusBadge(invoice.status)}</TableCell>
                               <TableCell>
                                 <div className="flex gap-2">

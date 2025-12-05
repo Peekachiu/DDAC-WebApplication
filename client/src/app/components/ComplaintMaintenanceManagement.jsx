@@ -242,7 +242,7 @@ export default function ComplaintMaintenanceManagement({ user }) {
 
   // Helper for Gradient Cards
   const GradientCard = ({ children, className }) => (
-    <div className={`relative rounded-xl p-[1px] bg-gradient-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
+    <div className={`relative rounded-xl p-px bg-linear-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
       <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-white/80 backdrop-blur-sm p-6 shadow-inner">
         {children}
       </div>
@@ -399,7 +399,7 @@ export default function ComplaintMaintenanceManagement({ user }) {
         </GradientCard>
       </div>
 
-      <Card className="glass !border-0">
+      <Card className="glass border-0!">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Request Management</CardTitle>

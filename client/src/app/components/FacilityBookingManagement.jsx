@@ -249,7 +249,7 @@ export default function FacilityBookingManagement({ user }) {
 
   // Helper for Gradient Cards
   const GradientCard = ({ children, className }) => (
-    <div className={`relative rounded-xl p-[1px] bg-gradient-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
+    <div className={`relative rounded-xl p-px bg-linear-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
       <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-white/80 backdrop-blur-sm p-6 shadow-inner">
         {children}
       </div>
@@ -273,7 +273,7 @@ export default function FacilityBookingManagement({ user }) {
           <h2>My Bookings</h2>
           <p className="text-sm text-gray-600">View your facility bookings</p>
         </div>
-        <Card className="glass !border-0">
+        <Card className="glass border-0!">
           <CardHeader>
             <CardTitle>My Bookings</CardTitle>
           </CardHeader>
@@ -292,7 +292,7 @@ export default function FacilityBookingManagement({ user }) {
                 {paginatedList.map((booking) => (
                   <TableRow key={booking.id}>
                     <TableCell>{booking.facilityName}</TableCell>
-                    <TableCell>{format(new Date(booking.date), 'MMM dd, yyyy')}</TableCell>
+                    <TableCell>{new Date(booking.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</TableCell>
                     <TableCell>
                       {booking.startTime} - {booking.endTime}
                     </TableCell>
@@ -494,7 +494,7 @@ export default function FacilityBookingManagement({ user }) {
         </TabsList>
 
         <TabsContent value="facilities" className="mt-4">
-          <Card className="glass !border-0">
+          <Card className="glass border-0!">
             <CardHeader>
               <CardTitle>Facility Management</CardTitle>
             </CardHeader>
@@ -581,7 +581,7 @@ export default function FacilityBookingManagement({ user }) {
 
         {/* All Bookings Tab */}
         <TabsContent value="bookings" className="mt-4">
-          <Card className="glass !border-0">
+          <Card className="glass border-0!">
             <CardHeader>
               <CardTitle>All Bookings</CardTitle>
             </CardHeader>
@@ -615,7 +615,7 @@ export default function FacilityBookingManagement({ user }) {
                             <TableCell>{booking.facilityName}</TableCell>
                             <TableCell>{booking.residentName}</TableCell>
                             <TableCell>{booking.unit}</TableCell>
-                            <TableCell>{format(new Date(booking.date), 'MMM dd, yyyy')}</TableCell>
+                            <TableCell>{new Date(booking.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</TableCell>
                             <TableCell>
                               {booking.startTime} - {booking.endTime}
                             </TableCell>
@@ -706,7 +706,7 @@ export default function FacilityBookingManagement({ user }) {
 
         {/* Pending Bookings Tab */}
         <TabsContent value="pending" className="mt-4">
-          <Card className="glass !border-0">
+          <Card className="glass border-0!">
             <CardHeader>
               <CardTitle>Pending Approvals</CardTitle>
             </CardHeader>
@@ -739,7 +739,7 @@ export default function FacilityBookingManagement({ user }) {
                             <TableCell>{booking.facilityName}</TableCell>
                             <TableCell>{booking.residentName}</TableCell>
                             <TableCell>{booking.unit}</TableCell>
-                            <TableCell>{format(new Date(booking.date), 'MMM dd, yyyy')}</TableCell>
+                            <TableCell>{new Date(booking.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</TableCell>
                             <TableCell>
                               {booking.startTime} - {booking.endTime}
                             </TableCell>
@@ -804,7 +804,7 @@ export default function FacilityBookingManagement({ user }) {
 
         {/* Blocked Dates Tab */}
         <TabsContent value="blocked" className="mt-4">
-          <Card className="glass !border-0">
+          <Card className="glass border-0!">
             <CardHeader>
               <CardTitle>Blocked Dates</CardTitle>
             </CardHeader>

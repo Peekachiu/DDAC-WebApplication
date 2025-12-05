@@ -24,10 +24,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A';
   const date = new Date(dateString);
-  return date.toLocaleString('en-MY', {
+  return date.toLocaleString('en-GB', {
     timeZone: 'Asia/Kuala_Lumpur',
     day: '2-digit',
-    month: '2-digit',
+    month: 'short',
     year: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
@@ -225,7 +225,7 @@ function ResidentVisitorRegister({ user }) {
         </Dialog>
       </div>
 
-      <Card className="glass !border-0">
+      <Card className="glass border-0!">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Visitor Records</CardTitle>
