@@ -66,7 +66,7 @@ export default function AdminDashboard({ user }) {
     },
     {
       title: 'Monthly Revenue',
-      value: `RM${data.monthlyRevenue}`,
+      value: `RM ${data.monthlyRevenue}`,
       icon: DollarSign,
       description: 'This month',
       color: 'text-green-600',

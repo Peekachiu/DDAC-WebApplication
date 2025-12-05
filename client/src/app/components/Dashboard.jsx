@@ -56,7 +56,7 @@ export default function Dashboard({ user }) {
     },
     {
       title: 'Pending Payments',
-      value: `RM${data.pendingPayments}`,
+      value: `RM ${data.pendingPayments}`,
       icon: DollarSign,
       description: 'Management fee due',
       color: 'text-green-600',
