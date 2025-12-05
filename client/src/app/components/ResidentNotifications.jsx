@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Ensure this matches your backend port
-const API_URL = 'http://localhost:5016/api/Announcements';
+const API_URL = '/api/Announcements';
 
 function ResidentNotifications({ user }) {
   const [notifications, setNotifications] = useState([]);
@@ -21,7 +21,7 @@ function ResidentNotifications({ user }) {
   const fetchNotifications = useCallback(async () => {
     // FIX: AuthContext provides user.id, not user.userID
     if (!user || !user.id) return;
-    
+
     setIsLoading(true);
     try {
       // Fetch only 'sent' announcements for residents
@@ -75,39 +75,39 @@ function ResidentNotifications({ user }) {
 
   const handleMarkAsUnread = async (id) => {
     try {
-        await fetch(`${API_URL}/mark-unread`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          // FIX: Use user.id
-          body: JSON.stringify({ userId: user.id, announcementId: id }),
-        });
-        setNotifications(notifications.map((n) => (n.id === id ? { ...n, read: false } : n)));
-        toast.success('Notification marked as unread');
-      } catch (error) {
-        console.error("Error marking as unread:", error);
-        toast.error('Failed to mark as unread');
-      }
+      await fetch(`${API_URL}/mark-unread`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // FIX: Use user.id
+        body: JSON.stringify({ userId: user.id, announcementId: id }),
+      });
+      setNotifications(notifications.map((n) => (n.id === id ? { ...n, read: false } : n)));
+      toast.success('Notification marked as unread');
+    } catch (error) {
+      console.error("Error marking as unread:", error);
+      toast.error('Failed to mark as unread');
+    }
   };
 
   // Removes notification from the current view (refreshing page will restore it unless we add DB logic)
   const handleDelete = async (id) => {
     try {
-        await fetch(`${API_URL}/dismiss`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          // FIX: Use user.id
-          body: JSON.stringify({ userId: user.id, announcementId: id }),
-        });
-        setNotifications(notifications.filter((n) => n.id !== id));
-        toast.success('Notification removed');
-      } catch (error) {
-        console.error("Error dismissing notification:", error);
-        toast.error('Failed to dismiss notification');
-      }
+      await fetch(`${API_URL}/dismiss`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // FIX: Use user.id
+        body: JSON.stringify({ userId: user.id, announcementId: id }),
+      });
+      setNotifications(notifications.filter((n) => n.id !== id));
+      toast.success('Notification removed');
+    } catch (error) {
+      console.error("Error dismissing notification:", error);
+      toast.error('Failed to dismiss notification');
+    }
   };
 
   const handleMarkAllAsRead = () => {

@@ -23,7 +23,7 @@ import {
   PaginationPrevious,
 } from "./ui/pagination";
 
-const API_URL = 'http://localhost:5016/api/Financial';
+const API_URL = '/api/Financial';
 
 export default function FinancialManagement({ user }) {
   const isAdmin = user.role === 'Admin';

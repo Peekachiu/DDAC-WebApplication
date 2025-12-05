@@ -24,7 +24,7 @@ import {
   PaginationPrevious,
 } from "./ui/pagination";
 
-const API_URL = 'http://localhost:5016/api/Bookings';
+const API_URL = '/api/Bookings';
 
 export default function ResidentSportFacilityBooking({ user }) {
   const [facilities, setFacilities] = useState([]);
