@@ -144,7 +144,7 @@ function ResidentNotifications({ user }) {
   const readNotifications = notifications.filter((n) => n.read);
 
   const renderNotification = (notification) => (
-    <Card key={notification.id} className={`glass !border-0 mb-4 ${!notification.read ? 'border-l-4 border-l-blue-500' : ''}`}>
+    <Card key={notification.id} className={`glass border-0! mb-4 ${!notification.read ? 'border-l-4 border-l-blue-500' : ''}`}>
       <CardContent className="p-6">
         <div className="flex items-start gap-4">
           <div className="mt-1 rounded-lg bg-gray-50 p-3">

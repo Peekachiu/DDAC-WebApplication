@@ -161,7 +161,7 @@ ResidentPro Management
         </Button>
       </div>
 
-      <Card className="glass !border-0">
+      <Card className="glass border-0!">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>My Documents</CardTitle>

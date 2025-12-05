@@ -166,7 +166,7 @@ function ResidentManagementFee({ user }) {
 
   // Helper for Gradient Cards
   const GradientCard = ({ children, className }) => (
-    <div className={`relative rounded-xl p-[1px] bg-gradient-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
+    <div className={`relative rounded-xl p-px bg-linear-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
       <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-white/80 backdrop-blur-sm p-6 shadow-inner">
         {children}
       </div>
@@ -250,7 +250,7 @@ function ResidentManagementFee({ user }) {
               >
                 {tabValue === 'pending' ? (
                   paginatedList.length > 0 ? (
-                    <Card className="glass !border-0">
+                    <Card className="glass border-0!">
                       <CardHeader>
                         <CardTitle>Pending Payments</CardTitle>
                       </CardHeader>
@@ -259,7 +259,7 @@ function ResidentManagementFee({ user }) {
                           {paginatedList.map((invoice) => (
                             <div
                               key={invoice.id}
-                              className="flex items-center justify-between rounded-lg p-4 glass !border-0 hover:shadow-lg transition-all duration-300"
+                              className="flex items-center justify-between rounded-lg p-4 glass border-0! hover:shadow-lg transition-all duration-300"
                             >
                               <div className="flex items-center gap-4">
                                 <div className="rounded-lg bg-orange-50 p-3">
@@ -317,14 +317,14 @@ function ResidentManagementFee({ user }) {
                       </CardContent>
                     </Card>
                   ) : (
-                    <Card className="glass !border-0">
+                    <Card className="glass border-0!">
                       <CardContent className="p-6 text-center text-gray-500">
                         No pending payments. You are all caught up!
                       </CardContent>
                     </Card>
                   )
                 ) : (
-                  <Card className="glass !border-0">
+                  <Card className="glass border-0!">
                     <CardHeader>
                       <CardTitle>Payment History</CardTitle>
                     </CardHeader>
@@ -336,7 +336,7 @@ function ResidentManagementFee({ user }) {
                           paginatedList.map((invoice) => (
                             <div
                               key={invoice.id}
-                              className="flex items-center justify-between rounded-lg p-4 glass !border-0 hover:shadow-lg transition-all duration-300"
+                              className="flex items-center justify-between rounded-lg p-4 glass border-0! hover:shadow-lg transition-all duration-300"
                             >
                               <div className="flex items-center gap-4">
                                 <div className="rounded-lg bg-green-50 p-3">

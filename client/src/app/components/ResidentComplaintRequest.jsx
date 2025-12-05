@@ -317,7 +317,7 @@ function ResidentComplaintRequest({ user }) {
         </Dialog>
       </div>
 
-      <Card className="glass !border-0">
+      <Card className="glass border-0!">
         <CardHeader>
           <CardTitle>My Requests</CardTitle>
         </CardHeader>
