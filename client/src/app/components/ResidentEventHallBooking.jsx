@@ -360,7 +360,7 @@ function ResidentEventHallBooking({ user }) {
                                 <TableRow key={b.id} className={tabValue === 'history' ? "opacity-70" : ""}>
                                   <TableCell>{b.facilityName}</TableCell>
                                   <TableCell>{b.purpose}</TableCell>
-                                  <TableCell>{format(new Date(b.date), 'MMM dd, yyyy')}</TableCell>
+                                  <TableCell>{format(new Date(b.date), 'dd MMM yyyy')}</TableCell>
                                   {tabValue === 'upcoming' && <TableCell>{b.startTime} - {b.endTime}</TableCell>}
                                   {tabValue === 'upcoming' && <TableCell>{b.guests}</TableCell>}
                                   <TableCell>{getStatusBadge(b.status)}</TableCell>

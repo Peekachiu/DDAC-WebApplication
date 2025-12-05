@@ -120,7 +120,7 @@ namespace server.Controllers
             activities.AddRange(newUsers.Select(u => new RecentActivityDto {
                 Id = u.UserID, Type = "resident", Title = "New Resident",
                 Description = $"{u.FirstName} {u.LastName} - {u.Property?.Unit ?? "No Unit"}",
-                Time = DateTime.UtcNow, Status = "success"
+                Time = DateTime.SpecifyKind(u.CreatedAt, DateTimeKind.Utc), Status = "success"
             }));
 
             // Recent Payments
@@ -157,7 +157,7 @@ namespace server.Controllers
                 Type = "Booking", 
                 Item = b.Facility?.Name ?? "Unknown Facility",
                 Requester = b.User?.FirstName ?? "Unknown", 
-                Date = b.BookingDate.ToShortDateString(), 
+                Date = b.BookingDate.ToString("dd MMM yyyy"), 
                 Priority = "medium"
             }));
 
@@ -165,7 +165,7 @@ namespace server.Controllers
                 .Where(r => r.ReportStatus == 0).Take(3).ToListAsync();
             approvals.AddRange(reqs.Select(r => new PendingApprovalDto {
                 Id = r.ReportID, Type = "Request", Item = r.Subject,
-                Requester = r.User?.FirstName ?? "Unknown", Date = r.SubmittedDate.ToShortDateString(), Priority = r.Priority
+                Requester = r.User?.FirstName ?? "Unknown", Date = r.SubmittedDate.ToString("dd MMM yyyy"), Priority = r.Priority
             }));
 
             return Ok(new DashboardStatsDto
@@ -257,7 +257,7 @@ namespace server.Controllers
                 Id = b.BookingID, 
                 Title = b.Facility?.Type == "sport" ? b.Facility.Name : "Hall Booking", 
                 Location = b.Facility?.Name ?? "Facility",
-                Date = b.BookingDate.ToString("MMM dd, yyyy"),
+                Date = b.BookingDate.ToString("dd MMM yyyy"),
                 Time = DateTime.UtcNow.Date.Add(b.StartTime).ToString("h:mm tt")
             }));
 
@@ -268,7 +268,7 @@ namespace server.Controllers
 
             eventsList.AddRange(announcements.Select(a => new UpcomingEventDto {
                 Id = a.AnnouncementID, Title = a.Title, Location = "Community",
-                Date = a.ScheduledDate.ToString("MMM dd, yyyy"),
+                Date = a.ScheduledDate.ToString("dd MMM yyyy"),
                 Time = "All Day"
             }));
 

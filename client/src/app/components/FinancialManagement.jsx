@@ -119,7 +119,7 @@ export default function FinancialManagement({ user }) {
 RESIDENTPRO OFFICIAL RECEIPT
 ----------------------------
 Invoice ID:   #${invoice.id}
-Date Issued:  ${new Date(invoice.issueDate).toLocaleDateString()}
+Date Issued:  ${new Date(invoice.issueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
 Resident:     ${invoice.residentName}
 Unit No:      ${fullUnit}
 Description:  ${invoice.month}
@@ -127,7 +127,7 @@ Description:  ${invoice.month}
 PAYMENT DETAILS
 ----------------------------
 Amount Paid:  RM ${invoice.amount.toFixed(2)}
-Payment Date: ${invoice.paidDate ? new Date(invoice.paidDate).toLocaleDateString() : 'N/A'}
+Payment Date: ${invoice.paidDate ? new Date(invoice.paidDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}
 Method:       ${invoice.paymentMethod || 'N/A'}
 Status:       PAID
 
@@ -237,7 +237,7 @@ ResidentPro Management System
                       <TableCell>#{invoice.id}</TableCell>
                       <TableCell>{invoice.month}</TableCell>
                       <TableCell>RM {invoice.amount.toFixed(2)}</TableCell>
-                      <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
+                      <TableCell>{new Date(invoice.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</TableCell>
                       <TableCell>{getStatusBadge(invoice.status)}</TableCell>
                       <TableCell>
                         {invoice.status === 'paid' && (
@@ -437,7 +437,7 @@ ResidentPro Management System
                   <TableCell>{`${invoice.block}-${invoice.floor}-${invoice.unit}`}</TableCell>
                   <TableCell>{invoice.month}</TableCell>
                   <TableCell>RM {invoice.amount.toFixed(2)}</TableCell>
-                  <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
+                  <TableCell>{new Date(invoice.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</TableCell>
                   <TableCell>{getStatusBadge(invoice.status)}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">

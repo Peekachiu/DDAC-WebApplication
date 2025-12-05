@@ -346,7 +346,7 @@ export default function ResidentSportFacilityBooking({ user }) {
                                 paginatedList.map((b) => (
                                   <TableRow key={b.id}>
                                     <TableCell>{b.facilityName}</TableCell>
-                                    <TableCell>{format(new Date(b.date), 'MMM dd, yyyy')}</TableCell>
+                                    <TableCell>{format(new Date(b.date), 'dd MMM yyyy')}</TableCell>
                                     <TableCell>{b.startTime}</TableCell>
                                     <TableCell>{b.guests}</TableCell>
                                     <TableCell>{getStatusBadge(b.status)}</TableCell>
@@ -442,7 +442,7 @@ export default function ResidentSportFacilityBooking({ user }) {
                                 paginatedList.map((b) => (
                                   <TableRow key={b.id} className="opacity-70">
                                     <TableCell>{b.facilityName}</TableCell>
-                                    <TableCell>{format(new Date(b.date), 'MMM dd, yyyy')}</TableCell>
+                                    <TableCell>{format(new Date(b.date), 'dd MMM yyyy')}</TableCell>
                                     <TableCell>{b.startTime}</TableCell>
                                     <TableCell>{getStatusBadge(b.status)}</TableCell>
                                   </TableRow>

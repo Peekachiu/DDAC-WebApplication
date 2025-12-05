@@ -292,7 +292,7 @@ export default function FacilityBookingManagement({ user }) {
                 {paginatedList.map((booking) => (
                   <TableRow key={booking.id}>
                     <TableCell>{booking.facilityName}</TableCell>
-                    <TableCell>{format(new Date(booking.date), 'MMM dd, yyyy')}</TableCell>
+                    <TableCell>{new Date(booking.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</TableCell>
                     <TableCell>
                       {booking.startTime} - {booking.endTime}
                     </TableCell>
@@ -615,7 +615,7 @@ export default function FacilityBookingManagement({ user }) {
                             <TableCell>{booking.facilityName}</TableCell>
                             <TableCell>{booking.residentName}</TableCell>
                             <TableCell>{booking.unit}</TableCell>
-                            <TableCell>{format(new Date(booking.date), 'MMM dd, yyyy')}</TableCell>
+                            <TableCell>{new Date(booking.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</TableCell>
                             <TableCell>
                               {booking.startTime} - {booking.endTime}
                             </TableCell>
@@ -739,7 +739,7 @@ export default function FacilityBookingManagement({ user }) {
                             <TableCell>{booking.facilityName}</TableCell>
                             <TableCell>{booking.residentName}</TableCell>
                             <TableCell>{booking.unit}</TableCell>
-                            <TableCell>{format(new Date(booking.date), 'MMM dd, yyyy')}</TableCell>
+                            <TableCell>{new Date(booking.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</TableCell>
                             <TableCell>
                               {booking.startTime} - {booking.endTime}
                             </TableCell>

@@ -204,7 +204,7 @@ export default function CommunicationManagement({ user }) {
                       <div className="flex items-center gap-2 mb-2">
                         {getTypeBadge(announcement.type)}
                         <span className="text-xs text-gray-500">
-                          {new Date(announcement.sentDate || announcement.scheduledDate).toLocaleDateString()}
+                          {new Date(announcement.sentDate || announcement.scheduledDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                         </span>
                       </div>
                       <h3 className="text-lg font-semibold mb-2">{announcement.title}</h3>
@@ -386,7 +386,7 @@ function AnnouncementTable({ data, onSend, onEdit, onDelete, getTypeBadge, getSt
               <TableCell className="font-medium">{announcement.title}</TableCell>
               <TableCell>{getTypeBadge(announcement.type)}</TableCell>
               <TableCell className="capitalize">{announcement.audience}</TableCell>
-              <TableCell>{new Date(announcement.scheduledDate).toLocaleDateString()}</TableCell>
+              <TableCell>{new Date(announcement.scheduledDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</TableCell>
               <TableCell>{getStatusBadge(announcement.status)}</TableCell>
               <TableCell>
                 <div className="flex gap-2">

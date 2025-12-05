@@ -372,7 +372,7 @@ function ResidentComplaintRequest({ user }) {
                               </TableCell>
                               <TableCell>{complaint.category}</TableCell>
                               <TableCell>{complaint.subject}</TableCell>
-                              <TableCell>{new Date(complaint.date).toLocaleDateString()}</TableCell>
+                              <TableCell>{new Date(complaint.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</TableCell>
                               <TableCell>{getStatusBadge(complaint.status)}</TableCell>
                               <TableCell>
                                 <Button
@@ -461,7 +461,7 @@ function ResidentComplaintRequest({ user }) {
                 </div>
                 <div>
                   <Label>Date Submitted</Label>
-                  <p className="text-sm">{new Date(selectedComplaint.date).toLocaleDateString()}</p>
+                  <p className="text-sm">{new Date(selectedComplaint.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
                 </div>
               </div>
 

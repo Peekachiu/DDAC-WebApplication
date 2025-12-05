@@ -268,7 +268,7 @@ function ResidentManagementFee({ user }) {
                                 <div>
                                   <p className="text-sm font-medium">{invoice.month}</p>
                                   <p className="text-xs text-gray-500">
-                                    Due: {new Date(invoice.dueDate).toLocaleDateString()}
+                                    Due: {new Date(invoice.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                                   </p>
                                 </div>
                               </div>
@@ -346,7 +346,7 @@ function ResidentManagementFee({ user }) {
                                   <p className="text-sm font-medium">{invoice.month}</p>
                                   <p className="text-xs text-gray-500">
                                     Paid on: {invoice.paidDate
-                                      ? new Date(invoice.paidDate).toLocaleDateString()
+                                      ? new Date(invoice.paidDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
                                       : 'N/A'}
                                   </p>
                                 </div>

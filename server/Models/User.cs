@@ -12,6 +12,7 @@ namespace server.Models
         public string Email { get; set; } = string.Empty;
         public int Role { get; set; } // 0 = Admin, 1 = Resident
         public int PropertyID { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation property for Login
         public Login? Login { get; set; }

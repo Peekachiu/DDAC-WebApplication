@@ -65,8 +65,8 @@ function ResidentInvoiceReceipt({ user }) {
 OFFICIAL INVOICE
 ----------------------------
 Invoice ID:   #${invoice.id}
-Issue Date:   ${new Date(invoice.issueDate).toLocaleDateString()}
-Due Date:     ${new Date(invoice.dueDate).toLocaleDateString()}
+Issue Date:   ${new Date(invoice.issueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+Due Date:     ${new Date(invoice.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
 
 BILL TO:
 Resident:     ${invoice.residentName}
@@ -91,7 +91,7 @@ ResidentPro Management
 OFFICIAL PAYMENT RECEIPT
 ----------------------------
 Receipt For:  Invoice #${invoice.id}
-Date Paid:    ${invoice.paidDate ? new Date(invoice.paidDate).toLocaleDateString() : 'N/A'}
+Date Paid:    ${invoice.paidDate ? new Date(invoice.paidDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}
 Payment Method: ${invoice.paymentMethod || 'N/A'}
 
 RECEIVED FROM:
@@ -224,8 +224,8 @@ ResidentPro Management
                               <TableCell>#{invoice.id}</TableCell>
                               <TableCell>{invoice.month}</TableCell>
                               <TableCell>RM {invoice.amount.toFixed(2)}</TableCell>
-                              <TableCell>{new Date(invoice.issueDate).toLocaleDateString()}</TableCell>
-                              <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
+                              <TableCell>{new Date(invoice.issueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</TableCell>
+                              <TableCell>{new Date(invoice.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</TableCell>
                               <TableCell>{getStatusBadge(invoice.status)}</TableCell>
                               <TableCell>
                                 <div className="flex gap-2">
