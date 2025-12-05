@@ -9,7 +9,7 @@ import { User, Lock, ShieldCheck, KeyRound, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 
-const API_URL = '/api/Profile';
+const API_URL = 'http://localhost:5016/api/Profile';
 
 export default function ResidentProfile({ user }) {
   const [passwords, setPasswords] = useState({
@@ -104,7 +104,7 @@ export default function ResidentProfile({ user }) {
 
   // Helper component for Gradient Border Input Display
   const GradientBorderDisplay = ({ children, className }) => (
-    <div className={`relative rounded-lg p-[1px] bg-gradient-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
+    <div className={`relative rounded-lg p-px bg-linear-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
       <div className="relative rounded-[calc(0.5rem-1px)] bg-white/80 backdrop-blur-sm p-2.5 text-sm text-gray-700 shadow-inner">
         {children}
       </div>
@@ -125,7 +125,7 @@ export default function ResidentProfile({ user }) {
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.3 }}
         >
-          <Card className="glass !border-0 h-full">
+          <Card className="glass border-0! h-full">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <User className="h-5 w-5 text-blue-600" />
@@ -168,7 +168,7 @@ export default function ResidentProfile({ user }) {
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.3, delay: 0.1 }}
         >
-          <Card className="glass !border-0 h-full">
+          <Card className="glass border-0! h-full">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <ShieldCheck className="h-5 w-5 text-green-600" />
@@ -181,7 +181,7 @@ export default function ResidentProfile({ user }) {
                 <div className="space-y-2">
                   <Label htmlFor="oldPassword">Current Password</Label>
                   <div className="relative group">
-                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-300 to-purple-300 rounded-lg blur opacity-0 group-focus-within:opacity-30 transition duration-200"></div>
+                    <div className="absolute -inset-0.5 bg-linear-to-r from-blue-300 to-purple-300 rounded-lg blur opacity-0 group-focus-within:opacity-30 transition duration-200"></div>
                     <div className="relative">
                       <KeyRound className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
                       <Input
@@ -211,7 +211,7 @@ export default function ResidentProfile({ user }) {
                 <div className="space-y-2">
                   <Label htmlFor="newPassword">New Password</Label>
                   <div className="relative group">
-                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-300 to-purple-300 rounded-lg blur opacity-0 group-focus-within:opacity-30 transition duration-200"></div>
+                    <div className="absolute -inset-0.5 bg-linear-to-r from-blue-300 to-purple-300 rounded-lg blur opacity-0 group-focus-within:opacity-30 transition duration-200"></div>
                     <div className="relative">
                       <Lock className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
                       <Input
@@ -241,7 +241,7 @@ export default function ResidentProfile({ user }) {
                 <div className="space-y-2">
                   <Label htmlFor="confirmPassword">Confirm New Password</Label>
                   <div className="relative group">
-                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-300 to-purple-300 rounded-lg blur opacity-0 group-focus-within:opacity-30 transition duration-200"></div>
+                    <div className="absolute -inset-0.5 bg-linear-to-r from-blue-300 to-purple-300 rounded-lg blur opacity-0 group-focus-within:opacity-30 transition duration-200"></div>
                     <div className="relative">
                       <Lock className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
                       <Input

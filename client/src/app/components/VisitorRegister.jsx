@@ -22,7 +22,7 @@ import {
   PaginationPrevious,
 } from "./ui/pagination";
 
-const API_URL = '/api/Visitors';
+const API_URL = 'http://localhost:5016/api/Visitors';
 
 export default function VisitorRegister({ user }) {
   const isAdmin = user.role === 'Admin';
@@ -212,7 +212,7 @@ export default function VisitorRegister({ user }) {
         </Dialog>
       </div>
 
-      <Card className="glass !border-0">
+      <Card className="glass border-0!">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Visitor Records</CardTitle>

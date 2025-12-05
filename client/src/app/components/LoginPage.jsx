@@ -20,7 +20,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/20 via-secondary to-primary/20 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-primary/20 via-secondary to-primary/20 p-4">
       <Card className="glass w-full max-w-md border-0 shadow-[0_0_15px_-3px_rgba(243,112,33,0.4),0_0_6px_-2px_rgba(243,112,33,0.2)] hover:shadow-[0_0_20px_-3px_rgba(243,112,33,0.6)] transition-shadow duration-300">
         <CardHeader className="space-y-1 text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/20 text-primary">

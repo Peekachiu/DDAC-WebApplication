@@ -7,7 +7,7 @@ import { Badge } from './ui/badge';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 
-const API_URL = '/api/Dashboard/stats';
+const API_URL = 'http://localhost:5016/api/Dashboard/stats';
 
 export default function AdminDashboard({ user }) {
   const [data, setData] = useState(null);
@@ -66,7 +66,7 @@ export default function AdminDashboard({ user }) {
     },
     {
       title: 'Monthly Revenue',
-      value: `$${data.monthlyRevenue}`,
+      value: `RM ${data.monthlyRevenue}`,
       icon: DollarSign,
       description: 'This month',
       color: 'text-green-600',

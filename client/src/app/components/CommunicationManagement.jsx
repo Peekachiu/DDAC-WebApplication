@@ -24,7 +24,7 @@ import {
   PaginationPrevious,
 } from "./ui/pagination";
 
-const API_URL = '/api/Announcements';
+const API_URL = 'http://localhost:5016/api/Announcements';
 
 export default function CommunicationManagement({ user }) {
   const isAdmin = user.role === 'Admin';
@@ -173,7 +173,7 @@ export default function CommunicationManagement({ user }) {
 
   // Helper for Gradient Cards
   const GradientCard = ({ children, className }) => (
-    <div className={`relative rounded-xl p-[1px] bg-gradient-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
+    <div className={`relative rounded-xl p-px bg-linear-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
       <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-white/80 backdrop-blur-sm p-6 shadow-inner">
         {children}
       </div>
@@ -192,7 +192,7 @@ export default function CommunicationManagement({ user }) {
           <h2>Notifications & Announcements</h2>
           <p className="text-sm text-gray-600">Latest updates from management</p>
         </div>
-        <Card className="glass !border-0">
+        <Card className="glass border-0!">
           <CardHeader><CardTitle>Recent Announcements</CardTitle></CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -204,7 +204,7 @@ export default function CommunicationManagement({ user }) {
                       <div className="flex items-center gap-2 mb-2">
                         {getTypeBadge(announcement.type)}
                         <span className="text-xs text-gray-500">
-                          {new Date(announcement.sentDate || announcement.scheduledDate).toLocaleDateString()}
+                          {new Date(announcement.sentDate || announcement.scheduledDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                         </span>
                       </div>
                       <h3 className="text-lg font-semibold mb-2">{announcement.title}</h3>
@@ -312,7 +312,7 @@ export default function CommunicationManagement({ user }) {
       </div>
 
       {/* Table */}
-      <Card className="glass !border-0">
+      <Card className="glass border-0!">
         <CardHeader><CardTitle>Announcements</CardTitle></CardHeader>
         <CardContent>
           <Tabs defaultValue="all">
@@ -368,79 +368,43 @@ function AnnouncementTable({ data, onSend, onEdit, onDelete, getTypeBadge, getSt
   );
 
   return (
-    <>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Title</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Audience</TableHead>
-            <TableHead>Schedule Date</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Actions</TableHead>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Title</TableHead>
+          <TableHead>Type</TableHead>
+          <TableHead>Audience</TableHead>
+          <TableHead>Schedule Date</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead>Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {data.map((announcement) => (
+          <TableRow key={announcement.announcementID}>
+            <TableCell className="font-medium">{announcement.title}</TableCell>
+            <TableCell>{getTypeBadge(announcement.type)}</TableCell>
+            <TableCell className="capitalize">{announcement.audience}</TableCell>
+            <TableCell>{new Date(announcement.scheduledDate).toLocaleDateString()}</TableCell>
+            <TableCell>{getStatusBadge(announcement.status)}</TableCell>
+            <TableCell>
+              <div className="flex gap-2">
+                {announcement.status === 'scheduled' && (
+                  <Button size="sm" onClick={() => onSend(announcement.announcementID)}>
+                    <Send className="mr-1 h-3 w-3" /> Send
+                  </Button>
+                )}
+                <Button size="sm" variant="outline" onClick={() => onEdit(announcement)}>
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button size="sm" variant="outline" className="text-red-600" onClick={() => onDelete(announcement.announcementID)}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </TableCell>
           </TableRow>
-        </TableHeader>
-        <TableBody>
-          {paginatedData.map((announcement) => (
-            <TableRow key={announcement.announcementID}>
-              <TableCell className="font-medium">{announcement.title}</TableCell>
-              <TableCell>{getTypeBadge(announcement.type)}</TableCell>
-              <TableCell className="capitalize">{announcement.audience}</TableCell>
-              <TableCell>{new Date(announcement.scheduledDate).toLocaleDateString()}</TableCell>
-              <TableCell>{getStatusBadge(announcement.status)}</TableCell>
-              <TableCell>
-                <div className="flex gap-2">
-                  {announcement.status === 'scheduled' && (
-                    <Button size="sm" onClick={() => onSend(announcement.announcementID)}>
-                      <Send className="mr-1 h-3 w-3" /> Send
-                    </Button>
-                  )}
-                  <Button size="sm" variant="outline" onClick={() => onEdit(announcement)}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button size="sm" variant="outline" className="text-red-600" onClick={() => onDelete(announcement.announcementID)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-
-      {totalPages > 1 && (
-        <div className="mt-4">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                />
-              </PaginationItem>
-
-              {[...Array(totalPages)].map((_, i) => (
-                <PaginationItem key={i + 1}>
-                  <PaginationLink
-                    isActive={currentPage === i + 1}
-                    onClick={() => setCurrentPage(i + 1)}
-                    className="cursor-pointer"
-                  >
-                    {i + 1}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
-
-              <PaginationItem>
-                <PaginationNext
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
-      )}
-    </>
+        ))}
+      </TableBody>
+    </Table>
   );
 }

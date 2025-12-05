@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 
 // Assuming your backend is on port 5016
-const API_URL = '/api/Dashboard/resident-stats';
+const API_URL = 'http://localhost:5016/api/Dashboard/resident-stats';
 
 export default function Dashboard({ user }) {
   const [data, setData] = useState(null);
@@ -56,7 +56,7 @@ export default function Dashboard({ user }) {
     },
     {
       title: 'Pending Payments',
-      value: `$${data.pendingPayments}`,
+      value: `RM ${data.pendingPayments}`,
       icon: DollarSign,
       description: 'Management fee due',
       color: 'text-green-600',
@@ -93,7 +93,7 @@ export default function Dashboard({ user }) {
     <div className="space-y-6">
       <div>
         <h2 className="mb-1 text-2xl font-semibold tracking-tight text-foreground">Welcome back, {user.name}!</h2>
-        <p className="text-muted-foreground">Here is what's happening with your residence</p>
+        <p className="text-muted-foreground">Here is whats happening with your residence</p>
       </div>
 
       {/* Stats Grid */}
