@@ -126,7 +126,7 @@ Description:  ${invoice.month}
 
 PAYMENT DETAILS
 ----------------------------
-Amount Paid:  RM${invoice.amount.toFixed(2)}
+Amount Paid:  RM ${invoice.amount.toFixed(2)}
 Payment Date: ${invoice.paidDate ? new Date(invoice.paidDate).toLocaleDateString() : 'N/A'}
 Method:       ${invoice.paymentMethod || 'N/A'}
 Status:       PAID
@@ -236,7 +236,7 @@ ResidentPro Management System
                     <TableRow key={invoice.id}>
                       <TableCell>#{invoice.id}</TableCell>
                       <TableCell>{invoice.month}</TableCell>
-                      <TableCell>RM{invoice.amount.toFixed(2)}</TableCell>
+                      <TableCell>RM {invoice.amount.toFixed(2)}</TableCell>
                       <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
                       <TableCell>{getStatusBadge(invoice.status)}</TableCell>
                       <TableCell>
@@ -358,7 +358,7 @@ ResidentPro Management System
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Revenue</p>
-              <p className="text-2xl text-green-600 font-bold">RM{totalRevenue.toFixed(2)}</p>
+              <p className="text-2xl text-green-600 font-bold">RM {totalRevenue.toFixed(2)}</p>
             </div>
             <div className="bg-green-50 p-3 rounded-lg"><DollarSign className="h-6 w-6 text-green-600" /></div>
           </div>
@@ -368,7 +368,7 @@ ResidentPro Management System
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Revenue (This Month)</p>
-              <p className="text-2xl text-blue-600 font-bold">RM{currentMonthRevenue.toFixed(2)}</p>
+              <p className="text-2xl text-blue-600 font-bold">RM {currentMonthRevenue.toFixed(2)}</p>
             </div>
             <div className="bg-blue-50 p-3 rounded-lg"><Calendar className="h-6 w-6 text-blue-600" /></div>
           </div>
@@ -378,7 +378,7 @@ ResidentPro Management System
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Outstanding</p>
-              <p className="text-2xl text-orange-600 font-bold">RM{totalOutstanding.toFixed(2)}</p>
+              <p className="text-2xl text-orange-600 font-bold">RM {totalOutstanding.toFixed(2)}</p>
             </div>
             <div className="bg-orange-50 p-3 rounded-lg"><AlertCircle className="h-6 w-6 text-orange-600" /></div>
           </div>
@@ -388,7 +388,7 @@ ResidentPro Management System
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Pending Amount</p>
-              <p className="text-2xl text-yellow-600 font-bold">RM{pendingAmount.toFixed(2)}</p>
+              <p className="text-2xl text-yellow-600 font-bold">RM {pendingAmount.toFixed(2)}</p>
             </div>
             <div className="bg-yellow-50 p-3 rounded-lg"><Clock className="h-6 w-6 text-yellow-600" /></div>
           </div>
@@ -436,7 +436,7 @@ ResidentPro Management System
                   <TableCell>{invoice.residentName}</TableCell>
                   <TableCell>{`${invoice.block}-${invoice.floor}-${invoice.unit}`}</TableCell>
                   <TableCell>{invoice.month}</TableCell>
-                  <TableCell>RM{invoice.amount.toFixed(2)}</TableCell>
+                  <TableCell>RM {invoice.amount.toFixed(2)}</TableCell>
                   <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
                   <TableCell>{getStatusBadge(invoice.status)}</TableCell>
                   <TableCell>
