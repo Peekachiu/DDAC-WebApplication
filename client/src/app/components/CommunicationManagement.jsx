@@ -15,6 +15,14 @@ import { DatePicker } from './ui/date-picker';
 import { Plus, Send, Bell, Megaphone, Calendar, AlertCircle, Info, CheckCircle, Trash2, Edit } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "./ui/pagination";
 
 const API_URL = '/api/Announcements';
 
@@ -165,7 +173,7 @@ export default function CommunicationManagement({ user }) {
 
   // Helper for Gradient Cards
   const GradientCard = ({ children, className }) => (
-    <div className={`relative rounded-xl p-[1px] bg-gradient-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
+    <div className={`relative rounded-xl p-px bg-linear-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
       <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-white/80 backdrop-blur-sm p-6 shadow-inner">
         {children}
       </div>
@@ -184,7 +192,7 @@ export default function CommunicationManagement({ user }) {
           <h2>Notifications & Announcements</h2>
           <p className="text-sm text-gray-600">Latest updates from management</p>
         </div>
-        <Card className="glass !border-0">
+        <Card className="glass border-0!">
           <CardHeader><CardTitle>Recent Announcements</CardTitle></CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -196,7 +204,7 @@ export default function CommunicationManagement({ user }) {
                       <div className="flex items-center gap-2 mb-2">
                         {getTypeBadge(announcement.type)}
                         <span className="text-xs text-gray-500">
-                          {new Date(announcement.sentDate || announcement.scheduledDate).toLocaleDateString()}
+                          {new Date(announcement.sentDate || announcement.scheduledDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                         </span>
                       </div>
                       <h3 className="text-lg font-semibold mb-2">{announcement.title}</h3>
@@ -304,7 +312,7 @@ export default function CommunicationManagement({ user }) {
       </div>
 
       {/* Table */}
-      <Card className="glass !border-0">
+      <Card className="glass border-0!">
         <CardHeader><CardTitle>Announcements</CardTitle></CardHeader>
         <CardContent>
           <Tabs defaultValue="all">
@@ -351,6 +359,14 @@ export default function CommunicationManagement({ user }) {
 }
 
 function AnnouncementTable({ data, onSend, onEdit, onDelete, getTypeBadge, getStatusBadge }) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+  const totalPages = Math.ceil(data.length / itemsPerPage);
+  const paginatedData = data.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
     <Table>
       <TableHeader>

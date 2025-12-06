@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react';
+import { generateReceiptPDF } from '../../utils/pdfGenerator';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -13,6 +14,14 @@ import { DatePicker } from './ui/date-picker';
 import { DollarSign, Plus, AlertCircle, Receipt, Trash2, Calendar, Clock, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "./ui/pagination";
 
 const API_URL = '/api/Financial';
 
@@ -24,6 +33,8 @@ export default function FinancialManagement({ user }) {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   const [isGenerateDialogOpen, setIsGenerateDialogOpen] = useState(false);
 
@@ -181,7 +192,7 @@ ResidentPro Management System
 
   // Helper for Gradient Cards
   const GradientCard = ({ children, className }) => (
-    <div className={`relative rounded-xl p-[1px] bg-gradient-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
+    <div className={`relative rounded-xl p-px bg-linear-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
       <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-white/80 backdrop-blur-sm p-6 shadow-inner">
         {children}
       </div>
@@ -192,13 +203,19 @@ ResidentPro Management System
 
   // --- RESIDENT VIEW ---
   if (!isAdmin) {
+    const totalPages = Math.ceil(residentInvoices.length / itemsPerPage);
+    const paginatedList = residentInvoices.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage
+    );
+
     return (
       <div className="space-y-6">
         <div>
           <h2>Invoices & Receipts</h2>
           <p className="text-sm text-gray-600">View your maintenance fee invoices</p>
         </div>
-        <Card className="glass !border-0">
+        <Card className="glass border-0!">
           <CardHeader><CardTitle>My Invoices</CardTitle></CardHeader>
           <CardContent>
             <Table>
@@ -213,10 +230,10 @@ ResidentPro Management System
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {residentInvoices.length === 0 ? (
+                {paginatedList.length === 0 ? (
                   <TableRow><TableCell colSpan={6} className="text-center py-4">No invoices found.</TableCell></TableRow>
                 ) : (
-                  residentInvoices.map((invoice) => (
+                  paginatedList.map((invoice) => (
                     <TableRow key={invoice.id}>
                       <TableCell>#{invoice.id}</TableCell>
                       <TableCell>{invoice.month}</TableCell>
@@ -235,6 +252,40 @@ ResidentPro Management System
                 )}
               </TableBody>
             </Table>
+
+            {totalPages > 1 && (
+              <div className="mt-4">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+
+                    {[...Array(totalPages)].map((_, i) => (
+                      <PaginationItem key={i + 1}>
+                        <PaginationLink
+                          isActive={currentPage === i + 1}
+                          onClick={() => setCurrentPage(i + 1)}
+                          className="cursor-pointer"
+                        >
+                          {i + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -242,6 +293,12 @@ ResidentPro Management System
   }
 
   // --- ADMIN VIEW ---
+  const totalPages = Math.ceil(displayInvoices.length / itemsPerPage);
+  const paginatedList = displayInvoices.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -279,7 +336,7 @@ ResidentPro Management System
                   <Input id="month" value={newInvoice.month} onChange={(e) => setNewInvoice({ ...newInvoice, month: e.target.value })} placeholder="e.g. November 2025" required />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="amount">Amount ($)</Label>
+                  <Label htmlFor="amount">Amount (RM)</Label>
                   <Input id="amount" type="number" step="0.01" value={newInvoice.amount} onChange={(e) => setNewInvoice({ ...newInvoice, amount: e.target.value })} required />
                 </div>
                 <div className="space-y-2">
@@ -302,7 +359,7 @@ ResidentPro Management System
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Revenue</p>
-              <p className="text-2xl text-green-600 font-bold">${totalRevenue.toFixed(2)}</p>
+              <p className="text-2xl text-green-600 font-bold">RM {totalRevenue.toFixed(2)}</p>
             </div>
             <div className="bg-green-50 p-3 rounded-lg"><DollarSign className="h-6 w-6 text-green-600" /></div>
           </div>
@@ -312,7 +369,7 @@ ResidentPro Management System
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Revenue (This Month)</p>
-              <p className="text-2xl text-blue-600 font-bold">${currentMonthRevenue.toFixed(2)}</p>
+              <p className="text-2xl text-blue-600 font-bold">RM {currentMonthRevenue.toFixed(2)}</p>
             </div>
             <div className="bg-blue-50 p-3 rounded-lg"><Calendar className="h-6 w-6 text-blue-600" /></div>
           </div>
@@ -322,7 +379,7 @@ ResidentPro Management System
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Outstanding</p>
-              <p className="text-2xl text-orange-600 font-bold">${totalOutstanding.toFixed(2)}</p>
+              <p className="text-2xl text-orange-600 font-bold">RM {totalOutstanding.toFixed(2)}</p>
             </div>
             <div className="bg-orange-50 p-3 rounded-lg"><AlertCircle className="h-6 w-6 text-orange-600" /></div>
           </div>
@@ -332,14 +389,14 @@ ResidentPro Management System
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Pending Amount</p>
-              <p className="text-2xl text-yellow-600 font-bold">${pendingAmount.toFixed(2)}</p>
+              <p className="text-2xl text-yellow-600 font-bold">RM {pendingAmount.toFixed(2)}</p>
             </div>
             <div className="bg-yellow-50 p-3 rounded-lg"><Clock className="h-6 w-6 text-yellow-600" /></div>
           </div>
         </GradientCard>
       </div>
 
-      <Card className="glass !border-0">
+      <Card className="glass border-0!">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Invoice List</CardTitle>
@@ -374,7 +431,7 @@ ResidentPro Management System
               </TableRow>
             </TableHeader>
             <TableBody>
-              {displayInvoices.map((invoice) => (
+              {paginatedList.map((invoice) => (
                 <TableRow key={invoice.id}>
                   <TableCell>#{invoice.id}</TableCell>
                   <TableCell>{invoice.residentName}</TableCell>
@@ -404,6 +461,40 @@ ResidentPro Management System
               ))}
             </TableBody>
           </Table>
+
+          {totalPages > 1 && (
+            <div className="mt-4">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+
+                  {[...Array(totalPages)].map((_, i) => (
+                    <PaginationItem key={i + 1}>
+                      <PaginationLink
+                        isActive={currentPage === i + 1}
+                        onClick={() => setCurrentPage(i + 1)}
+                        className="cursor-pointer"
+                      >
+                        {i + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

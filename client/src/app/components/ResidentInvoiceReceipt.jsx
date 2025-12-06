@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react';
+import { generateInvoicePDF, generateReceiptPDF } from '../../utils/pdfGenerator';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -10,6 +11,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Download, Search, RefreshCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "./ui/pagination";
 
 const API_URL = '/api/Financial';
 
@@ -18,6 +27,8 @@ function ResidentInvoiceReceipt({ user }) {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   const fetchInvoices = useCallback(async () => {
     if (!user?.unit) return;
@@ -48,69 +59,32 @@ function ResidentInvoiceReceipt({ user }) {
     fetchInvoices();
   }, [fetchInvoices]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab]);
+
   // [FIXED] Updated to use separate Block/Floor/Unit fields
+  // [FIXED] Updated to use PDF Generation
+
+
   const handleDownloadInvoice = (invoice) => {
-    const fullUnit = `${invoice.block}-${invoice.floor}-${invoice.unit}`;
-    const content = `
-OFFICIAL INVOICE
-----------------------------
-Invoice ID:   #${invoice.id}
-Issue Date:   ${new Date(invoice.issueDate).toLocaleDateString()}
-Due Date:     ${new Date(invoice.dueDate).toLocaleDateString()}
-
-BILL TO:
-Resident:     ${invoice.residentName}
-Unit No:      ${fullUnit}
-
-DETAILS:
-Description:  ${invoice.month}
-Amount Due:   RM ${invoice.amount.toFixed(2)}
-Status:       ${invoice.status.toUpperCase()}
-
-----------------------------
-Please make payment before the due date.
-ResidentPro Management
-    `;
-    downloadFile(content, `Invoice_${invoice.id}.txt`);
-    toast.success(`Invoice #${invoice.id} downloaded`);
+    try {
+      generateInvoicePDF(invoice);
+      toast.success(`Invoice #${invoice.id} downloaded as PDF`);
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to generate PDF');
+    }
   };
 
   const handleDownloadReceipt = (invoice) => {
-    const fullUnit = `${invoice.block}-${invoice.floor}-${invoice.unit}`;
-    const content = `
-OFFICIAL PAYMENT RECEIPT
-----------------------------
-Receipt For:  Invoice #${invoice.id}
-Date Paid:    ${invoice.paidDate ? new Date(invoice.paidDate).toLocaleDateString() : 'N/A'}
-Payment Method: ${invoice.paymentMethod || 'N/A'}
-
-RECEIVED FROM:
-Resident:     ${invoice.residentName}
-Unit No:      ${fullUnit}
-
-DETAILS:
-Description:  ${invoice.month}
-Amount Paid:  RM ${invoice.amount.toFixed(2)}
-Status:       PAID
-
-----------------------------
-Thank you for your payment!
-ResidentPro Management
-    `;
-    downloadFile(content, `Receipt_${invoice.id}.txt`);
-    toast.success(`Receipt for #${invoice.id} downloaded`);
-  };
-
-  const downloadFile = (content, filename) => {
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+    try {
+      generateReceiptPDF(invoice);
+      toast.success(`Receipt for #${invoice.id} downloaded as PDF`);
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to generate PDF');
+    }
   };
 
   const filteredInvoices = invoices.filter(
@@ -151,7 +125,7 @@ ResidentPro Management
         </Button>
       </div>
 
-      <Card className="glass !border-0">
+      <Card className="glass border-0!">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>My Documents</CardTitle>
@@ -174,74 +148,117 @@ ResidentPro Management
               <TabsTrigger value="paid">Paid ({paidInvoices.length})</TabsTrigger>
             </TabsList>
 
-            {['all', 'pending', 'paid'].map((tabValue) => (
-              <TabsContent key={tabValue} value={tabValue} className="mt-4">
-                <motion.div
-                  initial={{ x: 20, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Invoice ID</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead>Amount</TableHead>
-                        <TableHead>Issue Date</TableHead>
-                        <TableHead>Due Date</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {(tabValue === 'all' ? filteredInvoices : tabValue === 'pending' ? pendingInvoices : paidInvoices).length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                            No records found.
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        (tabValue === 'all' ? filteredInvoices : tabValue === 'pending' ? pendingInvoices : paidInvoices).map((invoice) => (
-                          <TableRow key={invoice.id}>
-                            <TableCell>#{invoice.id}</TableCell>
-                            <TableCell>{invoice.month}</TableCell>
-                            <TableCell>RM {invoice.amount.toFixed(2)}</TableCell>
-                            <TableCell>{new Date(invoice.issueDate).toLocaleDateString()}</TableCell>
-                            <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
-                            <TableCell>{getStatusBadge(invoice.status)}</TableCell>
-                            <TableCell>
-                              <div className="flex gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleDownloadInvoice(invoice)}
-                                  title="Download Invoice"
-                                >
-                                  <Download className="mr-1 h-3 w-3" />
-                                  Inv.
-                                </Button>
+            {['all', 'pending', 'paid'].map((tabValue) => {
+              const currentList = tabValue === 'all' ? filteredInvoices : tabValue === 'pending' ? pendingInvoices : paidInvoices;
+              const totalPages = Math.ceil(currentList.length / itemsPerPage);
+              const paginatedList = currentList.slice(
+                (currentPage - 1) * itemsPerPage,
+                currentPage * itemsPerPage
+              );
 
-                                {invoice.status === 'paid' && (
-                                  <Button
-                                    size="sm"
-                                    variant="default"
-                                    onClick={() => handleDownloadReceipt(invoice)}
-                                    title="Download Receipt"
-                                  >
-                                    <Download className="mr-1 h-3 w-3" />
-                                    Rcpt.
-                                  </Button>
-                                )}
-                              </div>
+              return (
+                <TabsContent key={tabValue} value={tabValue} className="mt-4">
+                  <motion.div
+                    initial={{ x: 20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Invoice ID</TableHead>
+                          <TableHead>Description</TableHead>
+                          <TableHead>Amount</TableHead>
+                          <TableHead>Issue Date</TableHead>
+                          <TableHead>Due Date</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {paginatedList.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                              No records found.
                             </TableCell>
                           </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </motion.div>
-              </TabsContent>
-            ))}
+                        ) : (
+                          paginatedList.map((invoice) => (
+                            <TableRow key={invoice.id}>
+                              <TableCell>#{invoice.id}</TableCell>
+                              <TableCell>{invoice.month}</TableCell>
+                              <TableCell>RM {invoice.amount.toFixed(2)}</TableCell>
+                              <TableCell>{new Date(invoice.issueDate).toLocaleDateString()}</TableCell>
+                              <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
+                              <TableCell>{getStatusBadge(invoice.status)}</TableCell>
+                              <TableCell>
+                                <div className="flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleDownloadInvoice(invoice)}
+                                    title="Download Invoice"
+                                  >
+                                    <Download className="mr-1 h-3 w-3" />
+                                    Inv.
+                                  </Button>
+
+                                  {invoice.status === 'paid' && (
+                                    <Button
+                                      size="sm"
+                                      variant="default"
+                                      onClick={() => handleDownloadReceipt(invoice)}
+                                      title="Download Receipt"
+                                    >
+                                      <Download className="mr-1 h-3 w-3" />
+                                      Rcpt.
+                                    </Button>
+                                  )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+
+                    {totalPages > 1 && (
+                      <div className="mt-4">
+                        <Pagination>
+                          <PaginationContent>
+                            <PaginationItem>
+                              <PaginationPrevious
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                              />
+                            </PaginationItem>
+
+                            {[...Array(totalPages)].map((_, i) => (
+                              <PaginationItem key={i + 1}>
+                                <PaginationLink
+                                  isActive={currentPage === i + 1}
+                                  onClick={() => setCurrentPage(i + 1)}
+                                  className="cursor-pointer"
+                                >
+                                  {i + 1}
+                                </PaginationLink>
+                              </PaginationItem>
+                            ))}
+
+                            <PaginationItem>
+                              <PaginationNext
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                              />
+                            </PaginationItem>
+                          </PaginationContent>
+                        </Pagination>
+                      </div>
+                    )}
+                  </motion.div>
+                </TabsContent>
+              );
+            })}
           </Tabs>
         </CardContent>
       </Card>

@@ -15,6 +15,14 @@ import { DatePicker } from './ui/date-picker';
 import { Plus, Edit, Trash2, CheckCircle, XCircle, Users, Clock, Ban } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "./ui/pagination";
 
 const API_URL = '/api/Bookings';
 
@@ -25,6 +33,8 @@ export default function FacilityBookingManagement({ user }) {
   const [facilities, setFacilities] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   // Fetch data on mount
   useEffect(() => {
@@ -239,7 +249,7 @@ export default function FacilityBookingManagement({ user }) {
 
   // Helper for Gradient Cards
   const GradientCard = ({ children, className }) => (
-    <div className={`relative rounded-xl p-[1px] bg-gradient-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
+    <div className={`relative rounded-xl p-px bg-linear-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
       <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-white/80 backdrop-blur-sm p-6 shadow-inner">
         {children}
       </div>
@@ -251,13 +261,19 @@ export default function FacilityBookingManagement({ user }) {
   if (!isAdmin) {
     // Resident view - simple booking list
     const residentBookings = bookings.filter((b) => b.unit === user.unit);
+    const totalPages = Math.ceil(residentBookings.length / itemsPerPage);
+    const paginatedList = residentBookings.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage
+    );
+
     return (
       <div className="space-y-6">
         <div>
           <h2>My Bookings</h2>
           <p className="text-sm text-gray-600">View your facility bookings</p>
         </div>
-        <Card className="glass !border-0">
+        <Card className="glass border-0!">
           <CardHeader>
             <CardTitle>My Bookings</CardTitle>
           </CardHeader>
@@ -273,10 +289,10 @@ export default function FacilityBookingManagement({ user }) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {residentBookings.map((booking) => (
+                {paginatedList.map((booking) => (
                   <TableRow key={booking.id}>
                     <TableCell>{booking.facilityName}</TableCell>
-                    <TableCell>{format(new Date(booking.date), 'MMM dd, yyyy')}</TableCell>
+                    <TableCell>{new Date(booking.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</TableCell>
                     <TableCell>
                       {booking.startTime} - {booking.endTime}
                     </TableCell>
@@ -286,6 +302,40 @@ export default function FacilityBookingManagement({ user }) {
                 ))}
               </TableBody>
             </Table>
+
+            {totalPages > 1 && (
+              <div className="mt-4">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+
+                    {[...Array(totalPages)].map((_, i) => (
+                      <PaginationItem key={i + 1}>
+                        <PaginationLink
+                          isActive={currentPage === i + 1}
+                          onClick={() => setCurrentPage(i + 1)}
+                          className="cursor-pointer"
+                        >
+                          {i + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -444,48 +494,94 @@ export default function FacilityBookingManagement({ user }) {
         </TabsList>
 
         <TabsContent value="facilities" className="mt-4">
-          <Card className="glass !border-0">
+          <Card className="glass border-0!">
             <CardHeader>
               <CardTitle>Facility Management</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Capacity</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {facilities.map((facility) => (
-                    <TableRow key={facility.id}>
-                      <TableCell>{facility.name}</TableCell>
-                      <TableCell><Badge variant="outline">{facility.type}</Badge></TableCell>
-                      <TableCell className="max-w-xs truncate">{facility.description}</TableCell>
-                      <TableCell>{facility.capacity} people</TableCell>
-                      <TableCell>{facility.status === 'available' ? <Badge className="bg-green-100 text-green-800">Available</Badge> : <Badge className="bg-red-100 text-red-800">Maintenance</Badge>}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="outline" onClick={() => handleEditFacility(facility)}><Edit className="h-4 w-4" /></Button>
-                          <Button size="sm" variant="outline" onClick={() => handleToggleFacilityStatus(facility.id)}>{facility.status === 'available' ? 'Set Maintenance' : 'Set Available'}</Button>
-                          <Button size="sm" variant="outline" onClick={() => handleDeleteFacility(facility.id)}><Trash2 className="h-4 w-4 text-red-600" /></Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              {(() => {
+                const totalPages = Math.ceil(facilities.length / itemsPerPage);
+                const paginatedList = facilities.slice(
+                  (currentPage - 1) * itemsPerPage,
+                  currentPage * itemsPerPage
+                );
+
+                return (
+                  <>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Description</TableHead>
+                          <TableHead>Capacity</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {paginatedList.map((facility) => (
+                          <TableRow key={facility.id}>
+                            <TableCell>{facility.name}</TableCell>
+                            <TableCell><Badge variant="outline">{facility.type}</Badge></TableCell>
+                            <TableCell className="max-w-xs truncate">{facility.description}</TableCell>
+                            <TableCell>{facility.capacity} people</TableCell>
+                            <TableCell>{facility.status === 'available' ? <Badge className="bg-green-100 text-green-800">Available</Badge> : <Badge className="bg-red-100 text-red-800">Maintenance</Badge>}</TableCell>
+                            <TableCell>
+                              <div className="flex gap-2">
+                                <Button size="sm" variant="outline" onClick={() => handleEditFacility(facility)}><Edit className="h-4 w-4" /></Button>
+                                <Button size="sm" variant="outline" onClick={() => handleToggleFacilityStatus(facility.id)}>{facility.status === 'available' ? 'Set Maintenance' : 'Set Available'}</Button>
+                                <Button size="sm" variant="outline" onClick={() => handleDeleteFacility(facility.id)}><Trash2 className="h-4 w-4 text-red-600" /></Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+
+                    {totalPages > 1 && (
+                      <div className="mt-4">
+                        <Pagination>
+                          <PaginationContent>
+                            <PaginationItem>
+                              <PaginationPrevious
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                              />
+                            </PaginationItem>
+
+                            {[...Array(totalPages)].map((_, i) => (
+                              <PaginationItem key={i + 1}>
+                                <PaginationLink
+                                  isActive={currentPage === i + 1}
+                                  onClick={() => setCurrentPage(i + 1)}
+                                  className="cursor-pointer"
+                                >
+                                  {i + 1}
+                                </PaginationLink>
+                              </PaginationItem>
+                            ))}
+
+                            <PaginationItem>
+                              <PaginationNext
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                              />
+                            </PaginationItem>
+                          </PaginationContent>
+                        </Pagination>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </CardContent>
           </Card>
         </TabsContent>
 
         {/* All Bookings Tab */}
         <TabsContent value="bookings" className="mt-4">
-          <Card className="glass !border-0">
+          <Card className="glass border-0!">
             <CardHeader>
               <CardTitle>All Bookings</CardTitle>
             </CardHeader>
@@ -564,7 +660,7 @@ export default function FacilityBookingManagement({ user }) {
 
         {/* Pending Bookings Tab */}
         <TabsContent value="pending" className="mt-4">
-          <Card className="glass !border-0">
+          <Card className="glass border-0!">
             <CardHeader>
               <CardTitle>Pending Approvals</CardTitle>
             </CardHeader>
@@ -616,35 +712,81 @@ export default function FacilityBookingManagement({ user }) {
 
         {/* Blocked Dates Tab */}
         <TabsContent value="blocked" className="mt-4">
-          <Card className="glass !border-0">
+          <Card className="glass border-0!">
             <CardHeader>
               <CardTitle>Blocked Dates</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Facility</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Reason</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {blockedDates.map((blocked) => (
-                    <TableRow key={blocked.id}>
-                      <TableCell>{blocked.facilityName}</TableCell>
-                      <TableCell>{format(new Date(blocked.date), 'MMM dd, yyyy')}</TableCell>
-                      <TableCell>{blocked.reason}</TableCell>
-                      <TableCell>
-                        <Button size="sm" variant="outline" onClick={() => handleUnblockDate(blocked.id)}>
-                          Unblock
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              {(() => {
+                const totalPages = Math.ceil(blockedDates.length / itemsPerPage);
+                const paginatedList = blockedDates.slice(
+                  (currentPage - 1) * itemsPerPage,
+                  currentPage * itemsPerPage
+                );
+
+                return (
+                  <>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Facility</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Reason</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {paginatedList.map((blocked) => (
+                          <TableRow key={blocked.id}>
+                            <TableCell>{blocked.facilityName}</TableCell>
+                            <TableCell>{format(new Date(blocked.date), 'MMM dd, yyyy')}</TableCell>
+                            <TableCell>{blocked.reason}</TableCell>
+                            <TableCell>
+                              <Button size="sm" variant="outline" onClick={() => handleUnblockDate(blocked.id)}>
+                                Unblock
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+
+                    {totalPages > 1 && (
+                      <div className="mt-4">
+                        <Pagination>
+                          <PaginationContent>
+                            <PaginationItem>
+                              <PaginationPrevious
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                              />
+                            </PaginationItem>
+
+                            {[...Array(totalPages)].map((_, i) => (
+                              <PaginationItem key={i + 1}>
+                                <PaginationLink
+                                  isActive={currentPage === i + 1}
+                                  onClick={() => setCurrentPage(i + 1)}
+                                  className="cursor-pointer"
+                                >
+                                  {i + 1}
+                                </PaginationLink>
+                              </PaginationItem>
+                            ))}
+
+                            <PaginationItem>
+                              <PaginationNext
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                              />
+                            </PaginationItem>
+                          </PaginationContent>
+                        </Pagination>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </CardContent>
           </Card>
         </TabsContent>

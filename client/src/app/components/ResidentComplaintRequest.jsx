@@ -15,6 +15,14 @@ import { Plus, Eye, X, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "./ui/pagination";
 
 const API_URL = '/api/Reports';
 
@@ -27,6 +35,8 @@ function ResidentComplaintRequest({ user }) {
   const [selectedComplaint, setSelectedComplaint] = useState(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   // Form State
   const [newComplaint, setNewComplaint] = useState({
@@ -307,7 +317,7 @@ function ResidentComplaintRequest({ user }) {
         </Dialog>
       </div>
 
-      <Card className="glass !border-0">
+      <Card className="glass border-0!">
         <CardHeader>
           <CardTitle>My Requests</CardTitle>
         </CardHeader>
@@ -408,7 +418,7 @@ function ResidentComplaintRequest({ user }) {
                 </div>
                 <div>
                   <Label>Date Submitted</Label>
-                  <p className="text-sm">{new Date(selectedComplaint.date).toLocaleDateString()}</p>
+                  <p className="text-sm">{new Date(selectedComplaint.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
                 </div>
               </div>
 

@@ -63,7 +63,7 @@ function AppContent({ children }) {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-gradient-to-br from-primary/20 via-secondary to-primary/20">
+      <div className="flex min-h-screen w-full bg-linear-to-br from-primary/20 via-secondary to-primary/20">
         <Sidebar variant="floating" collapsible="icon" className="border-r-0">
           <SidebarHeader className="border-b border-white/20 p-4">
             <div className="flex items-center justify-between group-data-[collapsible=icon]:justify-center">
@@ -120,7 +120,7 @@ function AppContent({ children }) {
               </div>
               <div className="flex items-center gap-4">
                 <p className="text-sm text-muted-foreground">Welcome, {currentUser.name}</p>
-                <Badge variant={currentUser.role === 'Admin' ? 'default' : 'secondary'} className="glass">
+                <Badge variant="default" className="glass">
                   {currentUser.role}
                 </Badge>
               </div>

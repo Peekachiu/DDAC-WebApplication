@@ -13,6 +13,15 @@ import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Plus, Search, Filter, MessageSquare, Wrench, CheckCircle, Clock, XCircle, Eye } from 'lucide-react';
 import { toast } from 'sonner';
+import { formatDate } from '../../lib/dateUtils';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "./ui/pagination";
 
 const API_URL = '/api/Reports';
 
@@ -36,6 +45,8 @@ export default function ComplaintMaintenanceManagement({ user }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterType, setFilterType] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
@@ -231,7 +242,7 @@ export default function ComplaintMaintenanceManagement({ user }) {
 
   // Helper for Gradient Cards
   const GradientCard = ({ children, className }) => (
-    <div className={`relative rounded-xl p-[1px] bg-gradient-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
+    <div className={`relative rounded-xl p-px bg-linear-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
       <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-white/80 backdrop-blur-sm p-6 shadow-inner">
         {children}
       </div>
@@ -388,7 +399,7 @@ export default function ComplaintMaintenanceManagement({ user }) {
         </GradientCard>
       </div>
 
-      <Card className="glass !border-0">
+      <Card className="glass border-0!">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Request Management</CardTitle>
@@ -426,28 +437,35 @@ export default function ComplaintMaintenanceManagement({ user }) {
               <TabsTrigger value="resolved">Resolved ({filteredRequests.filter(r => r.status === 'resolved').length})</TabsTrigger>
             </TabsList>
 
-            {['all', 'pending', 'inprogress', 'resolved'].map((tabValue) => (
-              <TabsContent key={tabValue} value={tabValue} className="mt-4">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>ID</TableHead>
-                      <TableHead>Type</TableHead>
-                      {isAdmin && <TableHead>Resident</TableHead>}
-                      {isAdmin && <TableHead>Unit</TableHead>}
-                      <TableHead>Category</TableHead>
-                      <TableHead>Subject</TableHead>
-                      <TableHead>Priority</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Date</TableHead>
-                      {isAdmin && <TableHead>Assigned To</TableHead>}
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredRequests
-                      .filter(req => tabValue === 'all' || req.status === (tabValue === 'inprogress' ? 'in-progress' : tabValue))
-                      .map((request) => (
+            {['all', 'pending', 'inprogress', 'resolved'].map((tabValue) => {
+              const currentList = filteredRequests
+                .filter(req => tabValue === 'all' || req.status === (tabValue === 'inprogress' ? 'in-progress' : tabValue));
+              const totalPages = Math.ceil(currentList.length / itemsPerPage);
+              const paginatedList = currentList.slice(
+                (currentPage - 1) * itemsPerPage,
+                currentPage * itemsPerPage
+              );
+
+              return (
+                <TabsContent key={tabValue} value={tabValue} className="mt-4">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>ID</TableHead>
+                        <TableHead>Type</TableHead>
+                        {isAdmin && <TableHead>Resident</TableHead>}
+                        {isAdmin && <TableHead>Unit</TableHead>}
+                        <TableHead>Category</TableHead>
+                        <TableHead>Subject</TableHead>
+                        <TableHead>Priority</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Date</TableHead>
+                        {isAdmin && <TableHead>Assigned To</TableHead>}
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {paginatedList.map((request) => (
                         <TableRow key={request.id}>
                           <TableCell>{request.id}</TableCell>
                           <TableCell>
@@ -462,7 +480,7 @@ export default function ComplaintMaintenanceManagement({ user }) {
                           <TableCell>{request.subject}</TableCell>
                           <TableCell>{getPriorityBadge(request.priority)}</TableCell>
                           <TableCell>{getStatusBadge(request.status)}</TableCell>
-                          <TableCell>{new Date(request.submittedDate).toLocaleDateString()}</TableCell>
+                          <TableCell>{formatDate(request.submittedDate)}</TableCell>
                           {isAdmin && <TableCell>{request.assignedTo || '-'}</TableCell>}
                           <TableCell>
                             <div className="flex gap-2">
@@ -485,10 +503,45 @@ export default function ComplaintMaintenanceManagement({ user }) {
                           </TableCell>
                         </TableRow>
                       ))}
-                  </TableBody>
-                </Table>
-              </TabsContent>
-            ))}
+                    </TableBody>
+                  </Table>
+
+                  {totalPages > 1 && (
+                    <div className="mt-4">
+                      <Pagination>
+                        <PaginationContent>
+                          <PaginationItem>
+                            <PaginationPrevious
+                              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                              className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                            />
+                          </PaginationItem>
+
+                          {[...Array(totalPages)].map((_, i) => (
+                            <PaginationItem key={i + 1}>
+                              <PaginationLink
+                                isActive={currentPage === i + 1}
+                                onClick={() => setCurrentPage(i + 1)}
+                                className="cursor-pointer"
+                              >
+                                {i + 1}
+                              </PaginationLink>
+                            </PaginationItem>
+                          ))}
+
+                          <PaginationItem>
+                            <PaginationNext
+                              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                              className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                            />
+                          </PaginationItem>
+                        </PaginationContent>
+                      </Pagination>
+                    </div>
+                  )}
+                </TabsContent>
+              );
+            })}
           </Tabs>
         </CardContent>
       </Card>
@@ -514,7 +567,7 @@ export default function ComplaintMaintenanceManagement({ user }) {
                 <div><span className="font-semibold">Category:</span> {selectedRequest.category}</div>
                 <div><span className="font-semibold">Submitted By:</span> {selectedRequest.residentName || 'N/A'}</div>
                 <div><span className="font-semibold">Unit:</span> {selectedRequest.unit || 'N/A'}</div>
-                <div><span className="font-semibold">Date:</span> {new Date(selectedRequest.submittedDate).toLocaleString()}</div>
+                <div><span className="font-semibold">Date:</span> {formatDate(selectedRequest.submittedDate)}</div>
                 <div><span className="font-semibold">Assigned To:</span> {selectedRequest.assignedTo || '-'}</div>
               </div>
 

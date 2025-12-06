@@ -28,12 +28,46 @@ namespace server.Controllers
         // GET: api/Announcements/resident
         // Filters only sent announcements for residents
         [HttpGet("resident")]
-        public async Task<ActionResult<IEnumerable<Announcement>>> GetResidentAnnouncements()
+        public async Task<ActionResult<IEnumerable<object>>> GetResidentAnnouncements([FromQuery] int userId)
         {
-            return await _context.Announcements
+            if (userId <= 0) return BadRequest("UserId is required");
+
+            var announcements = await _context.Announcements
                 .Where(a => a.Status == "sent")
                 .OrderByDescending(a => a.SentDate)
                 .ToListAsync();
+
+            var userAnnouncements = await _context.UserAnnouncements
+                .Where(ua => ua.UserID == userId)
+                .ToListAsync();
+
+            var result = announcements
+                .GroupJoin(
+                    userAnnouncements,
+                    a => a.AnnouncementID,
+                    ua => ua.AnnouncementID,
+                    (a, uaList) => new { Announcement = a, UserStatus = uaList.FirstOrDefault() }
+                )
+                .Where(x => x.UserStatus == null || !x.UserStatus.IsDeleted)
+                .Select(x => new
+                {
+                    x.Announcement.AnnouncementID,
+                    x.Announcement.Title,
+                    x.Announcement.Message,
+                    x.Announcement.Type,
+                    x.Announcement.SentDate,
+                    x.Announcement.ScheduledDate,
+                    Read = x.UserStatus != null && x.UserStatus.IsRead
+                })
+                .ToList();
+
+            return Ok(result);
+        }
+
+        // Helper to get Malaysia Time (UTC+8)
+        private DateTime GetMalaysiaTime()
+        {
+            return DateTime.UtcNow.AddHours(8); // Explicitly Malaysia Time
         }
 
         // POST: api/Announcements
@@ -41,10 +75,11 @@ namespace server.Controllers
         public async Task<ActionResult<Announcement>> CreateAnnouncement(Announcement announcement)
         {
             // Auto-determine status based on date
-            if (announcement.ScheduledDate <= DateTime.Now)
+            var now = GetMalaysiaTime();
+            if (announcement.ScheduledDate <= now)
             {
                 announcement.Status = "sent";
-                announcement.SentDate = DateTime.Now;
+                announcement.SentDate = now;
             }
             else
             {
@@ -86,7 +121,7 @@ namespace server.Controllers
             if (announcement == null) return NotFound();
 
             announcement.Status = "sent";
-            announcement.SentDate = DateTime.Now;
+            announcement.SentDate = GetMalaysiaTime();
 
             await _context.SaveChangesAsync();
             return Ok(new { message = "Announcement sent successfully" });
@@ -104,5 +139,59 @@ namespace server.Controllers
 
             return NoContent();
         }
+
+        // POST: api/Announcements/mark-read
+        [HttpPost("mark-read")]
+        public async Task<IActionResult> MarkAsRead([FromBody] UserAnnouncementStatusRequest request)
+        {
+            var userAnnouncement = await GetOrCreateUserAnnouncement(request.UserId, request.AnnouncementId);
+            userAnnouncement.IsRead = true;
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
+
+        // POST: api/Announcements/mark-unread
+        [HttpPost("mark-unread")]
+        public async Task<IActionResult> MarkAsUnread([FromBody] UserAnnouncementStatusRequest request)
+        {
+            var userAnnouncement = await GetOrCreateUserAnnouncement(request.UserId, request.AnnouncementId);
+            userAnnouncement.IsRead = false;
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
+
+        // POST: api/Announcements/dismiss
+        [HttpPost("dismiss")]
+        public async Task<IActionResult> Dismiss([FromBody] UserAnnouncementStatusRequest request)
+        {
+            var userAnnouncement = await GetOrCreateUserAnnouncement(request.UserId, request.AnnouncementId);
+            userAnnouncement.IsDeleted = true;
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
+
+        private async Task<UserAnnouncement> GetOrCreateUserAnnouncement(int userId, int announcementId)
+        {
+            var userAnnouncement = await _context.UserAnnouncements
+                .FirstOrDefaultAsync(ua => ua.UserID == userId && ua.AnnouncementID == announcementId);
+
+            if (userAnnouncement == null)
+            {
+                userAnnouncement = new UserAnnouncement
+                {
+                    UserID = userId,
+                    AnnouncementID = announcementId
+                };
+                _context.UserAnnouncements.Add(userAnnouncement);
+            }
+
+            return userAnnouncement;
+        }
+    }
+
+    public class UserAnnouncementStatusRequest
+    {
+        public int UserId { get; set; }
+        public int AnnouncementId { get; set; }
     }
 }

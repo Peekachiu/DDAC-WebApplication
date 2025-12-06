@@ -15,6 +15,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "./ui/pagination";
 
 const API_URL = '/api/Bookings';
 
@@ -26,6 +34,8 @@ export default function ResidentSportFacilityBooking({ user }) {
   const [selectedDate, setSelectedDate] = useState();
   const [blockedDates, setBlockedDates] = useState([]);
   const [activeTab, setActiveTab] = useState('upcoming');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   const [newBooking, setNewBooking] = useState({
     facility: '',
@@ -272,7 +282,7 @@ export default function ResidentSportFacilityBooking({ user }) {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {facilities.map((facility) => (
-          <div key={facility.id} className={`flex items-center gap-4 rounded-lg p-4 transition-all duration-300 glass !border-0 ${facility.status === 'maintenance' ? 'opacity-75' : 'hover:shadow-lg hover:-translate-y-1 cursor-pointer'}`}>
+          <div key={facility.id} className={`flex items-center gap-4 rounded-lg p-4 transition-all duration-300 glass border-0! ${facility.status === 'maintenance' ? 'opacity-75' : 'hover:shadow-lg hover:-translate-y-1 cursor-pointer'}`}>
             <div className="rounded-full bg-gray-100 p-2">
               {facility.status === 'maintenance' ? <AlertTriangle className="h-6 w-6 text-yellow-600" /> : getFacilityIcon(facility.name)}
             </div>
@@ -306,40 +316,86 @@ export default function ResidentSportFacilityBooking({ user }) {
                 exit={{ x: 20, opacity: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                <Card className="glass !border-0">
+                <Card className="glass border-0!">
                   <CardHeader><CardTitle>Upcoming</CardTitle></CardHeader>
                   <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Facility</TableHead>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Time</TableHead>
-                          <TableHead>Guests</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Action</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {upcomingBookings.length === 0 ? (
-                          <TableRow><TableCell colSpan={6} className="text-center">No upcoming bookings</TableCell></TableRow>
-                        ) : (
-                          upcomingBookings.map((b) => (
-                            <TableRow key={b.id}>
-                              <TableCell>{b.facilityName}</TableCell>
-                              <TableCell>{format(new Date(b.date), 'MMM dd, yyyy')}</TableCell>
-                              <TableCell>{b.startTime}</TableCell>
-                              <TableCell>{b.guests}</TableCell>
-                              <TableCell>{getStatusBadge(b.status)}</TableCell>
-                              <TableCell>
-                                {/* Only show Cancel if status is pending or approved */}
-                                <Button size="sm" variant="outline" onClick={() => handleCancelBooking(b.id)}>Cancel</Button>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
+                    {(() => {
+                      const totalPages = Math.ceil(upcomingBookings.length / itemsPerPage);
+                      const paginatedList = upcomingBookings.slice(
+                        (currentPage - 1) * itemsPerPage,
+                        currentPage * itemsPerPage
+                      );
+
+                      return (
+                        <>
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Facility</TableHead>
+                                <TableHead>Date</TableHead>
+                                <TableHead>Time</TableHead>
+                                <TableHead>Guests</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Action</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {paginatedList.length === 0 ? (
+                                <TableRow><TableCell colSpan={6} className="text-center">No upcoming bookings</TableCell></TableRow>
+                              ) : (
+                                paginatedList.map((b) => (
+                                  <TableRow key={b.id}>
+                                    <TableCell>{b.facilityName}</TableCell>
+                                    <TableCell>{format(new Date(b.date), 'dd MMM yyyy')}</TableCell>
+                                    <TableCell>{b.startTime}</TableCell>
+                                    <TableCell>{b.guests}</TableCell>
+                                    <TableCell>{getStatusBadge(b.status)}</TableCell>
+                                    <TableCell>
+                                      {/* Only show Cancel if status is pending or approved */}
+                                      <Button size="sm" variant="outline" onClick={() => handleCancelBooking(b.id)}>Cancel</Button>
+                                    </TableCell>
+                                  </TableRow>
+                                ))
+                              )}
+                            </TableBody>
+                          </Table>
+
+                          {totalPages > 1 && (
+                            <div className="mt-4">
+                              <Pagination>
+                                <PaginationContent>
+                                  <PaginationItem>
+                                    <PaginationPrevious
+                                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                      className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                    />
+                                  </PaginationItem>
+
+                                  {[...Array(totalPages)].map((_, i) => (
+                                    <PaginationItem key={i + 1}>
+                                      <PaginationLink
+                                        isActive={currentPage === i + 1}
+                                        onClick={() => setCurrentPage(i + 1)}
+                                        className="cursor-pointer"
+                                      >
+                                        {i + 1}
+                                      </PaginationLink>
+                                    </PaginationItem>
+                                  ))}
+
+                                  <PaginationItem>
+                                    <PaginationNext
+                                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                    />
+                                  </PaginationItem>
+                                </PaginationContent>
+                              </Pagination>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
                   </CardContent>
                 </Card>
               </motion.div>
@@ -358,33 +414,79 @@ export default function ResidentSportFacilityBooking({ user }) {
                 exit={{ x: -20, opacity: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                <Card className="glass !border-0">
+                <Card className="glass border-0!">
                   <CardHeader><CardTitle>History</CardTitle></CardHeader>
                   <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Facility</TableHead>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Time</TableHead>
-                          <TableHead>Status</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {pastBookings.length === 0 ? (
-                          <TableRow><TableCell colSpan={4} className="text-center">No booking history</TableCell></TableRow>
-                        ) : (
-                          pastBookings.map((b) => (
-                            <TableRow key={b.id} className="opacity-70">
-                              <TableCell>{b.facilityName}</TableCell>
-                              <TableCell>{format(new Date(b.date), 'MMM dd, yyyy')}</TableCell>
-                              <TableCell>{b.startTime}</TableCell>
-                              <TableCell>{getStatusBadge(b.status)}</TableCell>
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
+                    {(() => {
+                      const totalPages = Math.ceil(pastBookings.length / itemsPerPage);
+                      const paginatedList = pastBookings.slice(
+                        (currentPage - 1) * itemsPerPage,
+                        currentPage * itemsPerPage
+                      );
+
+                      return (
+                        <>
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Facility</TableHead>
+                                <TableHead>Date</TableHead>
+                                <TableHead>Time</TableHead>
+                                <TableHead>Status</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {paginatedList.length === 0 ? (
+                                <TableRow><TableCell colSpan={4} className="text-center">No booking history</TableCell></TableRow>
+                              ) : (
+                                paginatedList.map((b) => (
+                                  <TableRow key={b.id} className="opacity-70">
+                                    <TableCell>{b.facilityName}</TableCell>
+                                    <TableCell>{format(new Date(b.date), 'dd MMM yyyy')}</TableCell>
+                                    <TableCell>{b.startTime}</TableCell>
+                                    <TableCell>{getStatusBadge(b.status)}</TableCell>
+                                  </TableRow>
+                                ))
+                              )}
+                            </TableBody>
+                          </Table>
+
+                          {totalPages > 1 && (
+                            <div className="mt-4">
+                              <Pagination>
+                                <PaginationContent>
+                                  <PaginationItem>
+                                    <PaginationPrevious
+                                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                      className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                    />
+                                  </PaginationItem>
+
+                                  {[...Array(totalPages)].map((_, i) => (
+                                    <PaginationItem key={i + 1}>
+                                      <PaginationLink
+                                        isActive={currentPage === i + 1}
+                                        onClick={() => setCurrentPage(i + 1)}
+                                        className="cursor-pointer"
+                                      >
+                                        {i + 1}
+                                      </PaginationLink>
+                                    </PaginationItem>
+                                  ))}
+
+                                  <PaginationItem>
+                                    <PaginationNext
+                                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                    />
+                                  </PaginationItem>
+                                </PaginationContent>
+                              </Pagination>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
                   </CardContent>
                 </Card>
               </motion.div>

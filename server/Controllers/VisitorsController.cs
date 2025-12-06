@@ -77,7 +77,7 @@ namespace server.Controllers
         [HttpPost]
         public async Task<IActionResult> RegisterVisitor([FromBody] CreateVisitorRequest request)
         {
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
 
             var visitor = new Visitor
             {
@@ -108,7 +108,7 @@ namespace server.Controllers
             if (visitor == null) return NotFound();
 
             visitor.Status = 1; // Checked Out
-            visitor.CheckOutTime = DateTime.Now;
+            visitor.CheckOutTime = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
             return Ok(new { message = "Visitor checked out successfully" });
@@ -132,9 +132,9 @@ namespace server.Controllers
                 Phone = v.VisitorContactNumber,
                 Purpose = v.Purpose,
                 Unit = unitStr,
-                CheckIn = checkInDateTime.ToString("yyyy-MM-dd h:mm tt"),
+                CheckIn = DateTime.SpecifyKind(checkInDateTime, DateTimeKind.Utc).ToString("o"),
                 // Fixed CS8601: Handle potential null from ToString()
-                CheckOut = v.CheckOutTime?.ToString("yyyy-MM-dd h:mm tt") ?? string.Empty,
+                CheckOut = v.CheckOutTime.HasValue ? DateTime.SpecifyKind(v.CheckOutTime.Value, DateTimeKind.Utc).ToString("o") : string.Empty,
                 Status = v.Status == 0 ? "checked-in" : "checked-out"
             };
         }

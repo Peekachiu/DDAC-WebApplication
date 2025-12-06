@@ -12,6 +12,14 @@ import axios from 'axios';
 import CheckoutForm from './CheckoutForm';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "./ui/pagination";
 
 const BASE_API_URL = '/api';
 
@@ -25,6 +33,8 @@ function ResidentManagementFee({ user }) {
   const [clientSecret, setClientSecret] = useState(null);
   const [preparingPayment, setPreparingPayment] = useState(false);
   const [activeTab, setActiveTab] = useState('pending');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   // 1. Fetch Invoices (Stable function)
   const fetchInvoices = useCallback(async () => {
@@ -156,7 +166,7 @@ function ResidentManagementFee({ user }) {
 
   // Helper for Gradient Cards
   const GradientCard = ({ children, className }) => (
-    <div className={`relative rounded-xl p-[1px] bg-gradient-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
+    <div className={`relative rounded-xl p-px bg-linear-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
       <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-white/80 backdrop-blur-sm p-6 shadow-inner">
         {children}
       </div>
@@ -223,99 +233,174 @@ function ResidentManagementFee({ user }) {
           <TabsTrigger value="history">Payment History</TabsTrigger>
         </TabsList>
 
-        {['pending', 'history'].map((tabValue) => (
-          <TabsContent key={tabValue} value={tabValue}>
-            <motion.div
-              initial={{ x: tabValue === 'pending' ? -20 : 20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.2 }}
-            >
-              {tabValue === 'pending' ? (
-                pendingInvoices.length > 0 ? (
-                  <Card className="glass !border-0">
+        {['pending', 'history'].map((tabValue) => {
+          const currentList = tabValue === 'pending' ? pendingInvoices : paidInvoices;
+          const totalPages = Math.ceil(currentList.length / itemsPerPage);
+          const paginatedList = currentList.slice(
+            (currentPage - 1) * itemsPerPage,
+            currentPage * itemsPerPage
+          );
+
+          return (
+            <TabsContent key={tabValue} value={tabValue}>
+              <motion.div
+                initial={{ x: tabValue === 'pending' ? -20 : 20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ duration: 0.2 }}
+              >
+                {tabValue === 'pending' ? (
+                  paginatedList.length > 0 ? (
+                    <Card className="glass border-0!">
+                      <CardHeader>
+                        <CardTitle>Pending Payments</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          {paginatedList.map((invoice) => (
+                            <div
+                              key={invoice.id}
+                              className="flex items-center justify-between rounded-lg p-4 glass border-0! hover:shadow-lg transition-all duration-300"
+                            >
+                              <div className="flex items-center gap-4">
+                                <div className="rounded-lg bg-orange-50 p-3">
+                                  <DollarSign className="h-6 w-6 text-orange-600" />
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium">{invoice.month}</p>
+                                  <p className="text-xs text-gray-500">
+                                    Due: {new Date(invoice.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-4">
+                                <p className="text-lg font-bold">RM {invoice.amount.toFixed(2)}</p>
+                                <Button onClick={() => handleInitiatePayment(invoice)}>
+                                  Pay Now
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        {totalPages > 1 && (
+                          <div className="mt-4">
+                            <Pagination>
+                              <PaginationContent>
+                                <PaginationItem>
+                                  <PaginationPrevious
+                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                  />
+                                </PaginationItem>
+
+                                {[...Array(totalPages)].map((_, i) => (
+                                  <PaginationItem key={i + 1}>
+                                    <PaginationLink
+                                      isActive={currentPage === i + 1}
+                                      onClick={() => setCurrentPage(i + 1)}
+                                      className="cursor-pointer"
+                                    >
+                                      {i + 1}
+                                    </PaginationLink>
+                                  </PaginationItem>
+                                ))}
+
+                                <PaginationItem>
+                                  <PaginationNext
+                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                  />
+                                </PaginationItem>
+                              </PaginationContent>
+                            </Pagination>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <Card className="glass border-0!">
+                      <CardContent className="p-6 text-center text-gray-500">
+                        No pending payments. You are all caught up!
+                      </CardContent>
+                    </Card>
+                  )
+                ) : (
+                  <Card className="glass border-0!">
                     <CardHeader>
-                      <CardTitle>Pending Payments</CardTitle>
+                      <CardTitle>Payment History</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-4">
-                        {pendingInvoices.map((invoice) => (
-                          <div
-                            key={invoice.id}
-                            className="flex items-center justify-between rounded-lg p-4 glass !border-0 hover:shadow-lg transition-all duration-300"
-                          >
-                            <div className="flex items-center gap-4">
-                              <div className="rounded-lg bg-orange-50 p-3">
-                                <DollarSign className="h-6 w-6 text-orange-600" />
+                      <div className="space-y-3">
+                        {paginatedList.length === 0 ? (
+                          <p className="text-sm text-gray-500">No payment history available.</p>
+                        ) : (
+                          paginatedList.map((invoice) => (
+                            <div
+                              key={invoice.id}
+                              className="flex items-center justify-between rounded-lg p-4 glass border-0! hover:shadow-lg transition-all duration-300"
+                            >
+                              <div className="flex items-center gap-4">
+                                <div className="rounded-lg bg-green-50 p-3">
+                                  <DollarSign className="h-6 w-6 text-green-600" />
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium">{invoice.month}</p>
+                                  <p className="text-xs text-gray-500">
+                                    Paid on: {invoice.paidDate
+                                      ? new Date(invoice.paidDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+                                      : 'N/A'}
+                                  </p>
+                                </div>
                               </div>
-                              <div>
-                                <p className="text-sm font-medium">{invoice.month}</p>
-                                <p className="text-xs text-gray-500">
-                                  Due: {new Date(invoice.dueDate).toLocaleDateString()}
-                                </p>
+                              <div className="flex items-center gap-4">
+                                <p className="text-lg">RM {invoice.amount.toFixed(2)}</p>
+                                <span className="rounded-full bg-green-100 px-3 py-1 text-xs text-green-800">
+                                  Paid
+                                </span>
                               </div>
                             </div>
-                            <div className="flex items-center gap-4">
-                              <p className="text-lg font-bold">RM {invoice.amount.toFixed(2)}</p>
-                              <Button onClick={() => handleInitiatePayment(invoice)}>
-                                Pay Now
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
+                          ))
+                        )}
                       </div>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <Card className="glass !border-0">
-                    <CardContent className="p-6 text-center text-gray-500">
-                      No pending payments. You are all caught up!
-                    </CardContent>
-                  </Card>
-                )
-              ) : (
-                <Card className="glass !border-0">
-                  <CardHeader>
-                    <CardTitle>Payment History</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {paidInvoices.length === 0 ? (
-                        <p className="text-sm text-gray-500">No payment history available.</p>
-                      ) : (
-                        paidInvoices.map((invoice) => (
-                          <div
-                            key={invoice.id}
-                            className="flex items-center justify-between rounded-lg p-4 glass !border-0 hover:shadow-lg transition-all duration-300"
-                          >
-                            <div className="flex items-center gap-4">
-                              <div className="rounded-lg bg-green-50 p-3">
-                                <DollarSign className="h-6 w-6 text-green-600" />
-                              </div>
-                              <div>
-                                <p className="text-sm font-medium">{invoice.month}</p>
-                                <p className="text-xs text-gray-500">
-                                  Paid on: {invoice.paidDate
-                                    ? new Date(invoice.paidDate).toLocaleDateString()
-                                    : 'N/A'}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-4">
-                              <p className="text-lg">RM {invoice.amount.toFixed(2)}</p>
-                              <span className="rounded-full bg-green-100 px-3 py-1 text-xs text-green-800">
-                                Paid
-                              </span>
-                            </div>
-                          </div>
-                        ))
+                      {totalPages > 1 && (
+                        <div className="mt-4">
+                          <Pagination>
+                            <PaginationContent>
+                              <PaginationItem>
+                                <PaginationPrevious
+                                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                />
+                              </PaginationItem>
+
+                              {[...Array(totalPages)].map((_, i) => (
+                                <PaginationItem key={i + 1}>
+                                  <PaginationLink
+                                    isActive={currentPage === i + 1}
+                                    onClick={() => setCurrentPage(i + 1)}
+                                    className="cursor-pointer"
+                                  >
+                                    {i + 1}
+                                  </PaginationLink>
+                                </PaginationItem>
+                              ))}
+
+                              <PaginationItem>
+                                <PaginationNext
+                                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                />
+                              </PaginationItem>
+                            </PaginationContent>
+                          </Pagination>
+                        </div>
                       )}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </motion.div>
-          </TabsContent>
-        ))}
+                    </CardContent>
+                  </Card>
+                )}
+              </motion.div>
+            </TabsContent>
+          );
+        })}
       </Tabs>
 
       {/* Stripe Dialog */}

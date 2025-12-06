@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { User, Lock, ShieldCheck, KeyRound } from 'lucide-react';
+import { User, Lock, ShieldCheck, KeyRound, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 
@@ -18,6 +18,19 @@ export default function ResidentProfile({ user }) {
     confirmPassword: '',
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState({
+    oldPassword: false,
+    newPassword: false,
+    confirmPassword: false,
+  });
+
+  const handleMouseDown = (field) => {
+    setShowPassword((prev) => ({ ...prev, [field]: true }));
+  };
+
+  const handleMouseUp = (field) => {
+    setShowPassword((prev) => ({ ...prev, [field]: false }));
+  };
 
   const handleChange = (e) => {
     setPasswords({ ...passwords, [e.target.id]: e.target.value });
@@ -31,8 +44,32 @@ export default function ResidentProfile({ user }) {
       return;
     }
 
-    if (passwords.newPassword.length < 6) {
-      toast.error("Password must be at least 6 characters.");
+    if (passwords.newPassword === passwords.oldPassword) {
+      toast.error("New password cannot be the same as the old password.");
+      return;
+    }
+
+    // Password Complexity Validation
+    const hasUpperCase = /[A-Z]/.test(passwords.newPassword);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(passwords.newPassword);
+    const hasNumber = /\d/.test(passwords.newPassword);
+    const hasLetter = /[a-zA-Z]/.test(passwords.newPassword);
+    const isLengthValid = passwords.newPassword.length >= 10;
+
+    if (!isLengthValid) {
+      toast.error("Password must be at least 10 characters long.");
+      return;
+    }
+    if (!hasUpperCase) {
+      toast.error("Password must contain at least one uppercase letter.");
+      return;
+    }
+    if (!hasSpecialChar) {
+      toast.error("Password must contain at least one special symbol.");
+      return;
+    }
+    if (!hasNumber || !hasLetter) {
+      toast.error("Password must contain a mixture of alphabets and numbers.");
       return;
     }
 
@@ -67,7 +104,7 @@ export default function ResidentProfile({ user }) {
 
   // Helper component for Gradient Border Input Display
   const GradientBorderDisplay = ({ children, className }) => (
-    <div className={`relative rounded-lg p-[1px] bg-gradient-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
+    <div className={`relative rounded-lg p-px bg-linear-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
       <div className="relative rounded-[calc(0.5rem-1px)] bg-white/80 backdrop-blur-sm p-2.5 text-sm text-gray-700 shadow-inner">
         {children}
       </div>
@@ -88,7 +125,7 @@ export default function ResidentProfile({ user }) {
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.3 }}
         >
-          <Card className="glass !border-0 h-full">
+          <Card className="glass border-0! h-full">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <User className="h-5 w-5 text-blue-600" />
@@ -131,7 +168,7 @@ export default function ResidentProfile({ user }) {
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.3, delay: 0.1 }}
         >
-          <Card className="glass !border-0 h-full">
+          <Card className="glass border-0! h-full">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <ShieldCheck className="h-5 w-5 text-green-600" />
@@ -144,18 +181,29 @@ export default function ResidentProfile({ user }) {
                 <div className="space-y-2">
                   <Label htmlFor="oldPassword">Current Password</Label>
                   <div className="relative group">
-                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-300 to-purple-300 rounded-lg blur opacity-0 group-focus-within:opacity-30 transition duration-200"></div>
+                    <div className="absolute -inset-0.5 bg-linear-to-r from-blue-300 to-purple-300 rounded-lg blur opacity-0 group-focus-within:opacity-30 transition duration-200"></div>
                     <div className="relative">
                       <KeyRound className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
                       <Input
                         id="oldPassword"
-                        type="password"
+                        type={showPassword.oldPassword ? "text" : "password"}
                         placeholder="Enter current password"
-                        className="pl-9 bg-white/50 border-gray-200 focus:border-blue-400 focus:ring-blue-400/20"
+                        className="pl-9 pr-10 bg-white/50 border-gray-200 focus:border-blue-400 focus:ring-blue-400/20"
                         value={passwords.oldPassword}
                         onChange={handleChange}
                         required
                       />
+                      <button
+                        type="button"
+                        className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 focus:outline-none"
+                        onMouseDown={() => handleMouseDown('oldPassword')}
+                        onMouseUp={() => handleMouseUp('oldPassword')}
+                        onMouseLeave={() => handleMouseUp('oldPassword')}
+                        onTouchStart={() => handleMouseDown('oldPassword')}
+                        onTouchEnd={() => handleMouseUp('oldPassword')}
+                      >
+                        {showPassword.oldPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -163,18 +211,29 @@ export default function ResidentProfile({ user }) {
                 <div className="space-y-2">
                   <Label htmlFor="newPassword">New Password</Label>
                   <div className="relative group">
-                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-300 to-purple-300 rounded-lg blur opacity-0 group-focus-within:opacity-30 transition duration-200"></div>
+                    <div className="absolute -inset-0.5 bg-linear-to-r from-blue-300 to-purple-300 rounded-lg blur opacity-0 group-focus-within:opacity-30 transition duration-200"></div>
                     <div className="relative">
                       <Lock className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
                       <Input
                         id="newPassword"
-                        type="password"
+                        type={showPassword.newPassword ? "text" : "password"}
                         placeholder="Enter new password"
-                        className="pl-9 bg-white/50 border-gray-200 focus:border-blue-400 focus:ring-blue-400/20"
+                        className="pl-9 pr-10 bg-white/50 border-gray-200 focus:border-blue-400 focus:ring-blue-400/20"
                         value={passwords.newPassword}
                         onChange={handleChange}
                         required
                       />
+                      <button
+                        type="button"
+                        className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 focus:outline-none"
+                        onMouseDown={() => handleMouseDown('newPassword')}
+                        onMouseUp={() => handleMouseUp('newPassword')}
+                        onMouseLeave={() => handleMouseUp('newPassword')}
+                        onTouchStart={() => handleMouseDown('newPassword')}
+                        onTouchEnd={() => handleMouseUp('newPassword')}
+                      >
+                        {showPassword.newPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -182,18 +241,29 @@ export default function ResidentProfile({ user }) {
                 <div className="space-y-2">
                   <Label htmlFor="confirmPassword">Confirm New Password</Label>
                   <div className="relative group">
-                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-300 to-purple-300 rounded-lg blur opacity-0 group-focus-within:opacity-30 transition duration-200"></div>
+                    <div className="absolute -inset-0.5 bg-linear-to-r from-blue-300 to-purple-300 rounded-lg blur opacity-0 group-focus-within:opacity-30 transition duration-200"></div>
                     <div className="relative">
                       <Lock className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
                       <Input
                         id="confirmPassword"
-                        type="password"
+                        type={showPassword.confirmPassword ? "text" : "password"}
                         placeholder="Confirm new password"
-                        className="pl-9 bg-white/50 border-gray-200 focus:border-blue-400 focus:ring-blue-400/20"
+                        className="pl-9 pr-10 bg-white/50 border-gray-200 focus:border-blue-400 focus:ring-blue-400/20"
                         value={passwords.confirmPassword}
                         onChange={handleChange}
                         required
                       />
+                      <button
+                        type="button"
+                        className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 focus:outline-none"
+                        onMouseDown={() => handleMouseDown('confirmPassword')}
+                        onMouseUp={() => handleMouseUp('confirmPassword')}
+                        onMouseLeave={() => handleMouseUp('confirmPassword')}
+                        onTouchStart={() => handleMouseDown('confirmPassword')}
+                        onTouchEnd={() => handleMouseUp('confirmPassword')}
+                      >
+                        {showPassword.confirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
                     </div>
                   </div>
                 </div>
