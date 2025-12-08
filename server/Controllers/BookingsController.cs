@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization; // [ADDED]
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using server.Data;
@@ -65,6 +66,7 @@ namespace server.Controllers
 
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize] // [ADDED]
     public class BookingsController : ControllerBase
     {
         private readonly ResidentProDbContext _context;

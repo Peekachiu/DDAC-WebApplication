@@ -1,6 +1,8 @@
-using Microsoft.EntityFrameworkCore;
-// Make sure this 'Data' namespace matches your project
-using server.Data;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.EntityFrameworkCore; // [ADDED]
+using server.Data; // [ADDED]
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +26,26 @@ builder.Services.AddCors(options =>
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
+});
+
+// --- JWT Authentication Configuration [ADDED] ---
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+    };
 });
 
 // --- 3. Add Controllers ---
@@ -60,6 +82,8 @@ app.UseRouting();
 // --- 4. Use CORS (CRITICAL) ---
 app.UseCors("AllowReactApp"); // This line must be here
 app.UseCors("AllowFrontend");
+
+app.UseAuthentication(); // [ADDED]
 app.UseAuthorization();
 
 // --- 5. Map Controllers ---

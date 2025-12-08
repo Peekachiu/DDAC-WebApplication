@@ -71,7 +71,9 @@ export default function ComplaintMaintenanceManagement({ user }) {
     setLoading(true);
     try {
       const url = isAdmin ? API_URL : `${API_URL}/user/${user.id}`;
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${user.token}` }
+      });
 
       if (!response.ok) throw new Error('Failed to fetch requests');
       const data = await response.json();
@@ -115,7 +117,10 @@ export default function ComplaintMaintenanceManagement({ user }) {
     try {
       const response = await fetch(API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
         body: JSON.stringify(payload),
       });
 
@@ -137,7 +142,10 @@ export default function ComplaintMaintenanceManagement({ user }) {
     try {
       const response = await fetch(`${API_URL}/${selectedRequest.id}/status`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
         body: JSON.stringify({
           status: 'in-progress',
           assignedTo: assignedContractor
@@ -163,7 +171,10 @@ export default function ComplaintMaintenanceManagement({ user }) {
     try {
       const response = await fetch(`${API_URL}/${selectedRequest.id}/status`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
         body: JSON.stringify({
           status: 'resolved',
           resolutionNotes: resolutionNotes
@@ -188,7 +199,10 @@ export default function ComplaintMaintenanceManagement({ user }) {
     try {
       const response = await fetch(`${API_URL}/${request.id}/status`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
         body: JSON.stringify({ status: 'rejected' }),
       });
 

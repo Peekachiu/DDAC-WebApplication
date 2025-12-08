@@ -54,7 +54,9 @@ export default function FinancialManagement({ user }) {
   const fetchInvoices = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(API_URL);
+      const response = await fetch(API_URL, {
+        headers: { 'Authorization': `Bearer ${user.token}` }
+      });
       if (!response.ok) throw new Error('Failed to fetch invoices');
       const data = await response.json();
       setInvoices(data);
@@ -81,7 +83,10 @@ export default function FinancialManagement({ user }) {
     try {
       const response = await fetch(API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
         body: JSON.stringify(payload),
       });
 
@@ -103,6 +108,8 @@ export default function FinancialManagement({ user }) {
     try {
       const response = await fetch(`${API_URL}/${id}`, {
         method: 'DELETE',
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${user.token}` }
       });
 
       if (!response.ok) throw new Error('Failed to delete invoice');

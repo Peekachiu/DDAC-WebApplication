@@ -35,7 +35,9 @@ function ResidentInvoiceReceipt({ user }) {
 
     setIsLoading(true);
     try {
-      const response = await fetch(API_URL);
+      const response = await fetch(API_URL, {
+        headers: { 'Authorization': `Bearer ${user.token}` }
+      });
       if (!response.ok) throw new Error('Failed to fetch invoices');
 
       const data = await response.json();

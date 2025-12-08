@@ -25,10 +25,12 @@ namespace server.Controllers
     public class LoginController : ControllerBase
     {
         private readonly ResidentProDbContext _context;
+        private readonly IConfiguration _configuration; // [ADDED]
 
-        public LoginController(ResidentProDbContext context)
+        public LoginController(ResidentProDbContext context, IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
         }
 
         [HttpPost]
@@ -68,13 +70,33 @@ namespace server.Controllers
                 ? $"{user.Property.Block}-{user.Property.Floor}-{user.Property.Unit}" 
                 : "No Unit Assigned";
 
-            var userDto = new UserDto
+            // 5. Generate JWT Token [ADDED]
+            var tokenHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+            var key = System.Text.Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
+            var tokenDescriptor = new Microsoft.IdentityModel.Tokens.SecurityTokenDescriptor
+            {
+                Subject = new System.Security.Claims.ClaimsIdentity(new[]
+                {
+                    new System.Security.Claims.Claim("id", user.UserID.ToString()),
+                    new System.Security.Claims.Claim("email", user.Email),
+                    new System.Security.Claims.Claim("role", roleString)
+                }),
+                Expires = DateTime.UtcNow.AddMinutes(10), // Token expires in 10 minutes
+                Issuer = _configuration["Jwt:Issuer"],
+                Audience = _configuration["Jwt:Audience"],
+                SigningCredentials = new Microsoft.IdentityModel.Tokens.SigningCredentials(new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(key), Microsoft.IdentityModel.Tokens.SecurityAlgorithms.HmacSha256Signature)
+            };
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var tokenString = tokenHandler.WriteToken(token);
+
+            var userDto = new
             {
                 Id = user.UserID,
                 Name = $"{user.FirstName} {user.LastName}",
                 Email = user.Email,
                 Unit = unitString, 
-                Role = roleString
+                Role = roleString,
+                Token = tokenString // [ADDED]
             };
 
             return Ok(userDto);

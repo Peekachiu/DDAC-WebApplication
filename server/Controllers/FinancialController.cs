@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authorization; // [ADDED]
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using server.Data;
 using server.Models;
@@ -42,13 +44,17 @@ namespace server.Controllers
 
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize] // [ADDED]
     public class FinancialController : ControllerBase
     {
         private readonly ResidentProDbContext _context;
+        private readonly IConfiguration _configuration; // [ADDED]
 
-        public FinancialController(ResidentProDbContext context)
+        public FinancialController(ResidentProDbContext context, IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
+            StripeConfiguration.ApiKey = _configuration["Stripe:SecretKey"]; // [ADDED] Initialize Stripe
         }
 
         // GET: api/Financial
@@ -135,20 +141,52 @@ namespace server.Controllers
 
             try
             {
-                // Mock payment logic (Stripe integration skipped for brevity as per previous code)
-                string prettyMethod = request.PaymentMethod; // Simplified for now
+                // [CHANGED] Resolve Stripe Payment Method ID to readable string
+                string methodId = request.PaymentMethod.Trim();
+                string readableMethod = "Unknown";
 
-                fee.Method = prettyMethod;
+                if (methodId.StartsWith("pm_"))
+                {
+                    var paymentMethodService = new PaymentMethodService();
+                    var paymentMethod = await paymentMethodService.GetAsync(methodId);
+
+                    if (paymentMethod != null)
+                    {
+                        switch (paymentMethod.Type)
+                        {
+                            case "card":
+                                readableMethod = "card"; // Simplified as per request
+                                break;
+                            case "grabpay":
+                                readableMethod = "grabpay";
+                                break;
+                            case "fpx":
+                                readableMethod = $"fpx_{paymentMethod.Fpx?.Bank ?? "unknown"}";
+                                break;
+                            default:
+                                readableMethod = paymentMethod.Type;
+                                break;
+                        }
+                    }
+                }
+                else
+                {
+                    // Fallback if not a Stripe ID (e.g. legacy data or manual entry)
+                    readableMethod = methodId; 
+                }
+
+                fee.Method = readableMethod;
                 fee.Status = 1;
                 fee.PaymentDate = DateTime.UtcNow;
                 fee.PaymentTime = DateTime.UtcNow.TimeOfDay;
 
                 await _context.SaveChangesAsync();
 
-                return Ok(new { message = "Payment recorded successfully", method = prettyMethod });
+                return Ok(new { message = "Payment recorded successfully", method = readableMethod });
             }
             catch (Exception ex)
             {
+                // Log exception in a real app
                 return BadRequest(new { message = ex.Message });
             }
         }

@@ -58,7 +58,9 @@ function ResidentVisitorRegister({ user }) {
     setIsLoading(true);
     try {
       // Calls the endpoint specific to the logged-in user
-      const response = await fetch(`${API_URL}/my-visitors/${user.id}`);
+      const response = await fetch(`${API_URL}/my-visitors/${user.id}`, {
+        headers: { 'Authorization': `Bearer ${user.token}` }
+      });
 
       if (!response.ok) {
         throw new Error('Failed to fetch visitors');
@@ -105,7 +107,10 @@ function ResidentVisitorRegister({ user }) {
     try {
       const response = await fetch(API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
         body: JSON.stringify(payload),
       });
 
@@ -127,6 +132,7 @@ function ResidentVisitorRegister({ user }) {
     try {
       const response = await fetch(`${API_URL}/${id}/checkout`, {
         method: 'PUT',
+        headers: { 'Authorization': `Bearer ${user.token}` }
       });
 
       if (!response.ok) throw new Error('Failed to update status');

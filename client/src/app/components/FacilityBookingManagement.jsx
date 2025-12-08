@@ -45,16 +45,22 @@ export default function FacilityBookingManagement({ user }) {
     setLoading(true);
     try {
       // Fetch Facilities
-      const facResponse = await fetch(`${API_URL}/facilities`);
+      const facResponse = await fetch(`${API_URL}/facilities`, {
+        headers: { 'Authorization': `Bearer ${user.token}` }
+      });
       const facData = await facResponse.json();
       if (facResponse.ok) setFacilities(facData);
 
       // Fetch Bookings
-      const bookResponse = await fetch(`${API_URL}/all`);
+      const bookResponse = await fetch(`${API_URL}/all`, {
+        headers: { 'Authorization': `Bearer ${user.token}` }
+      });
       const bookData = await bookResponse.json();
       if (bookResponse.ok) setBookings(bookData);
 
-      const blockResponse = await fetch(`${API_URL}/blocked-dates`);
+      const blockResponse = await fetch(`${API_URL}/blocked-dates`, {
+        headers: { 'Authorization': `Bearer ${user.token}` }
+      });
       if (blockResponse.ok) setBlockedDates(await blockResponse.json());
 
     } catch (error) {
@@ -102,13 +108,19 @@ export default function FacilityBookingManagement({ user }) {
       if (editingFacility) {
         response = await fetch(`${API_URL}/facilities/${editingFacility.id}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${user.token}`
+          },
           body: JSON.stringify(payload),
         });
       } else {
         response = await fetch(`${API_URL}/facilities`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${user.token}`
+          },
           body: JSON.stringify(payload),
         });
       }
@@ -141,7 +153,10 @@ export default function FacilityBookingManagement({ user }) {
   const handleDeleteFacility = async (id) => {
     if (window.confirm('Are you sure you want to delete this facility?')) {
       try {
-        await fetch(`${API_URL}/facilities/${id}`, { method: 'DELETE' });
+        await fetch(`${API_URL}/facilities/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${user.token}` }
+        });
         toast.success('Facility deleted successfully!');
         fetchData();
       } catch (error) {
@@ -152,7 +167,10 @@ export default function FacilityBookingManagement({ user }) {
 
   const handleToggleFacilityStatus = async (id) => {
     try {
-      await fetch(`${API_URL}/facilities/toggle/${id}`, { method: 'PUT' });
+      await fetch(`${API_URL}/facilities/toggle/${id}`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${user.token}` }
+      });
       toast.success('Facility status updated!');
       fetchData();
     } catch (error) {
@@ -165,7 +183,10 @@ export default function FacilityBookingManagement({ user }) {
     try {
       const response = await fetch(`${API_URL}/update-status/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
         body: JSON.stringify({ status }),
       });
 
@@ -196,7 +217,10 @@ export default function FacilityBookingManagement({ user }) {
     try {
       const response = await fetch(`${API_URL}/block-date`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
         body: JSON.stringify({
           facilityName: blockDate.facility,
           date: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '',
@@ -221,7 +245,10 @@ export default function FacilityBookingManagement({ user }) {
 
   const handleUnblockDate = async (id) => {
     try {
-      await fetch(`${API_URL}/unblock-date/${id}`, { method: 'DELETE' });
+      await fetch(`${API_URL}/unblock-date/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${user.token}` }
+      });
       toast.success('Date unblocked!');
       fetchData(); // Refresh
     } catch (error) {

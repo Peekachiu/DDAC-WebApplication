@@ -42,7 +42,11 @@ function ResidentManagementFee({ user }) {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`${BASE_API_URL}/Financial`);
+      const response = await fetch(`${BASE_API_URL}/Financial`, {
+        headers: {
+          'Authorization': `Bearer ${user.token}`
+        }
+      });
       if (!response.ok) throw new Error('Failed to fetch data');
       const data = await response.json();
 
@@ -77,7 +81,10 @@ function ResidentManagementFee({ user }) {
 
       const response = await fetch(`${BASE_API_URL}/Financial/pay/${invoiceId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${user.token}`
+        },
         body: JSON.stringify(payload),
       });
 
@@ -109,7 +116,11 @@ function ResidentManagementFee({ user }) {
       const piId = clientSecretParam.split("_secret")[0];
 
       try {
-        const res = await fetch(`${BASE_API_URL}/payments/payment-intent/${piId}`);
+        const res = await fetch(`${BASE_API_URL}/payments/payment-intent/${piId}`, {
+          headers: {
+            'Authorization': `Bearer ${user.token}`
+          }
+        });
         const paymentIntent = await res.json();
 
         if (paymentIntent && paymentIntent.status === "succeeded") {
@@ -139,7 +150,12 @@ function ResidentManagementFee({ user }) {
     try {
       const response = await axios.post(
         `${BASE_API_URL}/payments/create-payment-intent`,
-        { amount: invoice.amount }
+        { amount: invoice.amount },
+        {
+          headers: {
+            'Authorization': `Bearer ${user.token}`
+          }
+        }
       );
 
       setClientSecret(response.data.clientSecret);
