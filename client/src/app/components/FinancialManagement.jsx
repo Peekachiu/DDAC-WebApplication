@@ -213,7 +213,7 @@ export default function FinancialManagement({ user }) {
                       <TableCell>#{invoice.id}</TableCell>
                       <TableCell>{invoice.month}</TableCell>
                       <TableCell>RM {invoice.amount.toFixed(2)}</TableCell>
-                      <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
+                      <TableCell>{format(new Date(invoice.dueDate), 'dd MMM yyyy')}</TableCell>
                       <TableCell>{getStatusBadge(invoice.status)}</TableCell>
                       <TableCell>
                         {invoice.status === 'paid' && (
@@ -413,7 +413,7 @@ export default function FinancialManagement({ user }) {
                   <TableCell>{`${invoice.block}-${invoice.floor}-${invoice.unit}`}</TableCell>
                   <TableCell>{invoice.month}</TableCell>
                   <TableCell>RM {invoice.amount.toFixed(2)}</TableCell>
-                  <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
+                  <TableCell>{format(new Date(invoice.dueDate), 'dd MMM yyyy')}</TableCell>
                   <TableCell>{getStatusBadge(invoice.status)}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
