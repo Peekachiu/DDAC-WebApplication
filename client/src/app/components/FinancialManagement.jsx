@@ -127,7 +127,7 @@ Description:  ${invoice.month}
 
 PAYMENT DETAILS
 ----------------------------
-Amount Paid:  $${invoice.amount.toFixed(2)}
+Amount Paid:  RM ${invoice.amount.toFixed(2)}
 Payment Date: ${invoice.paidDate ? new Date(invoice.paidDate).toLocaleDateString() : 'N/A'}
 Method:       ${invoice.paymentMethod || 'N/A'}
 Status:       PAID
@@ -237,7 +237,7 @@ ResidentPro Management System
                     <TableRow key={invoice.id}>
                       <TableCell>#{invoice.id}</TableCell>
                       <TableCell>{invoice.month}</TableCell>
-                      <TableCell>${invoice.amount.toFixed(2)}</TableCell>
+                      <TableCell>RM {invoice.amount.toFixed(2)}</TableCell>
                       <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
                       <TableCell>{getStatusBadge(invoice.status)}</TableCell>
                       <TableCell>
@@ -437,7 +437,7 @@ ResidentPro Management System
                   <TableCell>{invoice.residentName}</TableCell>
                   <TableCell>{`${invoice.block}-${invoice.floor}-${invoice.unit}`}</TableCell>
                   <TableCell>{invoice.month}</TableCell>
-                  <TableCell>${invoice.amount.toFixed(2)}</TableCell>
+                  <TableCell>RM {invoice.amount.toFixed(2)}</TableCell>
                   <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
                   <TableCell>{getStatusBadge(invoice.status)}</TableCell>
                   <TableCell>
