@@ -115,38 +115,13 @@ export default function FinancialManagement({ user }) {
   };
 
   const handleDownloadReceipt = (invoice) => {
-    const fullUnit = `${invoice.block}-${invoice.floor}-${invoice.unit}`;
-    const receiptContent = `
-RESIDENTPRO OFFICIAL RECEIPT
-----------------------------
-Invoice ID:   #${invoice.id}
-Date Issued:  ${new Date(invoice.issueDate).toLocaleDateString()}
-Resident:     ${invoice.residentName}
-Unit No:      ${fullUnit}
-Description:  ${invoice.month}
-
-PAYMENT DETAILS
-----------------------------
-Amount Paid:  RM ${invoice.amount.toFixed(2)}
-Payment Date: ${invoice.paidDate ? new Date(invoice.paidDate).toLocaleDateString() : 'N/A'}
-Method:       ${invoice.paymentMethod || 'N/A'}
-Status:       PAID
-
-----------------------------
-Thank you for your payment.
-ResidentPro Management System
-    `;
-
-    const blob = new Blob([receiptContent], { type: 'text/plain' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Receipt_${invoice.id}_${fullUnit}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-    toast.success(`Receipt downloaded!`);
+    try {
+      generateReceiptPDF(invoice);
+      toast.success(`Receipt downloaded!`);
+    } catch (error) {
+      console.error("PDF Generation Error:", error);
+      toast.error("Failed to generate receipt PDF");
+    }
   };
 
   const filteredInvoices = invoices.filter((inv) => {

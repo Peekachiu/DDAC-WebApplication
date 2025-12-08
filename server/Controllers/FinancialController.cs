@@ -138,12 +138,10 @@ namespace server.Controllers
                 // Mock payment logic (Stripe integration skipped for brevity as per previous code)
                 string prettyMethod = request.PaymentMethod; // Simplified for now
 
-                var malaysiaTime = DateTime.UtcNow.AddHours(8);
-
                 fee.Method = prettyMethod;
                 fee.Status = 1;
-                fee.PaymentDate = malaysiaTime;
-                fee.PaymentTime = malaysiaTime.TimeOfDay;
+                fee.PaymentDate = DateTime.UtcNow;
+                fee.PaymentTime = DateTime.UtcNow.TimeOfDay;
 
                 await _context.SaveChangesAsync();
 

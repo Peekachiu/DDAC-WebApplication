@@ -128,7 +128,7 @@ namespace server.Controllers
                 .Where(m => m.Status == 1).OrderByDescending(m => m.PaymentDate).Take(3).ToListAsync();
             activities.AddRange(payments.Select(p => new RecentActivityDto {
                 Id = p.PaymentID, Type = "payment", Title = "Fee Payment",
-                Description = $"Unit {p.Property?.Unit ?? "Unknown"} - ${p.Amount}",
+                Description = $"Unit {p.Property?.Unit ?? "Unknown"} - RM {p.Amount}",
                 Time = p.PaymentDate.HasValue ? DateTime.SpecifyKind(p.PaymentDate.Value, DateTimeKind.Utc) : DateTime.UtcNow, Status = "success"
             }));
 
@@ -220,7 +220,7 @@ namespace server.Controllers
                 
                 activities.AddRange(myPayments.Select(p => new RecentActivityDto {
                     Id = p.PaymentID, Type = "payment", Title = "Fee Paid",
-                    Description = $"Amount: ${p.Amount}", Time = p.PaymentDate.HasValue ? DateTime.SpecifyKind(p.PaymentDate.Value, DateTimeKind.Utc) : DateTime.UtcNow, Status = "success"
+                    Description = $"Amount: RM {p.Amount}", Time = p.PaymentDate.HasValue ? DateTime.SpecifyKind(p.PaymentDate.Value, DateTimeKind.Utc) : DateTime.UtcNow, Status = "success"
                 }));
             }
 
