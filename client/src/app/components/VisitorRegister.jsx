@@ -51,7 +51,9 @@ export default function VisitorRegister({ user }) {
           ? API_URL
           : `${API_URL}/my-visitors/${user.id}`;
 
-        const response = await fetch(endpoint);
+        const response = await fetch(endpoint, {
+          headers: { 'Authorization': `Bearer ${user.token}` }
+        });
         if (!response.ok) throw new Error('Failed to fetch visitors');
 
         const data = await response.json();
@@ -81,7 +83,10 @@ export default function VisitorRegister({ user }) {
     try {
       const response = await fetch(API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
         body: JSON.stringify(payload),
       });
 
@@ -106,6 +111,7 @@ export default function VisitorRegister({ user }) {
     try {
       const response = await fetch(`${API_URL}/${id}/checkout`, {
         method: 'PUT',
+        headers: { 'Authorization': `Bearer ${user.token}` }
       });
 
       if (!response.ok) throw new Error('Failed to check out visitor');

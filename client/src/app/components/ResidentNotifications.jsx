@@ -26,7 +26,9 @@ function ResidentNotifications({ user }) {
     try {
       // Fetch only 'sent' announcements for residents
       // FIX: Use user.id
-      const response = await fetch(`${API_URL}/resident?userId=${user.id}`);
+      const response = await fetch(`${API_URL}/resident?userId=${user.id}`, {
+        headers: { 'Authorization': `Bearer ${user.token}` }
+      });
       if (!response.ok) throw new Error('Failed to fetch notifications');
 
       const data = await response.json();
@@ -61,6 +63,7 @@ function ResidentNotifications({ user }) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
         },
         // FIX: Use user.id
         body: JSON.stringify({ userId: user.id, announcementId: id }),
@@ -79,6 +82,7 @@ function ResidentNotifications({ user }) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
         },
         // FIX: Use user.id
         body: JSON.stringify({ userId: user.id, announcementId: id }),
@@ -98,6 +102,7 @@ function ResidentNotifications({ user }) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
         },
         // FIX: Use user.id
         body: JSON.stringify({ userId: user.id, announcementId: id }),

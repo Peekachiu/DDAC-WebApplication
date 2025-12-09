@@ -14,7 +14,7 @@ export function AuthProvider({ children }) {
 
   // Check for existing session on load
   useEffect(() => {
-    const storedUser = localStorage.getItem('currentUser');
+    const storedUser = sessionStorage.getItem('currentUser'); // [CHANGED] sessionStorage
     if (storedUser) {
       setCurrentUser(JSON.parse(storedUser));
     }
@@ -44,10 +44,11 @@ export function AuthProvider({ children }) {
         email: data.email,
         unit: data.unit,
         role: data.role,
+        token: data.token // [ADDED]
       };
 
       setCurrentUser(userData);
-      localStorage.setItem('currentUser', JSON.stringify(userData));
+      sessionStorage.setItem('currentUser', JSON.stringify(userData)); // [CHANGED] sessionStorage
 
       router.push('/');
 
@@ -61,7 +62,7 @@ export function AuthProvider({ children }) {
 
   const handleLogout = () => {
     setCurrentUser(null);
-    localStorage.removeItem('currentUser');
+    sessionStorage.removeItem('currentUser'); // [CHANGED] sessionStorage
     router.push('/');
   };
 

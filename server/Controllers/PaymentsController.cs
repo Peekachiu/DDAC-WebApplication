@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization; // [ADDED]
 using Microsoft.AspNetCore.Mvc;
 using Stripe;
 
@@ -5,6 +6,7 @@ namespace DDAC_WebApplication.Server.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize] // [ADDED]
     public class PaymentsController : ControllerBase
     {
         private readonly IConfiguration _configuration;

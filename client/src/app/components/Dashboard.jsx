@@ -19,7 +19,9 @@ export default function Dashboard({ user }) {
     const fetchResidentData = async () => {
       try {
         // Append user ID to the endpoint
-        const response = await fetch(`${API_URL}/${user.id}`);
+        const response = await fetch(`${API_URL}/${user.id}`, {
+          headers: { 'Authorization': `Bearer ${user.token}` }
+        });
 
         if (!response.ok) {
           throw new Error(`Server Error: ${response.status}`);

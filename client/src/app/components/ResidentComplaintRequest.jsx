@@ -58,7 +58,9 @@ function ResidentComplaintRequest({ user }) {
   const fetchComplaints = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/user/${user.id}`);
+      const response = await fetch(`${API_URL}/user/${user.id}`, {
+        headers: { 'Authorization': `Bearer ${user.token}` }
+      });
       if (!response.ok) throw new Error('Failed to fetch data');
       const data = await response.json();
 
@@ -108,7 +110,10 @@ function ResidentComplaintRequest({ user }) {
     try {
       const response = await fetch(API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
         body: JSON.stringify(payload),
       });
 
