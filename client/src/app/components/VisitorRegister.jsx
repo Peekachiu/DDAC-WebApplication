@@ -152,7 +152,7 @@ export default function VisitorRegister({ user }) {
       <div className="flex items-center justify-between">
         <div>
           <h2>Visitor & Security Management</h2>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 dark:text-gray-300">
             {isAdmin
               ? 'View and search the full history of visitor registrations'
               : `Register and track visitors to ${user.unit}`}
@@ -223,7 +223,7 @@ export default function VisitorRegister({ user }) {
           <div className="flex items-center justify-between">
             <CardTitle>Visitor Records</CardTitle>
             <div className="relative w-64">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
               <Input
                 placeholder="Search visitors..."
                 value={searchTerm}
@@ -261,8 +261,8 @@ export default function VisitorRegister({ user }) {
                   >
                     {paginatedList.length === 0 ? (
                       <div className="flex flex-col items-center justify-center py-12 text-center">
-                        <Clock className="mb-4 h-12 w-12 text-gray-400" />
-                        <p className="text-gray-600">No {tabValue === 'active' ? 'active visitors' : 'visitor history'}</p>
+                        <Clock className="mb-4 h-12 w-12 text-gray-400 dark:text-gray-600" />
+                        <p className="text-gray-600 dark:text-gray-400">No {tabValue === 'active' ? 'active visitors' : 'visitor history'}</p>
                       </div>
                     ) : (
                       <>
@@ -290,12 +290,12 @@ export default function VisitorRegister({ user }) {
                                 {tabValue === 'history' && <TableCell>{formatDate(visitor.checkOut)}</TableCell>}
                                 <TableCell>
                                   {visitor.status === 'checked-in' ? (
-                                    <Badge className="bg-green-100 text-green-800">
+                                    <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
                                       <UserCheck className="mr-1 h-3 w-3" />
                                       Checked In
                                     </Badge>
                                   ) : (
-                                    <Badge variant="outline" className="text-gray-600">
+                                    <Badge variant="outline" className="text-gray-600 dark:text-gray-400">
                                       <UserX className="mr-1 h-3 w-3" />
                                       Checked Out
                                     </Badge>

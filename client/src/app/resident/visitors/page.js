@@ -1,6 +1,6 @@
 // peekachiu/ddac-webapplication/DDAC-WebApplication-jiayuan/client/src/app/resident/visitors/page.js
 'use client'
-import { useAuth } from '../../layout';
+import { useAuth } from '../../AuthContext';
 import ResidentVisitorRegister from '../../components/ResidentVisitorRegister';
 
 export default function Page() {

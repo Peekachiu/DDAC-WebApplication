@@ -259,13 +259,13 @@ export default function FacilityBookingManagement({ user }) {
   const getStatusBadge = (status) => {
     switch (status) {
       case 'approved':
-        return <Badge className="bg-green-100 text-green-800">Approved</Badge>;
+        return <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">Approved</Badge>;
       case 'pending':
-        return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>;
+        return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">Pending</Badge>;
       case 'rejected':
-        return <Badge className="bg-red-100 text-red-800">Rejected</Badge>;
+        return <Badge className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">Rejected</Badge>;
       case 'cancelled':
-        return <Badge className="bg-gray-100 text-gray-800">Cancelled</Badge>;
+        return <Badge className="bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300">Cancelled</Badge>;
       default:
         return null;
     }
@@ -277,7 +277,7 @@ export default function FacilityBookingManagement({ user }) {
   // Helper for Gradient Cards
   const GradientCard = ({ children, className }) => (
     <div className={`relative rounded-xl p-px bg-linear-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
-      <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-white/80 backdrop-blur-sm p-6 shadow-inner">
+      <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-white/80 dark:bg-black/40 backdrop-blur-sm p-6 shadow-inner">
         {children}
       </div>
     </div>
@@ -298,7 +298,7 @@ export default function FacilityBookingManagement({ user }) {
       <div className="space-y-6">
         <div>
           <h2>My Bookings</h2>
-          <p className="text-sm text-gray-600">View your facility bookings</p>
+          <p className="text-sm text-gray-600 dark:text-gray-300">View your facility bookings</p>
         </div>
         <Card className="glass border-0!">
           <CardHeader>
@@ -375,7 +375,7 @@ export default function FacilityBookingManagement({ user }) {
       <div className="flex items-center justify-between">
         <div>
           <h2>Facility & Booking Management</h2>
-          <p className="text-sm text-gray-600">Manage facilities, bookings, and schedules</p>
+          <p className="text-sm text-gray-600 dark:text-gray-300">Manage facilities, bookings, and schedules</p>
         </div>
         <div className="flex gap-2">
           <Dialog open={isFacilityDialogOpen} onOpenChange={setIsFacilityDialogOpen}>
@@ -506,10 +506,10 @@ export default function FacilityBookingManagement({ user }) {
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
-        <GradientCard><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Total Facilities</p><p className="mt-1 text-2xl font-bold">{facilities.length}</p></div><div className="rounded-lg bg-blue-50 p-3"><Users className="h-6 w-6 text-blue-600" /></div></div></GradientCard>
-        <GradientCard><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Pending Requests</p><p className="mt-1 text-2xl font-bold">{pendingBookings.length}</p></div><div className="rounded-lg bg-yellow-50 p-3"><Clock className="h-6 w-6 text-yellow-600" /></div></div></GradientCard>
-        <GradientCard><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Approved Bookings</p><p className="mt-1 text-2xl font-bold">{approvedBookings.length}</p></div><div className="rounded-lg bg-green-50 p-3"><CheckCircle className="h-6 w-6 text-green-600" /></div></div></GradientCard>
-        <GradientCard><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Blocked Dates</p><p className="mt-1 text-2xl font-bold">{blockedDates.length}</p></div><div className="rounded-lg bg-red-50 p-3"><Ban className="h-6 w-6 text-red-600" /></div></div></GradientCard>
+        <GradientCard><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600 dark:text-gray-300">Total Facilities</p><p className="mt-1 text-2xl font-bold">{facilities.length}</p></div><div className="rounded-lg bg-blue-50 dark:bg-blue-900/20 p-3"><Users className="h-6 w-6 text-blue-600 dark:text-blue-400" /></div></div></GradientCard>
+        <GradientCard><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600 dark:text-gray-300">Pending Requests</p><p className="mt-1 text-2xl font-bold">{pendingBookings.length}</p></div><div className="rounded-lg bg-yellow-50 dark:bg-yellow-900/20 p-3"><Clock className="h-6 w-6 text-yellow-600 dark:text-yellow-400" /></div></div></GradientCard>
+        <GradientCard><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600 dark:text-gray-300">Approved Bookings</p><p className="mt-1 text-2xl font-bold">{approvedBookings.length}</p></div><div className="rounded-lg bg-green-50 dark:bg-green-900/20 p-3"><CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" /></div></div></GradientCard>
+        <GradientCard><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600 dark:text-gray-300">Blocked Dates</p><p className="mt-1 text-2xl font-bold">{blockedDates.length}</p></div><div className="rounded-lg bg-red-50 dark:bg-red-900/20 p-3"><Ban className="h-6 w-6 text-red-600 dark:text-red-400" /></div></div></GradientCard>
       </div>
 
       <Tabs defaultValue="facilities">
@@ -553,7 +553,7 @@ export default function FacilityBookingManagement({ user }) {
                             <TableCell><Badge variant="outline">{facility.type}</Badge></TableCell>
                             <TableCell className="max-w-xs truncate">{facility.description}</TableCell>
                             <TableCell>{facility.capacity} people</TableCell>
-                            <TableCell>{facility.status === 'available' ? <Badge className="bg-green-100 text-green-800">Available</Badge> : <Badge className="bg-red-100 text-red-800">Maintenance</Badge>}</TableCell>
+                            <TableCell>{facility.status === 'available' ? <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">Available</Badge> : <Badge className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">Maintenance</Badge>}</TableCell>
                             <TableCell>
                               <div className="flex gap-2">
                                 <Button size="sm" variant="outline" onClick={() => handleEditFacility(facility)}><Edit className="h-4 w-4" /></Button>

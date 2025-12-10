@@ -183,7 +183,7 @@ export default function ResidentManagement({ user }) {
   // Helper for Gradient Cards
   const GradientCard = ({ children, className }) => (
     <div className={`relative rounded-xl p-px bg-linear-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
-      <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-white/80 backdrop-blur-sm p-6 shadow-inner">
+      <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-white/80 dark:bg-black/40 backdrop-blur-sm p-6 shadow-inner">
         {children}
       </div>
     </div>
@@ -203,7 +203,7 @@ export default function ResidentManagement({ user }) {
       <div className="flex items-center justify-between">
         <div>
           <h2>Resident Management</h2>
-          <p className="text-sm text-gray-600">Manage all residents in the community</p>
+          <p className="text-sm text-gray-600 dark:text-gray-300">Manage all residents in the community</p>
         </div>
 
         <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
@@ -289,7 +289,7 @@ export default function ResidentManagement({ user }) {
         <GradientCard>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total Residents</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Total Residents</p>
               <p className="mt-1 text-2xl font-bold">{residents.length}</p>
             </div>
             <div className="rounded-lg bg-blue-50 p-3">
@@ -300,7 +300,7 @@ export default function ResidentManagement({ user }) {
         <GradientCard>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Occupied Units</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Occupied Units</p>
               {/* [CHANGED] Calculate unique units based on combo of block-floor-unit */}
               <p className="mt-1 text-2xl font-bold">
                 {new Set(residents.map(r => `${r.block}-${r.floor}-${r.unit}`)).size}
@@ -318,7 +318,7 @@ export default function ResidentManagement({ user }) {
           <div className="flex items-center justify-between">
             <CardTitle>All Residents</CardTitle>
             <div className="relative w-64">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
               <Input placeholder="Search residents..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
             </div>
           </div>
@@ -337,7 +337,7 @@ export default function ResidentManagement({ user }) {
             <TableBody>
               {paginatedResidents.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-4 text-gray-500">
+                  <TableCell colSpan={5} className="text-center py-4 text-gray-500 dark:text-gray-400">
                     No residents found.
                   </TableCell>
                 </TableRow>

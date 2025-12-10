@@ -237,19 +237,19 @@ export default function ComplaintMaintenanceManagement({ user }) {
 
   const getStatusBadge = (status) => {
     switch (status) {
-      case 'pending': return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>;
-      case 'in-progress': return <Badge className="bg-blue-100 text-blue-800">In Progress</Badge>;
-      case 'resolved': return <Badge className="bg-green-100 text-green-800">Resolved</Badge>;
-      case 'rejected': return <Badge className="bg-red-100 text-red-800">Rejected</Badge>;
+      case 'pending': return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">Pending</Badge>;
+      case 'in-progress': return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">In Progress</Badge>;
+      case 'resolved': return <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">Resolved</Badge>;
+      case 'rejected': return <Badge className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">Rejected</Badge>;
       default: return null;
     }
   };
 
   const getPriorityBadge = (priority) => {
     switch (priority) {
-      case 'high': return <Badge className="bg-red-100 text-red-800">High</Badge>;
-      case 'medium': return <Badge className="bg-orange-100 text-orange-800">Medium</Badge>;
-      case 'low': return <Badge className="bg-gray-100 text-gray-800">Low</Badge>;
+      case 'high': return <Badge className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">High</Badge>;
+      case 'medium': return <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">Medium</Badge>;
+      case 'low': return <Badge className="bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300">Low</Badge>;
       default: return null;
     }
   };
@@ -257,7 +257,7 @@ export default function ComplaintMaintenanceManagement({ user }) {
   // Helper for Gradient Cards
   const GradientCard = ({ children, className }) => (
     <div className={`relative rounded-xl p-px bg-linear-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
-      <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-white/80 backdrop-blur-sm p-6 shadow-inner">
+      <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-white/80 dark:bg-black/40 backdrop-blur-sm p-6 shadow-inner">
         {children}
       </div>
     </div>
@@ -270,7 +270,7 @@ export default function ComplaintMaintenanceManagement({ user }) {
       <div className="flex items-center justify-between">
         <div>
           <h2>{isAdmin ? 'Complaint & Maintenance Management' : 'Complaints & Requests'}</h2>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 dark:text-gray-300">
             {isAdmin
               ? 'Receive, assign, and track all complaints and maintenance requests'
               : 'Submit and track your complaints and maintenance requests'}
@@ -374,41 +374,41 @@ export default function ComplaintMaintenanceManagement({ user }) {
         <GradientCard>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Pending</p>
-              <p className="mt-1 text-2xl text-yellow-600 font-bold">{pendingCount}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Pending</p>
+              <p className="mt-1 text-2xl text-yellow-600 dark:text-yellow-400 font-bold">{pendingCount}</p>
               <p className="mt-1 text-xs text-gray-500">Awaiting action</p>
             </div>
-            <div className="rounded-lg bg-yellow-50 p-3"><Clock className="h-6 w-6 text-yellow-600" /></div>
+            <div className="rounded-lg bg-yellow-50 dark:bg-yellow-900/20 p-3"><Clock className="h-6 w-6 text-yellow-600 dark:text-yellow-400" /></div>
           </div>
         </GradientCard>
         <GradientCard>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">In Progress</p>
-              <p className="mt-1 text-2xl text-blue-600 font-bold">{inProgressCount}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">In Progress</p>
+              <p className="mt-1 text-2xl text-blue-600 dark:text-blue-400 font-bold">{inProgressCount}</p>
               <p className="mt-1 text-xs text-gray-500">Being handled</p>
             </div>
-            <div className="rounded-lg bg-blue-50 p-3"><Wrench className="h-6 w-6 text-blue-600" /></div>
+            <div className="rounded-lg bg-blue-50 dark:bg-blue-900/20 p-3"><Wrench className="h-6 w-6 text-blue-600 dark:text-blue-400" /></div>
           </div>
         </GradientCard>
         <GradientCard>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Resolved</p>
-              <p className="mt-1 text-2xl text-green-600 font-bold">{resolvedCount}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Resolved</p>
+              <p className="mt-1 text-2xl text-green-600 dark:text-green-400 font-bold">{resolvedCount}</p>
               <p className="mt-1 text-xs text-gray-500">Completed</p>
             </div>
-            <div className="rounded-lg bg-green-50 p-3"><CheckCircle className="h-6 w-6 text-green-600" /></div>
+            <div className="rounded-lg bg-green-50 dark:bg-green-900/20 p-3"><CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" /></div>
           </div>
         </GradientCard>
         <GradientCard>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">High Priority</p>
-              <p className="mt-1 text-2xl text-red-600 font-bold">{highPriorityCount}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">High Priority</p>
+              <p className="mt-1 text-2xl text-red-600 dark:text-red-400 font-bold">{highPriorityCount}</p>
               <p className="mt-1 text-xs text-gray-500">Urgent attention</p>
             </div>
-            <div className="rounded-lg bg-red-50 p-3"><MessageSquare className="h-6 w-6 text-red-600" /></div>
+            <div className="rounded-lg bg-red-50 dark:bg-red-900/20 p-3"><MessageSquare className="h-6 w-6 text-red-600 dark:text-red-400" /></div>
           </div>
         </GradientCard>
       </div>
@@ -419,7 +419,7 @@ export default function ComplaintMaintenanceManagement({ user }) {
             <CardTitle>Request Management</CardTitle>
             <div className="flex gap-2">
               <div className="relative w-64">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
                 <Input placeholder="Search requests..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
               </div>
               <Select value={filterType} onValueChange={setFilterType}>
@@ -587,7 +587,7 @@ export default function ComplaintMaintenanceManagement({ user }) {
 
               <div>
                 <h4 className="font-semibold mb-1">Description:</h4>
-                <div className="p-3 bg-gray-50 rounded-md whitespace-pre-wrap">
+                <div className="p-3 bg-gray-50 dark:bg-zinc-900 rounded-md whitespace-pre-wrap">
                   {selectedRequest.description}
                 </div>
               </div>
@@ -605,8 +605,8 @@ export default function ComplaintMaintenanceManagement({ user }) {
 
               {selectedRequest.resolutionNotes && (
                 <div className="border-t pt-4">
-                  <h4 className="font-semibold mb-1 text-green-700">Resolution Notes:</h4>
-                  <p className="p-3 bg-green-50 rounded-md">{selectedRequest.resolutionNotes}</p>
+                  <h4 className="font-semibold mb-1 text-green-700 dark:text-green-400">Resolution Notes:</h4>
+                  <p className="p-3 bg-green-50 dark:bg-green-900/20 rounded-md">{selectedRequest.resolutionNotes}</p>
                 </div>
               )}
             </div>
@@ -621,7 +621,7 @@ export default function ComplaintMaintenanceManagement({ user }) {
             <DialogDescription>Assign this request to a contractor or staff member</DialogDescription>
           </DialogHeader>
           {selectedRequest && (
-            <div className="mb-4 rounded-lg bg-blue-50 p-4">
+            <div className="mb-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 p-4">
               <p className="text-sm"><strong>Request:</strong> {selectedRequest.subject}</p>
               <p className="text-xs text-gray-600">{selectedRequest.residentName} - {selectedRequest.unit}</p>
             </div>
@@ -650,7 +650,7 @@ export default function ComplaintMaintenanceManagement({ user }) {
             <DialogDescription>Mark this request as resolved and provide resolution details</DialogDescription>
           </DialogHeader>
           {selectedRequest && (
-            <div className="mb-4 rounded-lg bg-green-50 p-4">
+            <div className="mb-4 rounded-lg bg-green-50 dark:bg-green-900/20 p-4">
               <p className="text-sm"><strong>Request:</strong> {selectedRequest.subject}</p>
               <p className="text-xs text-gray-600">Assigned to: {selectedRequest.assignedTo}</p>
             </div>

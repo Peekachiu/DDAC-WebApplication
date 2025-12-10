@@ -168,18 +168,18 @@ export default function CommunicationManagement({ user }) {
 
   const getTypeBadge = (type) => {
     switch (type) {
-      case 'info': return <Badge className="bg-blue-100 text-blue-800"><Info className="mr-1 h-3 w-3" />Info</Badge>;
-      case 'warning': return <Badge className="bg-orange-100 text-orange-800"><AlertCircle className="mr-1 h-3 w-3" />Warning</Badge>;
-      case 'urgent': return <Badge className="bg-red-100 text-red-800"><Bell className="mr-1 h-3 w-3" />Urgent</Badge>;
-      case 'event': return <Badge className="bg-purple-100 text-purple-800"><Calendar className="mr-1 h-3 w-3" />Event</Badge>;
+      case 'info': return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"><Info className="mr-1 h-3 w-3" />Info</Badge>;
+      case 'warning': return <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300"><AlertCircle className="mr-1 h-3 w-3" />Warning</Badge>;
+      case 'urgent': return <Badge className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"><Bell className="mr-1 h-3 w-3" />Urgent</Badge>;
+      case 'event': return <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300"><Calendar className="mr-1 h-3 w-3" />Event</Badge>;
       default: return <Badge variant="secondary">{type}</Badge>;
     }
   };
 
   const getStatusBadge = (status) => {
     switch (status) {
-      case 'scheduled': return <Badge className="bg-yellow-100 text-yellow-800">Scheduled</Badge>;
-      case 'sent': return <Badge className="bg-green-100 text-green-800">Sent</Badge>;
+      case 'scheduled': return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">Scheduled</Badge>;
+      case 'sent': return <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">Sent</Badge>;
       default: return <Badge variant="outline">{status}</Badge>;
     }
   };
@@ -187,7 +187,7 @@ export default function CommunicationManagement({ user }) {
   // Helper for Gradient Cards
   const GradientCard = ({ children, className }) => (
     <div className={`relative rounded-xl p-px bg-linear-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
-      <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-white/80 backdrop-blur-sm p-6 shadow-inner">
+      <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-white/80 dark:bg-black/40 backdrop-blur-sm p-6 shadow-inner">
         {children}
       </div>
     </div>
@@ -203,13 +203,14 @@ export default function CommunicationManagement({ user }) {
       <div className="space-y-6">
         <div>
           <h2>Notifications & Announcements</h2>
-          <p className="text-sm text-gray-600">Latest updates from management</p>
+          <h2>Notifications & Announcements</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-300">Latest updates from management</p>
         </div>
         <Card className="glass border-0!">
           <CardHeader><CardTitle>Recent Announcements</CardTitle></CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {announcements.length === 0 ? <p className="text-center text-gray-500">No announcements yet.</p> : null}
+              {announcements.length === 0 ? <p className="text-center text-gray-500 dark:text-gray-400">No announcements yet.</p> : null}
               {announcements.map((announcement) => (
                 <div key={announcement.announcementID} className="rounded-lg border p-4">
                   <div className="flex items-start justify-between">
@@ -221,7 +222,7 @@ export default function CommunicationManagement({ user }) {
                         </span>
                       </div>
                       <h3 className="text-lg font-semibold mb-2">{announcement.title}</h3>
-                      <p className="text-sm text-gray-600 whitespace-pre-wrap">{announcement.message}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap">{announcement.message}</p>
                     </div>
                   </div>
                 </div>
@@ -242,7 +243,8 @@ export default function CommunicationManagement({ user }) {
       <div className="flex items-center justify-between">
         <div>
           <h2>Communication Management</h2>
-          <p className="text-sm text-gray-600">Manage system-wide announcements</p>
+          <h2>Communication Management</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-300">Manage system-wide announcements</p>
         </div>
         <Dialog open={isAnnouncementDialogOpen} onOpenChange={(open) => { setIsAnnouncementDialogOpen(open); if (!open) resetForm(); }}>
           <DialogTrigger asChild>
@@ -306,20 +308,20 @@ export default function CommunicationManagement({ user }) {
       <div className="grid gap-4 md:grid-cols-3">
         <GradientCard>
           <div className="flex items-center justify-between">
-            <div><p className="text-sm text-gray-600">Sent</p><p className="text-2xl font-bold text-green-600">{sentCount}</p></div>
-            <div className="bg-green-50 p-3 rounded"><CheckCircle className="h-6 w-6 text-green-600" /></div>
+            <div><p className="text-sm text-gray-600 dark:text-gray-300">Sent</p><p className="text-2xl font-bold text-green-600 dark:text-green-400">{sentCount}</p></div>
+            <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded"><CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" /></div>
           </div>
         </GradientCard>
         <GradientCard>
           <div className="flex items-center justify-between">
-            <div><p className="text-sm text-gray-600">Scheduled</p><p className="text-2xl font-bold text-yellow-600">{scheduledCount}</p></div>
-            <div className="bg-yellow-50 p-3 rounded"><Calendar className="h-6 w-6 text-yellow-600" /></div>
+            <div><p className="text-sm text-gray-600 dark:text-gray-300">Scheduled</p><p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{scheduledCount}</p></div>
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded"><Calendar className="h-6 w-6 text-yellow-600 dark:text-yellow-400" /></div>
           </div>
         </GradientCard>
         <GradientCard>
           <div className="flex items-center justify-between">
-            <div><p className="text-sm text-gray-600">Total</p><p className="text-2xl font-bold text-purple-600">{announcements.length}</p></div>
-            <div className="bg-purple-50 p-3 rounded"><Megaphone className="h-6 w-6 text-purple-600" /></div>
+            <div><p className="text-sm text-gray-600 dark:text-gray-300">Total</p><p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{announcements.length}</p></div>
+            <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded"><Megaphone className="h-6 w-6 text-purple-600 dark:text-purple-400" /></div>
           </div>
         </GradientCard>
       </div>
