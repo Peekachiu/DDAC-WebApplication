@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { generateReceiptPDF } from '../../utils/pdfGenerator';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -47,11 +47,7 @@ export default function FinancialManagement({ user }) {
     dueDate: ''
   });
 
-  useEffect(() => {
-    fetchInvoices();
-  }, []);
-
-  const fetchInvoices = async () => {
+  const fetchInvoices = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch(API_URL, {
@@ -66,7 +62,11 @@ export default function FinancialManagement({ user }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user.token]);
+
+  useEffect(() => {
+    fetchInvoices();
+  }, [fetchInvoices]);
 
   const handleGenerateInvoice = async (e) => {
     e.preventDefault();

@@ -84,7 +84,7 @@ export default function ComplaintMaintenanceManagement({ user }) {
     } finally {
       setLoading(false);
     }
-  }, [isAdmin, user.id]); // Dependencies: isAdmin and user.id
+  }, [isAdmin, user.id, user.token]); // Dependencies: isAdmin and user.id
 
   // [FIX 1] Add fetchRequests to dependency array
   useEffect(() => {

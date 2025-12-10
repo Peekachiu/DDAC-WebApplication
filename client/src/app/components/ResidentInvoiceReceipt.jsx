@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { generateInvoicePDF, generateReceiptPDF } from '../../utils/pdfGenerator';
+import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -190,8 +191,8 @@ function ResidentInvoiceReceipt({ user }) {
                               <TableCell>#{invoice.id}</TableCell>
                               <TableCell>{invoice.month}</TableCell>
                               <TableCell>RM {invoice.amount.toFixed(2)}</TableCell>
-                              <TableCell>{new Date(invoice.issueDate).toLocaleDateString()}</TableCell>
-                              <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
+                              <TableCell>{format(new Date(invoice.issueDate), 'dd MMM yyyy')}</TableCell>
+                              <TableCell>{format(new Date(invoice.dueDate), 'dd MMM yyyy')}</TableCell>
                               <TableCell>{getStatusBadge(invoice.status)}</TableCell>
                               <TableCell>
                                 <div className="flex gap-2">

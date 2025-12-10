@@ -63,7 +63,7 @@ function ResidentManagementFee({ user }) {
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user.token, user.unit]);
 
   // 2. Initial Fetch
   useEffect(() => {
@@ -100,7 +100,7 @@ function ResidentManagementFee({ user }) {
       console.error("DB Update Failed:", error);
       toast.error("Payment succeeded but database update failed.");
     }
-  }, [fetchInvoices]); // Dependency ensures it stays up to date
+  }, [fetchInvoices, user.token]); // Dependency ensures it stays up to date
 
   // 4. Handle Stripe Redirect Return (Uses updateInvoiceStatus)
   useEffect(() => {
@@ -137,7 +137,7 @@ function ResidentManagementFee({ user }) {
         console.error("Error verifying payment intent:", e);
       }
     });
-  }, [updateInvoiceStatus]); // Fixed dependency
+  }, [updateInvoiceStatus, user.token]); // Fixed dependency
 
   // 5. Pay Now Button Logic
   const handleInitiatePayment = async (invoice) => {
