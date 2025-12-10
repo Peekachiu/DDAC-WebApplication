@@ -118,7 +118,7 @@ namespace server.Controllers
 
             // New Users
             var newUsers = await _context.Users.Include(u => u.Property)
-                .Where(u => u.Role == 1).OrderByDescending(u => u.UserID).Take(3).ToListAsync();
+                .Where(u => u.Role == 1).OrderByDescending(u => u.UserID).Take(10).ToListAsync();
             activities.AddRange(newUsers.Select(u => new RecentActivityDto {
                 Id = u.UserID, Type = "resident", Title = "New Resident",
                 Description = $"{u.FirstName} {u.LastName} - {u.Property?.Unit ?? "No Unit"}",
@@ -127,7 +127,7 @@ namespace server.Controllers
 
             // Recent Payments
             var payments = await _context.ManagementFees.Include(m => m.Property)
-                .Where(m => m.Status == 1).OrderByDescending(m => m.PaymentDate).Take(3).ToListAsync();
+                .Where(m => m.Status == 1).OrderByDescending(m => m.PaymentDate).Take(10).ToListAsync();
             activities.AddRange(payments.Select(p => new RecentActivityDto {
                 Id = p.PaymentID, Type = "payment", Title = "Fee Payment",
                 Description = $"Unit {p.Property?.Unit ?? "Unknown"} - RM {p.Amount}",
@@ -136,7 +136,7 @@ namespace server.Controllers
 
             // Recent Reports
             var reports = await _context.Reports.Include(r => r.User).ThenInclude(u => u!.Property)
-                .OrderByDescending(r => r.SubmittedDate).Take(3).ToListAsync();
+                .OrderByDescending(r => r.SubmittedDate).Take(10).ToListAsync();
             activities.AddRange(reports.Select(r => new RecentActivityDto {
                 Id = r.ReportID, Type = "complaint", Title = r.Subject,
                 Description = r.Description.Length > 30 ? r.Description.Substring(0, 30) + "..." : r.Description,
@@ -151,7 +151,7 @@ namespace server.Controllers
                 .Include(b => b.Facility)
                 .Where(b => b.Status == 0) // 0 = Pending
                 .OrderByDescending(b => b.BookingDate)
-                .Take(3)
+                .Take(10)
                 .ToListAsync();
 
             approvals.AddRange(bookings.Select(b => new PendingApprovalDto {
@@ -164,7 +164,7 @@ namespace server.Controllers
             }));
 
             var reqs = await _context.Reports.Include(r => r.User).ThenInclude(u => u!.Property)
-                .Where(r => r.ReportStatus == 0).Take(3).ToListAsync();
+                .Where(r => r.ReportStatus == 0).Take(10).ToListAsync();
             approvals.AddRange(reqs.Select(r => new PendingApprovalDto {
                 Id = r.ReportID, Type = "Request", Item = r.Subject,
                 Requester = r.User?.FirstName ?? "Unknown", Date = r.SubmittedDate.ToString("dd MMM yyyy"), Priority = r.Priority
@@ -177,7 +177,7 @@ namespace server.Controllers
                 PendingRequests = pendingRequests,
                 MonthlyRevenue = monthlyRevenue,
                 Occupancy = occupancy,
-                RecentActivities = activities.OrderByDescending(a => a.Time).Take(5).ToList(),
+                RecentActivities = activities.OrderByDescending(a => a.Time).Take(20).ToList(),
                 PendingApprovals = approvals
             });
         }
