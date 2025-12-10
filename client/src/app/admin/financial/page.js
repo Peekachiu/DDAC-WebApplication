@@ -1,7 +1,7 @@
 // peekachiu/ddac-webapplication/DDAC-WebApplication-jiayuan/client/src/app/financial/page.js
 'use client'
 
-import { useAuth } from '../../layout';
+import { useAuth } from '../../AuthContext';
 import FinancialManagement from '../../components/FinancialManagement';
 
 export default function FinancialPage() {

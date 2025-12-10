@@ -183,7 +183,7 @@ function ResidentManagementFee({ user }) {
   // Helper for Gradient Cards
   const GradientCard = ({ children, className }) => (
     <div className={`relative rounded-xl p-px bg-linear-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
-      <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-white/80 backdrop-blur-sm p-6 shadow-inner">
+      <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-white/80 dark:bg-black/40 backdrop-blur-sm p-6 shadow-inner">
         {children}
       </div>
     </div>
@@ -209,8 +209,8 @@ function ResidentManagementFee({ user }) {
         <GradientCard>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total Due</p>
-              <p className="mt-1 text-2xl text-red-600 font-bold">RM {totalDue.toFixed(2)}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Total Due</p>
+              <p className="mt-1 text-2xl text-red-600 dark:text-red-400 font-bold">RM {totalDue.toFixed(2)}</p>
             </div>
             <div className="rounded-lg bg-red-50 p-3">
               <DollarSign className="h-6 w-6 text-red-600" />
@@ -221,8 +221,10 @@ function ResidentManagementFee({ user }) {
         <GradientCard>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Pending Payments</p>
-              <p className="mt-1 text-2xl font-bold">{pendingInvoices.length}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Pending Payments</p>
+              <p className="mt-1 text-2xl font-bold text-foreground">
+                {pendingInvoices.length}
+              </p>
             </div>
             <div className="rounded-lg bg-yellow-50 p-3">
               <Calendar className="h-6 w-6 text-yellow-600" />
@@ -233,8 +235,10 @@ function ResidentManagementFee({ user }) {
         <GradientCard>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Paid This Year</p>
-              <p className="mt-1 text-2xl font-bold">{paidInvoices.length}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Paid This Year</p>
+              <p className="mt-1 text-2xl font-bold text-foreground">
+                {paidInvoices.length}
+              </p>
             </div>
             <div className="rounded-lg bg-green-50 p-3">
               <CreditCard className="h-6 w-6 text-green-600" />

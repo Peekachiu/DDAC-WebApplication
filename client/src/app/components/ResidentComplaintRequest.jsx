@@ -46,6 +46,7 @@ function ResidentComplaintRequest({ user }) {
     description: '',
     priority: 'medium',
     photos: [],
+    rawFile: null
   });
 
   const categories = {
@@ -97,24 +98,27 @@ function ResidentComplaintRequest({ user }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const payload = {
-      type: newComplaint.type,
-      category: newComplaint.category,
-      subject: newComplaint.subject,
-      description: newComplaint.description,
-      priority: newComplaint.priority,
-      userId: user.id,
-      photo: newComplaint.photos.length > 0 ? newComplaint.photos[0] : null
-    };
+    const formData = new FormData();
+    formData.append('type', newComplaint.type);
+    formData.append('category', newComplaint.category);
+    formData.append('subject', newComplaint.subject);
+    formData.append('description', newComplaint.description);
+    formData.append('priority', newComplaint.priority);
+    formData.append('userId', user.id);
+
+    // Append file if exists
+    if (newComplaint.rawFile) {
+      formData.append('photo', newComplaint.rawFile);
+    }
 
     try {
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          // 'Content-Type': 'multipart/form-data', // Browser sets this automatically
           'Authorization': `Bearer ${user.token}`
         },
-        body: JSON.stringify(payload),
+        body: formData,
       });
 
       if (!response.ok) throw new Error('Failed to submit request');
@@ -127,7 +131,8 @@ function ResidentComplaintRequest({ user }) {
         subject: '',
         description: '',
         priority: 'medium',
-        photos: []
+        photos: [],
+        rawFile: null
       });
       setIsDialogOpen(false);
 
@@ -143,7 +148,11 @@ function ResidentComplaintRequest({ user }) {
     if (files && files[0]) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setNewComplaint({ ...newComplaint, photos: [reader.result] });
+        setNewComplaint({
+          ...newComplaint,
+          photos: [reader.result], // Preview
+          rawFile: files[0] // Actual file for upload
+        });
       };
       reader.readAsDataURL(files[0]);
     }
@@ -153,6 +162,7 @@ function ResidentComplaintRequest({ user }) {
     setNewComplaint({
       ...newComplaint,
       photos: newComplaint.photos.filter((_, i) => i !== index),
+      rawFile: null
     });
   };
 

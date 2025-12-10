@@ -1,7 +1,7 @@
 // peekachiu/ddac-webapplication/DDAC-WebApplication-jiayuan/client/src/app/sports/page.js
 'use client'
 
-import { useAuth } from '../../layout';
+import { useAuth } from '../../AuthContext';
 import ResidentSportFacilityBooking from '../../components/ResidentSportFacilityBooking';
 
 export default function SportsPage() {

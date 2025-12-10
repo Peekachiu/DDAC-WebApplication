@@ -1,7 +1,7 @@
 // peekachiu/ddac-webapplication/DDAC-WebApplication-jiayuan/client/src/app/bookings/page.js
 'use client'
 
-import { useAuth } from '../../layout';
+import { useAuth } from '../../AuthContext';
 import FacilityBookingManagement from '../../components/FacilityBookingManagement';
 
 export default function BookingsPage() {
