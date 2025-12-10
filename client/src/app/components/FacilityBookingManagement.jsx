@@ -613,74 +613,118 @@ export default function FacilityBookingManagement({ user }) {
               <CardTitle>All Bookings</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Facility</TableHead>
-                    <TableHead>Resident</TableHead>
-                    <TableHead>Unit</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Time</TableHead>
-                    <TableHead>Guests</TableHead>
-                    <TableHead>Purpose</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {bookings.map((booking) => (
-                    <TableRow key={booking.id}>
-                      <TableCell>{booking.facilityName}</TableCell>
-                      <TableCell>{booking.residentName}</TableCell>
-                      <TableCell>{booking.unit}</TableCell>
-                      <TableCell>{format(new Date(booking.date), 'MMM dd, yyyy')}</TableCell>
-                      <TableCell>
-                        {booking.startTime} - {booking.endTime}
-                      </TableCell>
-                      <TableCell>{booking.guests}</TableCell>
-                      <TableCell>{booking.purpose || '-'}</TableCell>
-                      <TableCell>{getStatusBadge(booking.status)}</TableCell>
-                      {/* [FIX START]: Added controls for Pending bookings */}
-                      <TableCell>
-                        <div className="flex gap-2">
-                          {booking.status === 'pending' && (
-                            <>
-                              <Button
-                                size="sm"
-                                className="bg-green-600 hover:bg-green-700 h-8 w-8 p-0"
-                                onClick={() => handleApproveBooking(booking.id)}
-                                title="Approve"
-                              >
-                                <CheckCircle className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-8 w-8 p-0 border-red-200 text-red-600 hover:bg-red-50"
-                                onClick={() => handleRejectBooking(booking.id)}
-                                title="Reject"
-                              >
-                                <XCircle className="h-4 w-4" />
-                              </Button>
-                            </>
-                          )}
-                          {booking.status === 'approved' && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-red-600 hover:bg-red-50"
-                              onClick={() => handleCancelBooking(booking.id)}
-                            >
-                              Cancel
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                      {/* [FIX END] */}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              {(() => {
+                const totalPages = Math.ceil(bookings.length / itemsPerPage);
+                const paginatedList = bookings.slice(
+                  (currentPage - 1) * itemsPerPage,
+                  currentPage * itemsPerPage
+                );
+
+                return (
+                  <>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Facility</TableHead>
+                          <TableHead>Resident</TableHead>
+                          <TableHead>Unit</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Time</TableHead>
+                          <TableHead>Guests</TableHead>
+                          <TableHead>Purpose</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {paginatedList.map((booking) => (
+                          <TableRow key={booking.id}>
+                            <TableCell>{booking.facilityName}</TableCell>
+                            <TableCell>{booking.residentName}</TableCell>
+                            <TableCell>{booking.unit}</TableCell>
+                            <TableCell>{format(new Date(booking.date), 'MMM dd, yyyy')}</TableCell>
+                            <TableCell>
+                              {booking.startTime} - {booking.endTime}
+                            </TableCell>
+                            <TableCell>{booking.guests}</TableCell>
+                            <TableCell>{booking.purpose || '-'}</TableCell>
+                            <TableCell>{getStatusBadge(booking.status)}</TableCell>
+                            <TableCell>
+                              <div className="flex gap-2">
+                                {booking.status === 'pending' && (
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      className="bg-green-600 hover:bg-green-700 h-8 w-8 p-0"
+                                      onClick={() => handleApproveBooking(booking.id)}
+                                      title="Approve"
+                                    >
+                                      <CheckCircle className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-8 w-8 p-0 border-red-200 text-red-600 hover:bg-red-50"
+                                      onClick={() => handleRejectBooking(booking.id)}
+                                      title="Reject"
+                                    >
+                                      <XCircle className="h-4 w-4" />
+                                    </Button>
+                                  </>
+                                )}
+                                {booking.status === 'approved' && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-red-600 hover:bg-red-50"
+                                    onClick={() => handleCancelBooking(booking.id)}
+                                  >
+                                    Cancel
+                                  </Button>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+
+                    {totalPages > 1 && (
+                      <div className="mt-4">
+                        <Pagination>
+                          <PaginationContent>
+                            <PaginationItem>
+                              <PaginationPrevious
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                              />
+                            </PaginationItem>
+
+                            {[...Array(totalPages)].map((_, i) => (
+                              <PaginationItem key={i + 1}>
+                                <PaginationLink
+                                  isActive={currentPage === i + 1}
+                                  onClick={() => setCurrentPage(i + 1)}
+                                  className="cursor-pointer"
+                                >
+                                  {i + 1}
+                                </PaginationLink>
+                              </PaginationItem>
+                            ))}
+
+                            <PaginationItem>
+                              <PaginationNext
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                              />
+                            </PaginationItem>
+                          </PaginationContent>
+                        </Pagination>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </CardContent>
           </Card>
         </TabsContent>
@@ -692,47 +736,93 @@ export default function FacilityBookingManagement({ user }) {
               <CardTitle>Pending Approvals</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Facility</TableHead>
-                    <TableHead>Resident</TableHead>
-                    <TableHead>Unit</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Time</TableHead>
-                    <TableHead>Guests</TableHead>
-                    <TableHead>Purpose</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {pendingBookings.map((booking) => (
-                    <TableRow key={booking.id}>
-                      <TableCell>{booking.facilityName}</TableCell>
-                      <TableCell>{booking.residentName}</TableCell>
-                      <TableCell>{booking.unit}</TableCell>
-                      <TableCell>{format(new Date(booking.date), 'MMM dd, yyyy')}</TableCell>
-                      <TableCell>
-                        {booking.startTime} - {booking.endTime}
-                      </TableCell>
-                      <TableCell>{booking.guests}</TableCell>
-                      <TableCell>{booking.purpose || '-'}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => handleApproveBooking(booking.id)}>
-                            <CheckCircle className="mr-1 h-3 w-3" />
-                            Approve
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => handleRejectBooking(booking.id)}>
-                            <XCircle className="mr-1 h-3 w-3" />
-                            Reject
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              {(() => {
+                const totalPages = Math.ceil(pendingBookings.length / itemsPerPage);
+                const paginatedList = pendingBookings.slice(
+                  (currentPage - 1) * itemsPerPage,
+                  currentPage * itemsPerPage
+                );
+
+                return (
+                  <>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Facility</TableHead>
+                          <TableHead>Resident</TableHead>
+                          <TableHead>Unit</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Time</TableHead>
+                          <TableHead>Guests</TableHead>
+                          <TableHead>Purpose</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {paginatedList.map((booking) => (
+                          <TableRow key={booking.id}>
+                            <TableCell>{booking.facilityName}</TableCell>
+                            <TableCell>{booking.residentName}</TableCell>
+                            <TableCell>{booking.unit}</TableCell>
+                            <TableCell>{format(new Date(booking.date), 'MMM dd, yyyy')}</TableCell>
+                            <TableCell>
+                              {booking.startTime} - {booking.endTime}
+                            </TableCell>
+                            <TableCell>{booking.guests}</TableCell>
+                            <TableCell>{booking.purpose || '-'}</TableCell>
+                            <TableCell>
+                              <div className="flex gap-2">
+                                <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => handleApproveBooking(booking.id)}>
+                                  <CheckCircle className="mr-1 h-3 w-3" />
+                                  Approve
+                                </Button>
+                                <Button size="sm" variant="outline" onClick={() => handleRejectBooking(booking.id)}>
+                                  <XCircle className="mr-1 h-3 w-3" />
+                                  Reject
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+
+                    {totalPages > 1 && (
+                      <div className="mt-4">
+                        <Pagination>
+                          <PaginationContent>
+                            <PaginationItem>
+                              <PaginationPrevious
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                              />
+                            </PaginationItem>
+
+                            {[...Array(totalPages)].map((_, i) => (
+                              <PaginationItem key={i + 1}>
+                                <PaginationLink
+                                  isActive={currentPage === i + 1}
+                                  onClick={() => setCurrentPage(i + 1)}
+                                  className="cursor-pointer"
+                                >
+                                  {i + 1}
+                                </PaginationLink>
+                              </PaginationItem>
+                            ))}
+
+                            <PaginationItem>
+                              <PaginationNext
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                              />
+                            </PaginationItem>
+                          </PaginationContent>
+                        </Pagination>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </CardContent>
           </Card>
         </TabsContent>
