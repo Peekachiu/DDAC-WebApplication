@@ -182,10 +182,8 @@ export default function ResidentManagement({ user }) {
 
   // Helper for Gradient Cards
   const GradientCard = ({ children, className }) => (
-    <div className={`relative rounded-xl p-px bg-linear-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
-      <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-[var(--card)] backdrop-blur-sm p-6 shadow-inner">
-        {children}
-      </div>
+    <div className={`relative h-full rounded-xl glass border-0! p-6 shadow-sm hover:shadow-md transition-all duration-300 ${className}`}>
+      {children}
     </div>
   );
 

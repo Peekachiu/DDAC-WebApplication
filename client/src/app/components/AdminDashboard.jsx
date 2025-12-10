@@ -7,11 +7,22 @@ import { Badge } from './ui/badge';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "./ui/pagination";
+
 const API_URL = '/api/Dashboard/stats';
 
 export default function AdminDashboard({ user }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [currentApprovalPage, setCurrentApprovalPage] = useState(1);
+  const itemsPerPage = 5;
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -129,7 +140,7 @@ export default function AdminDashboard({ user }) {
             <CardTitle>Recent Activities</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
               {data.recentActivities.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No recent activities.</p>
               ) : (
@@ -193,29 +204,77 @@ export default function AdminDashboard({ user }) {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {data.pendingApprovals.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No pending approvals.</p>
-            ) : (
-              data.pendingApprovals.map((approval, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between rounded-lg border border-white/20 bg-white/5 p-4"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3">
-                      <Badge variant="outline" className="border-white/20 text-foreground">{approval.type}</Badge>
-                      <p className="text-sm font-medium text-foreground">{approval.item}</p>
+            {(() => {
+              const totalPages = Math.ceil(data.pendingApprovals.length / itemsPerPage);
+              const paginatedApprovals = data.pendingApprovals.slice(
+                (currentApprovalPage - 1) * itemsPerPage,
+                currentApprovalPage * itemsPerPage
+              );
+
+              return (
+                <>
+                  <div className="space-y-3">
+                    {paginatedApprovals.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">No pending approvals.</p>
+                    ) : (
+                      paginatedApprovals.map((approval, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between rounded-lg border border-white/20 bg-white/5 p-4"
+                        >
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3">
+                              <Badge variant="outline" className="border-white/20 text-foreground">{approval.type}</Badge>
+                              <p className="text-sm font-medium text-foreground">{approval.item}</p>
+                            </div>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {approval.requester} • {approval.date}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            {getPriorityBadge(approval.priority)}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  {totalPages > 1 && (
+                    <div className="mt-4">
+                      <Pagination>
+                        <PaginationContent>
+                          <PaginationItem>
+                            <PaginationPrevious
+                              onClick={() => setCurrentApprovalPage(p => Math.max(1, p - 1))}
+                              className={currentApprovalPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                            />
+                          </PaginationItem>
+
+                          {[...Array(totalPages)].map((_, i) => (
+                            <PaginationItem key={i + 1}>
+                              <PaginationLink
+                                isActive={currentApprovalPage === i + 1}
+                                onClick={() => setCurrentApprovalPage(i + 1)}
+                                className="cursor-pointer"
+                              >
+                                {i + 1}
+                              </PaginationLink>
+                            </PaginationItem>
+                          ))}
+
+                          <PaginationItem>
+                            <PaginationNext
+                              onClick={() => setCurrentApprovalPage(p => Math.min(totalPages, p + 1))}
+                              className={currentApprovalPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                            />
+                          </PaginationItem>
+                        </PaginationContent>
+                      </Pagination>
                     </div>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {approval.requester} • {approval.date}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    {getPriorityBadge(approval.priority)}
-                  </div>
-                </div>
-              ))
-            )}
+                  )}
+                </>
+              );
+            })()}
           </div>
         </CardContent>
       </Card>
