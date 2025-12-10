@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -42,11 +42,7 @@ export default function ResidentManagement({ user }) {
     role: 'Resident',
   });
 
-  useEffect(() => {
-    fetchResidents();
-  }, []);
-
-  async function fetchResidents() {
+  const fetchResidents = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch(`${API_URL}/api/residents`, {
@@ -61,7 +57,11 @@ export default function ResidentManagement({ user }) {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [user.token]);
+
+  useEffect(() => {
+    fetchResidents();
+  }, [fetchResidents]);
 
   const handleOpenChange = (open) => {
     setIsDialogOpen(open);
@@ -183,7 +183,7 @@ export default function ResidentManagement({ user }) {
   // Helper for Gradient Cards
   const GradientCard = ({ children, className }) => (
     <div className={`relative rounded-xl p-px bg-linear-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
-      <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-white/80 dark:bg-black/40 backdrop-blur-sm p-6 shadow-inner">
+      <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-[var(--card)] backdrop-blur-sm p-6 shadow-inner">
         {children}
       </div>
     </div>
@@ -290,7 +290,7 @@ export default function ResidentManagement({ user }) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-300">Total Residents</p>
-              <p className="mt-1 text-2xl font-bold">{residents.length}</p>
+              <p className="mt-1 text-2xl font-bold dark:text-gray-100">{residents.length}</p>
             </div>
             <div className="rounded-lg bg-blue-50 p-3">
               <UserCheck className="h-6 w-6 text-blue-600" />
@@ -302,7 +302,7 @@ export default function ResidentManagement({ user }) {
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-300">Occupied Units</p>
               {/* [CHANGED] Calculate unique units based on combo of block-floor-unit */}
-              <p className="mt-1 text-2xl font-bold">
+              <p className="mt-1 text-2xl font-bold dark:text-gray-100">
                 {new Set(residents.map(r => `${r.block}-${r.floor}-${r.unit}`)).size}
               </p>
             </div>

@@ -63,7 +63,7 @@ function ResidentManagementFee({ user }) {
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user.token, user.unit]);
 
   // 2. Initial Fetch
   useEffect(() => {
@@ -100,7 +100,7 @@ function ResidentManagementFee({ user }) {
       console.error("DB Update Failed:", error);
       toast.error("Payment succeeded but database update failed.");
     }
-  }, [fetchInvoices]); // Dependency ensures it stays up to date
+  }, [fetchInvoices, user.token]); // Dependency ensures it stays up to date
 
   // 4. Handle Stripe Redirect Return (Uses updateInvoiceStatus)
   useEffect(() => {
@@ -137,7 +137,7 @@ function ResidentManagementFee({ user }) {
         console.error("Error verifying payment intent:", e);
       }
     });
-  }, [updateInvoiceStatus]); // Fixed dependency
+  }, [updateInvoiceStatus, user.token]); // Fixed dependency
 
   // 5. Pay Now Button Logic
   const handleInitiatePayment = async (invoice) => {
@@ -183,7 +183,7 @@ function ResidentManagementFee({ user }) {
   // Helper for Gradient Cards
   const GradientCard = ({ children, className }) => (
     <div className={`relative rounded-xl p-px bg-linear-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
-      <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-white/80 dark:bg-black/40 backdrop-blur-sm p-6 shadow-inner">
+      <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-[var(--card)] backdrop-blur-sm p-6 shadow-inner">
         {children}
       </div>
     </div>

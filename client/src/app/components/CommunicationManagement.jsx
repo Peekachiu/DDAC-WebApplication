@@ -61,7 +61,7 @@ export default function CommunicationManagement({ user }) {
     } finally {
       setIsLoading(false);
     }
-  }, [isAdmin]); // Re-create function only if isAdmin changes
+  }, [isAdmin, user.token]); // Re-create function only if isAdmin changes
 
   useEffect(() => {
     fetchAnnouncements();
@@ -187,7 +187,7 @@ export default function CommunicationManagement({ user }) {
   // Helper for Gradient Cards
   const GradientCard = ({ children, className }) => (
     <div className={`relative rounded-xl p-px bg-linear-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
-      <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-white/80 dark:bg-black/40 backdrop-blur-sm p-6 shadow-inner">
+      <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-[var(--card)] backdrop-blur-sm p-6 shadow-inner">
         {children}
       </div>
     </div>
@@ -202,7 +202,6 @@ export default function CommunicationManagement({ user }) {
     return (
       <div className="space-y-6">
         <div>
-          <h2>Notifications & Announcements</h2>
           <h2>Notifications & Announcements</h2>
           <p className="text-sm text-gray-600 dark:text-gray-300">Latest updates from management</p>
         </div>
@@ -243,14 +242,13 @@ export default function CommunicationManagement({ user }) {
       <div className="flex items-center justify-between">
         <div>
           <h2>Communication Management</h2>
-          <h2>Communication Management</h2>
           <p className="text-sm text-gray-600 dark:text-gray-300">Manage system-wide announcements</p>
         </div>
         <Dialog open={isAnnouncementDialogOpen} onOpenChange={(open) => { setIsAnnouncementDialogOpen(open); if (!open) resetForm(); }}>
           <DialogTrigger asChild>
             <Button><Plus className="mr-2 h-4 w-4" /> Create Announcement</Button>
           </DialogTrigger>
-          <DialogContent className="max-w-xl">
+          <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingAnnouncement ? 'Edit Announcement' : 'Create New Announcement'}</DialogTitle>
               <DialogDescription>Notify residents about events, maintenance, or alerts.</DialogDescription>
@@ -400,7 +398,7 @@ function AnnouncementTable({ data, onSend, onEdit, onDelete, getTypeBadge, getSt
             <TableCell className="font-medium">{announcement.title}</TableCell>
             <TableCell>{getTypeBadge(announcement.type)}</TableCell>
             <TableCell className="capitalize">{announcement.audience}</TableCell>
-            <TableCell>{new Date(announcement.scheduledDate).toLocaleDateString()}</TableCell>
+            <TableCell>{format(new Date(announcement.scheduledDate), 'dd MMM yyyy')}</TableCell>
             <TableCell>{getStatusBadge(announcement.status)}</TableCell>
             <TableCell>
               <div className="flex gap-2">

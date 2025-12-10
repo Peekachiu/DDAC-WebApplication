@@ -34,16 +34,50 @@ namespace server.Controllers
         {
             if (userId <= 0) return BadRequest("UserId is required");
 
+            // 1. Get User and Property to determine audience eligibility
+            var user = await _context.Users
+                .Include(u => u.Property)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.UserID == userId);
+
+            if (user == null) return NotFound("User not found");
+
+            // Normalize block for comparison
+            string userBlock = user.Property?.Block?.Trim().ToLower() ?? "";
+
+            // 2. Fetch all sent announcements
             var announcements = await _context.Announcements
                 .Where(a => a.Status == "sent")
                 .OrderByDescending(a => a.SentDate)
                 .ToListAsync();
 
+            // 3. Filter in memory
+            var filteredAnnouncements = announcements.Where(a =>
+            {
+                if (string.IsNullOrEmpty(a.Audience) || a.Audience == "all") return true;
+
+                string audience = a.Audience.ToLower();
+
+                // Logic for Tower A
+                if (audience == "building-a")
+                {
+                    return userBlock == "a" || userBlock == "block a" || userBlock == "tower a";
+                }
+
+                // Logic for Tower B
+                if (audience == "building-b")
+                {
+                    return userBlock == "b" || userBlock == "block b" || userBlock == "tower b";
+                }
+
+                return false; 
+            }).ToList();
+
             var userAnnouncements = await _context.UserAnnouncements
                 .Where(ua => ua.UserID == userId)
                 .ToListAsync();
 
-            var result = announcements
+            var result = filteredAnnouncements
                 .GroupJoin(
                     userAnnouncements,
                     a => a.AnnouncementID,

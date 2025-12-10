@@ -108,7 +108,7 @@ export default function ResidentProfile({ user }) {
   // Helper component for Gradient Border Input Display
   const GradientBorderDisplay = ({ children, className }) => (
     <div className={`relative rounded-lg p-px bg-linear-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
-      <div className="relative rounded-[calc(0.5rem-1px)] bg-white/80 dark:bg-black/40 backdrop-blur-sm p-2.5 text-sm text-foreground shadow-inner">
+      <div className="relative rounded-[calc(0.5rem-1px)] bg-[var(--card)] backdrop-blur-sm p-2.5 text-sm text-foreground shadow-inner">
         {children}
       </div>
     </div>
@@ -191,7 +191,7 @@ export default function ResidentProfile({ user }) {
                         id="oldPassword"
                         type={showPassword.oldPassword ? "text" : "password"}
                         placeholder="Enter current password"
-                        className="pl-9 pr-10 bg-white/50 dark:bg-black/20 border-gray-200 dark:border-white/10 focus:border-blue-400 focus:ring-blue-400/20"
+                        className="pl-9 pr-10 bg-white/50 dark:bg-black/20 border-gray-200 dark:border-white/10 text-gray-900 dark:text-gray-100 dark:placeholder:text-gray-400 focus:border-blue-400 focus:ring-blue-400/20"
                         value={passwords.oldPassword}
                         onChange={handleChange}
                         required
@@ -221,7 +221,7 @@ export default function ResidentProfile({ user }) {
                         id="newPassword"
                         type={showPassword.newPassword ? "text" : "password"}
                         placeholder="Enter new password"
-                        className="pl-9 pr-10 bg-white/50 dark:bg-black/20 border-gray-200 dark:border-white/10 focus:border-blue-400 focus:ring-blue-400/20"
+                        className="pl-9 pr-10 bg-white/50 dark:bg-black/20 border-gray-200 dark:border-white/10 text-gray-900 dark:text-gray-100 dark:placeholder:text-gray-400 focus:border-blue-400 focus:ring-blue-400/20"
                         value={passwords.newPassword}
                         onChange={handleChange}
                         required
@@ -251,7 +251,7 @@ export default function ResidentProfile({ user }) {
                         id="confirmPassword"
                         type={showPassword.confirmPassword ? "text" : "password"}
                         placeholder="Confirm new password"
-                        className="pl-9 pr-10 bg-white/50 dark:bg-black/20 border-gray-200 dark:border-white/10 focus:border-blue-400 focus:ring-blue-400/20"
+                        className="pl-9 pr-10 bg-white/50 dark:bg-black/20 border-gray-200 dark:border-white/10 text-gray-900 dark:text-gray-100 dark:placeholder:text-gray-400 focus:border-blue-400 focus:ring-blue-400/20"
                         value={passwords.confirmPassword}
                         onChange={handleChange}
                         required
