@@ -22,7 +22,7 @@ import {
   PaginationPrevious,
 } from "./ui/pagination";
 
-const API_URL = 'http://localhost:5016/api/Visitors';
+const API_URL = '/api/Visitors';
 
 export default function VisitorRegister({ user }) {
   const isAdmin = user.role === 'Admin';
