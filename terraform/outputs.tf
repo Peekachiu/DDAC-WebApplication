@@ -1,0 +1,128 @@
+# =========================================================
+# Root Outputs — From the VPC Module
+# =========================================================
+
+output "vpc_id" {
+  description = "The ID of the created VPC"
+  value       = module.vpc.vpc_id
+}
+
+output "public_subnet_ids" {
+  description = "List of public subnet IDs"
+  value       = module.vpc.public_subnet_ids
+}
+
+output "private_subnet_ids" {
+  description = "List of private subnet IDs"
+  value       = module.vpc.private_subnet_ids
+}
+
+output "nat_gateway_ids" {
+  description = "List of NAT gateway IDs"
+  value       = module.vpc.nat_gateway_ids
+}
+
+output "nat_eip_addresses" {
+  description = "Elastic IP addresses attached to the NAT Gateways"
+  value       = module.vpc.nat_eip_addresses
+}
+
+# =========================================================
+# Root Outputs — From the Security Groups Module
+# =========================================================
+
+output "web_sg_id" {
+  description = "ID of the public security group"
+  value       = module.security_groups.web_sg_id
+}
+
+output "api_sg_id" {
+  description = "ID of the API security group"
+  value       = module.security_groups.api_sg_id
+}
+
+output "db_sg_id" {
+  description = "ID of the database security group"
+  value       = module.security_groups.db_sg_id
+}
+
+output "bastion_sg_id" {
+  description = "ID of the bastion host security group"
+  value       = module.security_groups.bastion_sg_id
+}
+
+output "lb_sg_id" {
+  description = "Security group ID for the load balancer"
+  value       = module.security_groups.lb_sg_id
+}
+
+# =========================================================
+# Admin IP Detection Output
+# =========================================================
+
+output "admin_ip" {
+  description = "The detected or manually overridden admin IP used in security groups"
+  value       = local.admin_ip
+}
+
+# =========================================================
+# Bastion Host Outputs
+# =========================================================
+
+output "bastion_instance_ids" {
+  description = "IDs of bastion EC2 instances"
+  value       = module.bastion.bastion_instance_ids
+}
+
+output "bastion_public_ips" {
+  description = "Public IPs of bastion hosts (if EIP assigned)"
+  value       = module.bastion.bastion_public_ips
+}
+
+output "bastion_public_dns" {
+  description = "Public DNS names of bastion hosts"
+  value       = module.bastion.bastion_public_dns
+}
+
+# =========================================================
+# Web Server Outputs
+# =========================================================
+output "web_asg_name" {
+  description = "Auto Scaling Group name for web servers"
+  value       = module.web_server.asg_name
+}
+
+# If you previously relied on per-instance EIPs (discouraged), this shows EIPs if assigned
+output "web_eip_addresses" {
+  description = "EIP addresses assigned to web instances (if assign_eip true)"
+  value       = module.web_server.web_eip_addresses
+}
+
+# =========================================================
+# Application Load Balancer Outputs
+# =========================================================
+output "alb_dns_name" {
+  description = "Public DNS name of the Application Load Balancer"
+  value       = module.alb.alb_dns_name
+}
+
+# =========================================================
+# Database Outputs
+# =========================================================
+output "database_endpoint" {
+  description = "The connection endpoint for the RDS database"
+  value       = module.database.db_endpoint
+}
+
+output "database_port" {
+  description = "The connection port for the RDS database"
+  value       = module.database.db_port
+}
+
+# =========================================================
+# Cloudfront Outputs
+# =========================================================
+output "cloudfront_url" {
+  description = "The URL of the CloudFront Distribution"
+  value       = "https://${module.cloudfront.cloudfront_domain_name}"
+}
