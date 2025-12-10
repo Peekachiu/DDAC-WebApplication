@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 const AuthContext = createContext(null);
-const API_URL = 'http://localhost:5016'; // Check that this matches your dotnet run port
+const API_URL = ''; // Check that this matches your dotnet run port
 
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
