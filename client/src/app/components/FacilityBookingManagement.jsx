@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -36,12 +36,7 @@ export default function FacilityBookingManagement({ user }) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  // Fetch data on mount
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       // Fetch Facilities
@@ -69,7 +64,12 @@ export default function FacilityBookingManagement({ user }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user.token]);
+
+  // Fetch data on mount
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const [blockedDates, setBlockedDates] = useState([]);
 
@@ -506,10 +506,10 @@ export default function FacilityBookingManagement({ user }) {
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
-        <GradientCard><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600 dark:text-gray-300">Total Facilities</p><p className="mt-1 text-2xl font-bold">{facilities.length}</p></div><div className="rounded-lg bg-blue-50 dark:bg-blue-900/20 p-3"><Users className="h-6 w-6 text-blue-600 dark:text-blue-400" /></div></div></GradientCard>
-        <GradientCard><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600 dark:text-gray-300">Pending Requests</p><p className="mt-1 text-2xl font-bold">{pendingBookings.length}</p></div><div className="rounded-lg bg-yellow-50 dark:bg-yellow-900/20 p-3"><Clock className="h-6 w-6 text-yellow-600 dark:text-yellow-400" /></div></div></GradientCard>
-        <GradientCard><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600 dark:text-gray-300">Approved Bookings</p><p className="mt-1 text-2xl font-bold">{approvedBookings.length}</p></div><div className="rounded-lg bg-green-50 dark:bg-green-900/20 p-3"><CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" /></div></div></GradientCard>
-        <GradientCard><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600 dark:text-gray-300">Blocked Dates</p><p className="mt-1 text-2xl font-bold">{blockedDates.length}</p></div><div className="rounded-lg bg-red-50 dark:bg-red-900/20 p-3"><Ban className="h-6 w-6 text-red-600 dark:text-red-400" /></div></div></GradientCard>
+        <GradientCard><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600 dark:text-gray-300">Total Facilities</p><p className="mt-1 text-2xl font-bold dark:text-gray-100">{facilities.length}</p></div><div className="rounded-lg bg-blue-50 dark:bg-blue-900/20 p-3"><Users className="h-6 w-6 text-blue-600 dark:text-blue-400" /></div></div></GradientCard>
+        <GradientCard><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600 dark:text-gray-300">Pending Requests</p><p className="mt-1 text-2xl font-bold dark:text-gray-100">{pendingBookings.length}</p></div><div className="rounded-lg bg-yellow-50 dark:bg-yellow-900/20 p-3"><Clock className="h-6 w-6 text-yellow-600 dark:text-yellow-400" /></div></div></GradientCard>
+        <GradientCard><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600 dark:text-gray-300">Approved Bookings</p><p className="mt-1 text-2xl font-bold dark:text-gray-100">{approvedBookings.length}</p></div><div className="rounded-lg bg-green-50 dark:bg-green-900/20 p-3"><CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" /></div></div></GradientCard>
+        <GradientCard><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600 dark:text-gray-300">Blocked Dates</p><p className="mt-1 text-2xl font-bold dark:text-gray-100">{blockedDates.length}</p></div><div className="rounded-lg bg-red-50 dark:bg-red-900/20 p-3"><Ban className="h-6 w-6 text-red-600 dark:text-red-400" /></div></div></GradientCard>
       </div>
 
       <Tabs defaultValue="facilities">

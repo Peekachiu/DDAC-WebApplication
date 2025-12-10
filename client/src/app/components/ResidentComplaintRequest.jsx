@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image'; // Added for optimization
+import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -86,7 +87,7 @@ function ResidentComplaintRequest({ user }) {
     } finally {
       setLoading(false);
     }
-  }, [user.id]);
+  }, [user.id, user.token]);
 
   useEffect(() => {
     if (user?.id) {
@@ -379,7 +380,7 @@ function ResidentComplaintRequest({ user }) {
                             </TableCell>
                             <TableCell>{complaint.category}</TableCell>
                             <TableCell>{complaint.subject}</TableCell>
-                            <TableCell>{new Date(complaint.date).toLocaleDateString()}</TableCell>
+                            <TableCell>{format(new Date(complaint.date), 'dd MMM yyyy')}</TableCell>
                             <TableCell>{getStatusBadge(complaint.status)}</TableCell>
                             <TableCell>
                               <Button
@@ -433,7 +434,7 @@ function ResidentComplaintRequest({ user }) {
                 </div>
                 <div>
                   <Label>Date Submitted</Label>
-                  <p className="text-sm">{new Date(selectedComplaint.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                  <p className="text-sm">{format(new Date(selectedComplaint.date), 'dd MMM yyyy')}</p>
                 </div>
               </div>
 

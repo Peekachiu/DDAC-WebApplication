@@ -67,7 +67,7 @@ export default function VisitorRegister({ user }) {
     };
 
     fetchVisitors();
-  }, [user.id, isAdmin]); // Added dependencies here
+  }, [user.id, user.token, isAdmin]); // Added dependencies here
 
   // 2. Handle Registration (POST)
   const handleRegisterVisitor = async (e) => {
