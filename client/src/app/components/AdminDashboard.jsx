@@ -16,15 +16,6 @@ import {
   PaginationPrevious,
 } from "./ui/pagination";
 
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "./ui/pagination";
-
 const API_URL = '/api/Dashboard/stats';
 
 export default function AdminDashboard({ user }) {
