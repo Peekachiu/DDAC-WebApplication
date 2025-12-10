@@ -108,7 +108,7 @@ export default function ResidentProfile({ user }) {
   // Helper component for Gradient Border Input Display
   const GradientBorderDisplay = ({ children, className }) => (
     <div className={`relative rounded-lg p-px bg-linear-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
-      <div className="relative rounded-[calc(0.5rem-1px)] bg-white/80 dark:bg-black/40 backdrop-blur-sm p-2.5 text-sm text-foreground dark:text-gray-100 shadow-inner">
+      <div className="relative rounded-[calc(0.5rem-1px)] bg-[var(--card)] backdrop-blur-sm p-2.5 text-sm text-foreground shadow-inner">
         {children}
       </div>
     </div>

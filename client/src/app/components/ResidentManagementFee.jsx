@@ -183,7 +183,7 @@ function ResidentManagementFee({ user }) {
   // Helper for Gradient Cards
   const GradientCard = ({ children, className }) => (
     <div className={`relative rounded-xl p-px bg-linear-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
-      <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-white/80 dark:bg-black/40 backdrop-blur-sm p-6 shadow-inner">
+      <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-[var(--card)] backdrop-blur-sm p-6 shadow-inner">
         {children}
       </div>
     </div>
