@@ -21,7 +21,7 @@ import {
   PaginationPrevious,
 } from "./ui/pagination";
 
-const API_URL = '/api/Financial';
+const API_URL = 'http://localhost:5016/api/Financial';
 
 function ResidentInvoiceReceipt({ user }) {
   const [invoices, setInvoices] = useState([]);

@@ -25,7 +25,7 @@ import {
   PaginationPrevious,
 } from "./ui/pagination";
 
-const API_URL = '/api/Bookings';
+const API_URL = 'http://localhost:5016/api/Bookings';
 
 function ResidentEventHallBooking({ user }) {
   const [bookings, setBookings] = useState([]);

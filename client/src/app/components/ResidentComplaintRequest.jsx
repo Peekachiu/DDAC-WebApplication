@@ -25,7 +25,7 @@ import {
   PaginationPrevious,
 } from "./ui/pagination";
 
-const API_URL = '/api/Reports';
+const API_URL = 'http://localhost:5016/api/Reports';
 
 function ResidentComplaintRequest({ user }) {
   const [complaints, setComplaints] = useState([]);

@@ -21,7 +21,7 @@ import {
   PaginationPrevious,
 } from "./ui/pagination";
 
-const BASE_API_URL = '/api';
+const BASE_API_URL = 'http://localhost:5016/api';
 
 const stripePromise = loadStripe("pk_test_51SShspDHK3g2RSaD4TA2mWa4Ags0RudgGgjo8mzLeHTLgvlKGYStPWmIBTI0FyowL95p8NAOAXSnSYmp0kU88XHD00LtjssHh0");
 

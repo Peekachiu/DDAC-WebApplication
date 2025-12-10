@@ -23,7 +23,7 @@ import {
   PaginationPrevious,
 } from "./ui/pagination";
 
-const API_URL = '/api/Reports';
+const API_URL = 'http://localhost:5016/api/Reports';
 
 export default function ComplaintMaintenanceManagement({ user }) {
   const isAdmin = user.role === 'Admin';
