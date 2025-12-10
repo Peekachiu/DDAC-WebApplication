@@ -14,7 +14,7 @@ namespace server.Controllers
         public string Subject { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string Priority { get; set; } = "medium";
-        public string? Photo { get; set; } 
+        public IFormFile? Photo { get; set; } // [CHANGED] Accepts file directly
         public int UserId { get; set; }
     }
 
@@ -45,7 +45,7 @@ namespace server.Controllers
 
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize] // [ADDED]
+    [Authorize]
     public class ReportsController : ControllerBase
     {
         private readonly ResidentProDbContext _context;
@@ -84,8 +84,23 @@ namespace server.Controllers
 
         // POST: api/Reports
         [HttpPost]
-        public async Task<IActionResult> CreateReport([FromBody] CreateReportRequest request)
+        public async Task<IActionResult> CreateReport([FromForm] CreateReportRequest request) // [CHANGED] FromBody -> FromForm
         {
+            string? photoBase64 = null;
+
+            if (request.Photo != null && request.Photo.Length > 0)
+            {
+                using (var ms = new MemoryStream())
+                {
+                    await request.Photo.CopyToAsync(ms);
+                    // Convert to base64 immediately for DB storage
+                    // Ideally you would upload to S3 here, but preserving existing logic for now
+                    string base64Data = Convert.ToBase64String(ms.ToArray());
+                    string mimeType = request.Photo.ContentType;
+                    photoBase64 = $"data:{mimeType};base64,{base64Data}";
+                }
+            }
+
             var report = new Report
             {
                 Type = request.Type,
@@ -93,7 +108,7 @@ namespace server.Controllers
                 Subject = request.Subject,
                 Description = request.Description,
                 Priority = request.Priority,
-                PhotoBase64 = request.Photo,
+                PhotoBase64 = photoBase64,
                 UserID = request.UserId,
                 ReportStatus = 0, // Pending
                 SubmittedDate = DateTime.UtcNow

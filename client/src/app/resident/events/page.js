@@ -1,7 +1,7 @@
 // peekachiu/ddac-webapplication/DDAC-WebApplication-jiayuan/client/src/app/events/page.js
 'use client'
 
-import { useAuth } from '../../layout';
+import { useAuth } from '../../AuthContext';
 import ResidentEventHallBooking from '../../components/ResidentEventHallBooking';
 
 export default function EventsPage() {

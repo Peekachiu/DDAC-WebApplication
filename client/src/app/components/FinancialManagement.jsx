@@ -158,10 +158,10 @@ export default function FinancialManagement({ user }) {
 
   const getStatusBadge = (status) => {
     switch (status) {
-      case 'paid': return <Badge className="bg-green-100 text-green-800">Paid</Badge>;
-      case 'pending': return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>;
-      case 'overdue': return <Badge className="bg-red-100 text-red-800">Overdue</Badge>;
-      default: return <Badge className="bg-gray-100 text-gray-800">Unknown</Badge>;
+      case 'paid': return <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">Paid</Badge>;
+      case 'pending': return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">Pending</Badge>;
+      case 'overdue': return <Badge className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">Overdue</Badge>;
+      default: return <Badge className="bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300">Unknown</Badge>;
     }
   };
 
@@ -175,7 +175,7 @@ export default function FinancialManagement({ user }) {
   // Helper for Gradient Cards
   const GradientCard = ({ children, className }) => (
     <div className={`relative rounded-xl p-px bg-linear-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
-      <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-white/80 backdrop-blur-sm p-6 shadow-inner">
+      <div className="relative h-full rounded-[calc(0.75rem-1px)] bg-white/80 dark:bg-black/40 backdrop-blur-sm p-6 shadow-inner">
         {children}
       </div>
     </div>
@@ -195,7 +195,7 @@ export default function FinancialManagement({ user }) {
       <div className="space-y-6">
         <div>
           <h2>Invoices & Receipts</h2>
-          <p className="text-sm text-gray-600">View your maintenance fee invoices</p>
+          <p className="text-sm text-gray-600 dark:text-gray-300">View your maintenance fee invoices</p>
         </div>
         <Card className="glass border-0!">
           <CardHeader><CardTitle>My Invoices</CardTitle></CardHeader>
@@ -286,7 +286,7 @@ export default function FinancialManagement({ user }) {
       <div className="flex items-center justify-between">
         <div>
           <h2>Financial Management</h2>
-          <p className="text-sm text-gray-600">Manage invoices and track revenue</p>
+          <p className="text-sm text-gray-600 dark:text-gray-300">Manage invoices and track revenue</p>
         </div>
         <div className="flex gap-2">
           <Dialog open={isGenerateDialogOpen} onOpenChange={setIsGenerateDialogOpen}>
@@ -340,40 +340,40 @@ export default function FinancialManagement({ user }) {
         <GradientCard>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total Revenue</p>
-              <p className="text-2xl text-green-600 font-bold">RM {totalRevenue.toFixed(2)}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Total Revenue</p>
+              <p className="text-2xl text-green-600 dark:text-green-400 font-bold">RM {totalRevenue.toFixed(2)}</p>
             </div>
-            <div className="bg-green-50 p-3 rounded-lg"><DollarSign className="h-6 w-6 text-green-600" /></div>
+            <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg"><DollarSign className="h-6 w-6 text-green-600 dark:text-green-400" /></div>
           </div>
         </GradientCard>
 
         <GradientCard>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Revenue (This Month)</p>
-              <p className="text-2xl text-blue-600 font-bold">RM {currentMonthRevenue.toFixed(2)}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Revenue (This Month)</p>
+              <p className="text-2xl text-blue-600 dark:text-blue-400 font-bold">RM {currentMonthRevenue.toFixed(2)}</p>
             </div>
-            <div className="bg-blue-50 p-3 rounded-lg"><Calendar className="h-6 w-6 text-blue-600" /></div>
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg"><Calendar className="h-6 w-6 text-blue-600 dark:text-blue-400" /></div>
           </div>
         </GradientCard>
 
         <GradientCard>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Outstanding</p>
-              <p className="text-2xl text-orange-600 font-bold">RM {totalOutstanding.toFixed(2)}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Outstanding</p>
+              <p className="text-2xl text-orange-600 dark:text-orange-400 font-bold">RM {totalOutstanding.toFixed(2)}</p>
             </div>
-            <div className="bg-orange-50 p-3 rounded-lg"><AlertCircle className="h-6 w-6 text-orange-600" /></div>
+            <div className="bg-orange-50 dark:bg-orange-900/20 p-3 rounded-lg"><AlertCircle className="h-6 w-6 text-orange-600 dark:text-orange-400" /></div>
           </div>
         </GradientCard>
 
         <GradientCard>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Pending Amount</p>
-              <p className="text-2xl text-yellow-600 font-bold">RM {pendingAmount.toFixed(2)}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Pending Amount</p>
+              <p className="text-2xl text-yellow-600 dark:text-yellow-400 font-bold">RM {pendingAmount.toFixed(2)}</p>
             </div>
-            <div className="bg-yellow-50 p-3 rounded-lg"><Clock className="h-6 w-6 text-yellow-600" /></div>
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg"><Clock className="h-6 w-6 text-yellow-600 dark:text-yellow-400" /></div>
           </div>
         </GradientCard>
       </div>
