@@ -100,7 +100,7 @@ export default function ComplaintMaintenanceManagement({ user }) {
       }
       const reader = new FileReader();
       reader.onloadend = () => {
-        setNewRequest({ ...newRequest, photo: reader.result });
+        setNewRequest({ ...newRequest, photo: reader.result, photoFile: file });
       };
       reader.readAsDataURL(file);
     }
@@ -109,25 +109,31 @@ export default function ComplaintMaintenanceManagement({ user }) {
   const handleSubmitRequest = async (e) => {
     e.preventDefault();
 
-    const payload = {
-      ...newRequest,
-      userId: user.id
-    };
+    const formData = new FormData();
+    formData.append('Type', newRequest.type);
+    formData.append('Category', newRequest.category);
+    formData.append('Subject', newRequest.subject);
+    formData.append('Description', newRequest.description);
+    formData.append('Priority', newRequest.priority);
+    formData.append('UserId', user.id);
+
+    if (newRequest.photoFile) {
+      formData.append('Photo', newRequest.photoFile);
+    }
 
     try {
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${user.token}`
         },
-        body: JSON.stringify(payload),
+        body: formData,
       });
 
       if (!response.ok) throw new Error('Failed to submit request');
 
       toast.success('Request submitted successfully!');
-      setNewRequest({ type: 'maintenance', category: '', subject: '', description: '', priority: 'medium', photo: '' });
+      setNewRequest({ type: 'maintenance', category: '', subject: '', description: '', priority: 'medium', photo: '', photoFile: null });
       setIsRequestDialogOpen(false);
       fetchRequests();
     } catch (error) {
