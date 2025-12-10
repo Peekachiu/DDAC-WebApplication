@@ -16,7 +16,9 @@ export default function AdminDashboard({ user }) {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const response = await fetch(API_URL);
+        const response = await fetch(API_URL, {
+          headers: { 'Authorization': `Bearer ${user.token}` }
+        });
         if (!response.ok) throw new Error('Failed to fetch dashboard data');
         const result = await response.json();
         setData(result);

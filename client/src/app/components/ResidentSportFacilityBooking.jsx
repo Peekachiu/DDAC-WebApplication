@@ -55,13 +55,17 @@ export default function ResidentSportFacilityBooking({ user }) {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const facResponse = await fetch(`${API_URL}/facilities`);
+        const facResponse = await fetch(`${API_URL}/facilities`, {
+          headers: { 'Authorization': `Bearer ${user.token}` }
+        });
         if (facResponse.ok) {
           const data = await facResponse.json();
           setFacilities(data.filter(f => f.type === 'sport'));
         }
 
-        const bookResponse = await fetch(`${API_URL}/all`);
+        const bookResponse = await fetch(`${API_URL}/all`, {
+          headers: { 'Authorization': `Bearer ${user.token}` }
+        });
         if (bookResponse.ok) {
           const data = await bookResponse.json();
           const myBookings = data.filter(b =>
@@ -70,7 +74,9 @@ export default function ResidentSportFacilityBooking({ user }) {
           setBookings(myBookings);
         }
 
-        const blockResponse = await fetch(`${API_URL}/blocked-dates`);
+        const blockResponse = await fetch(`${API_URL}/blocked-dates`, {
+          headers: { 'Authorization': `Bearer ${user.token}` }
+        });
         if (blockResponse.ok) setBlockedDates(await blockResponse.json());
 
 
@@ -120,7 +126,10 @@ export default function ResidentSportFacilityBooking({ user }) {
     try {
       const response = await fetch(`${API_URL}/sport`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
         body: JSON.stringify(payload),
       });
 
@@ -143,7 +152,10 @@ export default function ResidentSportFacilityBooking({ user }) {
     try {
       const response = await fetch(`${API_URL}/update-status/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
         body: JSON.stringify({ status: 'cancelled' }),
       });
       if (!response.ok) throw new Error('Cancellation failed');

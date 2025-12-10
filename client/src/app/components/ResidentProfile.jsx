@@ -78,7 +78,10 @@ export default function ResidentProfile({ user }) {
     try {
       const response = await fetch(`${API_URL}/change-password`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
         body: JSON.stringify({
           userId: user.id,
           oldPassword: passwords.oldPassword,

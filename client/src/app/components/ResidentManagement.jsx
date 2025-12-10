@@ -49,7 +49,9 @@ export default function ResidentManagement({ user }) {
   async function fetchResidents() {
     setIsLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/residents`);
+      const response = await fetch(`${API_URL}/api/residents`, {
+        headers: { 'Authorization': `Bearer ${user.token}` }
+      });
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       setResidents(data);
@@ -88,7 +90,10 @@ export default function ResidentManagement({ user }) {
     try {
       const response = await fetch(`${API_URL}/api/residents`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
         body: JSON.stringify(residentToAdd),
       });
 
@@ -136,7 +141,10 @@ export default function ResidentManagement({ user }) {
     try {
       const response = await fetch(`${API_URL}/api/residents/${editingResident.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
         body: JSON.stringify(updatedResidentData),
       });
 
@@ -154,7 +162,10 @@ export default function ResidentManagement({ user }) {
   const handleDeleteResident = async (id) => {
     if (window.confirm('Are you sure you want to delete this resident?')) {
       try {
-        const response = await fetch(`${API_URL}/api/residents/${id}`, { method: 'DELETE' });
+        const response = await fetch(`${API_URL}/api/residents/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${user.token}` }
+        });
         if (!response.ok) throw new Error('Delete failed');
         setResidents(residents.filter((r) => r.id !== id));
         toast.success('Resident deleted successfully!');

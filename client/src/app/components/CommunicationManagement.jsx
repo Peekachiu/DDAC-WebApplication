@@ -49,7 +49,9 @@ export default function CommunicationManagement({ user }) {
     try {
       // If resident, use the specific endpoint to only see "sent" items
       const endpoint = isAdmin ? API_URL : `${API_URL}/resident`;
-      const response = await fetch(endpoint);
+      const response = await fetch(endpoint, {
+        headers: { 'Authorization': `Bearer ${user.token}` }
+      });
       if (!response.ok) throw new Error('Failed to fetch announcements');
       const data = await response.json();
       setAnnouncements(data);
@@ -84,14 +86,20 @@ export default function CommunicationManagement({ user }) {
         // Update
         response = await fetch(`${API_URL}/${editingAnnouncement.announcementID}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${user.token}`
+          },
           body: JSON.stringify({ ...payload, announcementID: editingAnnouncement.announcementID, status: editingAnnouncement.status }),
         });
       } else {
         // Create
         response = await fetch(API_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${user.token}`
+          },
           body: JSON.stringify(payload),
         });
       }
@@ -112,6 +120,8 @@ export default function CommunicationManagement({ user }) {
     try {
       const response = await fetch(`${API_URL}/${id}/send`, {
         method: 'PUT',
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${user.token}` }
       });
       if (!response.ok) throw new Error('Failed to send');
       toast.success('Announcement sent immediately!');
@@ -126,7 +136,10 @@ export default function CommunicationManagement({ user }) {
     if (!window.confirm('Are you sure you want to delete this announcement?')) return;
 
     try {
-      const response = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+      const response = await fetch(`${API_URL}/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${user.token}` }
+      });
       if (!response.ok) throw new Error('Failed to delete');
       toast.success('Announcement deleted!');
       fetchAnnouncements();
