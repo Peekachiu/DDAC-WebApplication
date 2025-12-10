@@ -1,7 +1,7 @@
 // peekachiu/ddac-webapplication/DDAC-WebApplication-jiayuan/client/src/app/invoices/page.js
 'use client'
 
-import { useAuth } from '../../layout';
+import { useAuth } from '../../AuthContext';
 import ResidentInvoiceReceipt from '../../components/ResidentInvoiceReceipt';
 
 export default function InvoicesPage() {

@@ -108,7 +108,7 @@ export default function ResidentProfile({ user }) {
   // Helper component for Gradient Border Input Display
   const GradientBorderDisplay = ({ children, className }) => (
     <div className={`relative rounded-lg p-px bg-linear-to-br from-blue-300/50 via-purple-300/50 to-blue-300/50 shadow-sm ${className}`}>
-      <div className="relative rounded-[calc(0.5rem-1px)] bg-white/80 backdrop-blur-sm p-2.5 text-sm text-gray-700 shadow-inner">
+      <div className="relative rounded-[calc(0.5rem-1px)] bg-white/80 dark:bg-black/40 backdrop-blur-sm p-2.5 text-sm text-foreground shadow-inner">
         {children}
       </div>
     </div>
@@ -118,7 +118,7 @@ export default function ResidentProfile({ user }) {
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
         <h2>Profile Settings</h2>
-        <p className="text-gray-600">Manage your account details and security</p>
+        <p className="text-muted-foreground">Manage your account details and security</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -186,19 +186,19 @@ export default function ResidentProfile({ user }) {
                   <div className="relative group">
                     <div className="absolute -inset-0.5 bg-linear-to-r from-blue-300 to-purple-300 rounded-lg blur opacity-0 group-focus-within:opacity-30 transition duration-200"></div>
                     <div className="relative">
-                      <KeyRound className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                      <KeyRound className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="oldPassword"
                         type={showPassword.oldPassword ? "text" : "password"}
                         placeholder="Enter current password"
-                        className="pl-9 pr-10 bg-white/50 border-gray-200 focus:border-blue-400 focus:ring-blue-400/20"
+                        className="pl-9 pr-10 bg-white/50 dark:bg-black/20 border-gray-200 dark:border-white/10 focus:border-blue-400 focus:ring-blue-400/20"
                         value={passwords.oldPassword}
                         onChange={handleChange}
                         required
                       />
                       <button
                         type="button"
-                        className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 focus:outline-none"
+                        className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground focus:outline-none"
                         onMouseDown={() => handleMouseDown('oldPassword')}
                         onMouseUp={() => handleMouseUp('oldPassword')}
                         onMouseLeave={() => handleMouseUp('oldPassword')}
@@ -216,19 +216,19 @@ export default function ResidentProfile({ user }) {
                   <div className="relative group">
                     <div className="absolute -inset-0.5 bg-linear-to-r from-blue-300 to-purple-300 rounded-lg blur opacity-0 group-focus-within:opacity-30 transition duration-200"></div>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                      <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="newPassword"
                         type={showPassword.newPassword ? "text" : "password"}
                         placeholder="Enter new password"
-                        className="pl-9 pr-10 bg-white/50 border-gray-200 focus:border-blue-400 focus:ring-blue-400/20"
+                        className="pl-9 pr-10 bg-white/50 dark:bg-black/20 border-gray-200 dark:border-white/10 focus:border-blue-400 focus:ring-blue-400/20"
                         value={passwords.newPassword}
                         onChange={handleChange}
                         required
                       />
                       <button
                         type="button"
-                        className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 focus:outline-none"
+                        className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground focus:outline-none"
                         onMouseDown={() => handleMouseDown('newPassword')}
                         onMouseUp={() => handleMouseUp('newPassword')}
                         onMouseLeave={() => handleMouseUp('newPassword')}
@@ -246,19 +246,19 @@ export default function ResidentProfile({ user }) {
                   <div className="relative group">
                     <div className="absolute -inset-0.5 bg-linear-to-r from-blue-300 to-purple-300 rounded-lg blur opacity-0 group-focus-within:opacity-30 transition duration-200"></div>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                      <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="confirmPassword"
                         type={showPassword.confirmPassword ? "text" : "password"}
                         placeholder="Confirm new password"
-                        className="pl-9 pr-10 bg-white/50 border-gray-200 focus:border-blue-400 focus:ring-blue-400/20"
+                        className="pl-9 pr-10 bg-white/50 dark:bg-black/20 border-gray-200 dark:border-white/10 focus:border-blue-400 focus:ring-blue-400/20"
                         value={passwords.confirmPassword}
                         onChange={handleChange}
                         required
                       />
                       <button
                         type="button"
-                        className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 focus:outline-none"
+                        className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground focus:outline-none"
                         onMouseDown={() => handleMouseDown('confirmPassword')}
                         onMouseUp={() => handleMouseUp('confirmPassword')}
                         onMouseLeave={() => handleMouseUp('confirmPassword')}

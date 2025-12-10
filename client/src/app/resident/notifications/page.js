@@ -1,6 +1,6 @@
 // peekachiu/ddac-webapplication/DDAC-WebApplication-jiayuan/client/src/app/resident/notifications/page.js
 'use client'
-import { useAuth } from '../../layout';
+import { useAuth } from '../../AuthContext';
 import ResidentNotifications from '../../components/ResidentNotifications';
 
 export default function Page() {
