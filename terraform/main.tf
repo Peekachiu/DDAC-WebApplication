@@ -368,3 +368,11 @@ module "guardduty" {
 module "security_hub" {
   source = "./modules/security_hub"
 }
+
+############################################################
+# AWS Config Module
+############################################################
+module "config" {
+  source       = "./modules/config"
+  project_name = var.project_name
+}
