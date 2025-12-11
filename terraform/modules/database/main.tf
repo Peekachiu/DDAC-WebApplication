@@ -19,7 +19,7 @@ resource "aws_db_instance" "db_instance" {
   identifier     = lower("${var.vpc_name}-db")
   engine         = "mysql"       # SQL Server Express Edition
   engine_version = "8.0"         # SQL Server 2019
-  instance_class = "db.t3.small" # Good for development/testing
+  instance_class = "db.t3.medium" # Upgraded for performance
 
   allocated_storage = 20 # 20 GB of storage
   storage_type      = "gp3"
