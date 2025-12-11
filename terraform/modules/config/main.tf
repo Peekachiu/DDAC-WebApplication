@@ -22,7 +22,7 @@ resource "aws_config_configuration_recorder_status" "main" {
 
 # --- S3 Bucket for Config Logs ---
 resource "aws_s3_bucket" "config_bucket" {
-  bucket_prefix = "${var.project_name}-config-logs-"
+  bucket_prefix = "${lower(var.project_name)}-config-logs-"
   force_destroy = true
 }
 
