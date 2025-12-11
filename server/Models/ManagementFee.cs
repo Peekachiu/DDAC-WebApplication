@@ -30,6 +30,10 @@ namespace server.Models
         [Column("method")]
         public string Method { get; set; } = string.Empty;
 
+        // [ADDED] Description for flexible fee names (e.g. Fire Insurance)
+        [Column("description")]
+        public string Description { get; set; } = string.Empty;
+
         [Column("status")]
         public int Status { get; set; } // 0 = Pending, 1 = Paid
 

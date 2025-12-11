@@ -284,7 +284,7 @@ function ResidentManagementFee({ user }) {
                                   <DollarSign className="h-6 w-6 text-orange-600" />
                                 </div>
                                 <div>
-                                  <p className="text-sm font-medium">{invoice.month}</p>
+                                  <p className="text-sm font-medium">{invoice.description || invoice.month}</p>
                                   <p className="text-xs text-gray-500">
                                     Due: {new Date(invoice.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                                   </p>
@@ -361,7 +361,7 @@ function ResidentManagementFee({ user }) {
                                   <DollarSign className="h-6 w-6 text-green-600" />
                                 </div>
                                 <div>
-                                  <p className="text-sm font-medium">{invoice.month}</p>
+                                  <p className="text-sm font-medium">{invoice.description || invoice.month}</p>
                                   <p className="text-xs text-gray-500">
                                     Paid on: {invoice.paidDate
                                       ? new Date(invoice.paidDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
