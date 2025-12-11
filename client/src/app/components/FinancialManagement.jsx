@@ -42,9 +42,10 @@ export default function FinancialManagement({ user }) {
     block: '',
     floor: '',
     unit: '',
-    month: '',
+    description: '', // [CHANGED] Renamed from month to description for clarity
     amount: '450.00',
-    dueDate: ''
+    dueDate: '',
+    issueDate: '' // [ADDED]
   });
 
   const fetchInvoices = useCallback(async () => {
@@ -75,8 +76,10 @@ export default function FinancialManagement({ user }) {
       block: newInvoice.block,
       floor: newInvoice.floor,
       unit: newInvoice.unit,
-      month: newInvoice.month,
+      description: newInvoice.description, // [CHANGED] Send description
       amount: parseFloat(newInvoice.amount),
+      // [CHANGED] Send custom issue date if provided, else backend handles it (or we send null)
+      issueDate: newInvoice.issueDate ? format(newInvoice.issueDate, 'yyyy-MM-dd') : null,
       dueDate: newInvoice.dueDate ? format(newInvoice.dueDate, 'yyyy-MM-dd') : new Date().toISOString()
     };
 
@@ -95,7 +98,7 @@ export default function FinancialManagement({ user }) {
 
       toast.success('Invoice generated successfully!');
       setIsGenerateDialogOpen(false);
-      setNewInvoice({ block: '', floor: '', unit: '', month: '', amount: '450.00', dueDate: '' });
+      setNewInvoice({ block: '', floor: '', unit: '', description: '', amount: '450.00', dueDate: '', issueDate: '' });
       fetchInvoices();
     } catch (error) {
       toast.error(error.message);
@@ -202,7 +205,7 @@ export default function FinancialManagement({ user }) {
               <TableHeader>
                 <TableRow>
                   <TableHead>ID</TableHead>
-                  <TableHead>Month</TableHead>
+                  <TableHead>Description</TableHead> {/* [CHANGED] Header */}
                   <TableHead>Amount</TableHead>
                   <TableHead>Due Date</TableHead>
                   <TableHead>Status</TableHead>
@@ -216,7 +219,7 @@ export default function FinancialManagement({ user }) {
                   paginatedList.map((invoice) => (
                     <TableRow key={invoice.id}>
                       <TableCell>#{invoice.id}</TableCell>
-                      <TableCell>{invoice.month}</TableCell>
+                      <TableCell>{invoice.description || invoice.month}</TableCell> {/* [CHANGED] Show Description or Month */}
                       <TableCell>RM {invoice.amount.toFixed(2)}</TableCell>
                       <TableCell>{format(new Date(invoice.dueDate), 'dd MMM yyyy')}</TableCell>
                       <TableCell>{getStatusBadge(invoice.status)}</TableCell>
@@ -312,12 +315,21 @@ export default function FinancialManagement({ user }) {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="month">Billing Month/Desc</Label>
-                  <Input id="month" value={newInvoice.month} onChange={(e) => setNewInvoice({ ...newInvoice, month: e.target.value })} placeholder="e.g. November 2025" required />
+                  <Label htmlFor="description">Description (e.g. Fire Insurance, Maint. Fee)</Label>
+                  <Input id="description" value={newInvoice.description} onChange={(e) => setNewInvoice({ ...newInvoice, description: e.target.value })} placeholder="Type a description" required />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="amount">Amount (RM)</Label>
-                  <Input id="amount" type="number" step="0.01" value={newInvoice.amount} onChange={(e) => setNewInvoice({ ...newInvoice, amount: e.target.value })} required />
+                <div className="grid grid-cols-2 gap-2">
+                   <div className="space-y-2">
+                    <Label htmlFor="amount">Amount (RM)</Label>
+                    <Input id="amount" type="number" step="0.01" value={newInvoice.amount} onChange={(e) => setNewInvoice({ ...newInvoice, amount: e.target.value })} required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="issueDate">Issue Date (Optional)</Label>
+                    <DatePicker
+                      date={newInvoice.issueDate}
+                      setDate={(date) => setNewInvoice({ ...newInvoice, issueDate: date })}
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="dueDate">Due Date</Label>
@@ -403,7 +415,7 @@ export default function FinancialManagement({ user }) {
                 <TableHead>ID</TableHead>
                 <TableHead>Resident</TableHead>
                 <TableHead>Unit</TableHead>
-                <TableHead>Month</TableHead>
+                <TableHead>Description</TableHead> {/* [CHANGED] Header */}
                 <TableHead>Amount</TableHead>
                 <TableHead>Due Date</TableHead>
                 <TableHead>Status</TableHead>
@@ -416,7 +428,7 @@ export default function FinancialManagement({ user }) {
                   <TableCell>#{invoice.id}</TableCell>
                   <TableCell>{invoice.residentName}</TableCell>
                   <TableCell>{`${invoice.block}-${invoice.floor}-${invoice.unit}`}</TableCell>
-                  <TableCell>{invoice.month}</TableCell>
+                  <TableCell>{invoice.description || invoice.month}</TableCell> {/* [CHANGED] Show Description or Month */}
                   <TableCell>RM {invoice.amount.toFixed(2)}</TableCell>
                   <TableCell>{format(new Date(invoice.dueDate), 'dd MMM yyyy')}</TableCell>
                   <TableCell>{getStatusBadge(invoice.status)}</TableCell>

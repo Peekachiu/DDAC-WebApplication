@@ -17,6 +17,7 @@ namespace server.Controllers
         public string Floor { get; set; } = string.Empty; // [ADDED]
         public string Unit { get; set; } = string.Empty;
         public string Month { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty; // [ADDED]
         public decimal Amount { get; set; } // [CHANGED] decimal
         public DateTime IssueDate { get; set; }
         public DateTime DueDate { get; set; }
@@ -32,8 +33,11 @@ namespace server.Controllers
         public string Floor { get; set; } = string.Empty;
         public string Unit { get; set; } = string.Empty;
         
+        // This 'Month' field might be redundant if we use Description, but keeping for compatibility
         public string Month { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty; // [ADDED]
         public decimal Amount { get; set; } // [CHANGED] decimal
+        public DateTime? IssueDate { get; set; } // [ADDED] Optional custom issue date
         public DateTime DueDate { get; set; }
     }
 
@@ -84,6 +88,7 @@ namespace server.Controllers
                     Floor = f.Property?.Floor ?? "N/A",
                     Unit = f.Property?.Unit ?? "N/A",
                     Month = f.IssueDate.ToString("MMMM yyyy"),
+                    Description = f.Description, // [ADDED]
                     Amount = f.Amount,
                     IssueDate = f.IssueDate,
                     DueDate = f.DueDate,
@@ -118,11 +123,12 @@ namespace server.Controllers
             {
                 PropertyID = targetProp.PropertyID,
                 Amount = request.Amount,
-                IssueDate = DateTime.Now,
+                IssueDate = request.IssueDate ?? DateTime.Now, // [CHANGED] Use custom issue date or default to Now
                 DueDate = request.DueDate,
                 PaymentDate = null,
                 Status = 0,
                 Method = "",
+                Description = request.Description, // [ADDED]
                 PaymentTime = TimeSpan.Zero
             };
 
