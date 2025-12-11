@@ -23,7 +23,7 @@ resource "aws_config_configuration_recorder_status" "main" {
 # --- S3 Bucket for Config Logs ---
 resource "aws_s3_bucket" "config_bucket" {
   bucket_prefix = "${var.project_name}-config-logs-"
-  force_destroy = true 
+  force_destroy = true
 }
 
 resource "aws_s3_bucket_public_access_block" "config_bucket" {
@@ -46,7 +46,7 @@ resource "aws_s3_bucket_policy" "config_bucket" {
         Principal = {
           Service = "config.amazonaws.com"
         }
-        Action = "s3:GetBucketAcl"
+        Action   = "s3:GetBucketAcl"
         Resource = aws_s3_bucket.config_bucket.arn
       },
       {
@@ -55,7 +55,7 @@ resource "aws_s3_bucket_policy" "config_bucket" {
         Principal = {
           Service = "config.amazonaws.com"
         }
-        Action = "s3:ListBucket"
+        Action   = "s3:ListBucket"
         Resource = aws_s3_bucket.config_bucket.arn
       },
       {
@@ -64,7 +64,7 @@ resource "aws_s3_bucket_policy" "config_bucket" {
         Principal = {
           Service = "config.amazonaws.com"
         }
-        Action = "s3:PutObject"
+        Action   = "s3:PutObject"
         Resource = "${aws_s3_bucket.config_bucket.arn}/AWSLogs/*/Config/*"
         Condition = {
           StringEquals = {
