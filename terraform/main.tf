@@ -354,3 +354,17 @@ module "cloudwatch" {
   db_instance_id = module.database.db_instance_identifier
   api_asg_name   = module.api.asg_name
 }
+
+############################################################
+# GuardDuty Module
+############################################################
+module "guardduty" {
+  source = "./modules/guardduty"
+}
+
+############################################################
+# Security Hub Module
+############################################################
+module "security_hub" {
+  source = "./modules/security_hub"
+}
