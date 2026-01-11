@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { jwtDecode } from "jwt-decode";
 
 const AuthContext = createContext(null);
-const API_URL = ''; // Check that this matches your dotnet run port
+const API_URL = 'http://localhost:5016'; // Check that this matches your dotnet run port
 
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
@@ -67,27 +67,45 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  // Set up auto-logout timer whenever user changes
+  // Idle Timeout Logic
   useEffect(() => {
-    if (!currentUser?.token) return;
+    if (!currentUser) return;
 
-    try {
-      const decoded = jwtDecode(currentUser.token);
-      const expiryTime = decoded.exp * 1000;
-      const timeoutDuration = expiryTime - Date.now();
+    const IDLE_TIMEOUT = 10 * 60 * 1000; // 10 minutes
+    let idleTimer;
 
-      if (timeoutDuration > 0) {
-        const timer = setTimeout(() => {
-          handleLogout(); // Auto logout when token expires
-        }, timeoutDuration);
-        return () => clearTimeout(timer);
-      } else {
-        handleLogout(); // Already expired
-      }
-    } catch (error) {
-      console.error("Token decode error", error);
-      handleLogout();
-    }
+    const resetTimer = () => {
+      if (idleTimer) clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => {
+        handleLogout();
+        toast.error("Logged out due to inactivity.");
+      }, IDLE_TIMEOUT);
+    };
+
+    // Events to track activity
+    const activityEvents = [
+      'mousedown',
+      'mousemove',
+      'keydown',
+      'scroll',
+      'touchstart'
+    ];
+
+    // Attach listeners
+    activityEvents.forEach(event => {
+      window.addEventListener(event, resetTimer);
+    });
+
+    // Start initial timer
+    resetTimer();
+
+    // Cleanup
+    return () => {
+      if (idleTimer) clearTimeout(idleTimer);
+      activityEvents.forEach(event => {
+        window.removeEventListener(event, resetTimer);
+      });
+    };
   }, [currentUser]);
 
 
