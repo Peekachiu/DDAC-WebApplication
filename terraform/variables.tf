@@ -27,9 +27,9 @@ variable "availability_zones" {
 }
 
 variable "admin_ip_override" {
-  description = "Optional manual override for admin IP (e.g. 115.135.27.146/32). Leave empty to auto-detect."
+  description = "Optional manual override for admin IP. Leave empty to auto-detect."
   type        = string
-  default     = "115.135.25.37/32" # Manually set to a specific IP for testing
+  default     = "115.135.28.159/32" # Manually set to a specific IP for testing
 }
 
 variable "project_name" {
