@@ -81,7 +81,7 @@ namespace server.Controllers
                     new System.Security.Claims.Claim("email", user.Email),
                     new System.Security.Claims.Claim("role", roleString)
                 }),
-                Expires = DateTime.UtcNow.AddMinutes(10), // Token expires in 10 minutes
+                Expires = DateTime.UtcNow.AddHours(24),
                 Issuer = _configuration["Jwt:Issuer"],
                 Audience = _configuration["Jwt:Audience"],
                 SigningCredentials = new Microsoft.IdentityModel.Tokens.SigningCredentials(new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(key), Microsoft.IdentityModel.Tokens.SecurityAlgorithms.HmacSha256Signature)
