@@ -71,9 +71,9 @@ graph TD
     subgraph "Infrastructure Deployment"
         Admin[Administrator] -->|Run| TF[Terraform Apply]
         TF -->|Provision| VPC[AWS VPC]
-        TF -->|Provision| RDS[Amazon RDS (MySQL)]
-        TF -->|Provision| EC2_Web[EC2: Web Server (Public)]
-        TF -->|Provision| EC2_API[EC2: API Server (Private)]
+        TF -->|Provision| RDS["Amazon RDS (MySQL)"]
+        TF -->|Provision| EC2_Web["EC2: Web Server (Public)"]
+        TF -->|Provision| EC2_API["EC2: API Server (Private)"]
     end
 
     subgraph "Instance Initialization (User Data)"
