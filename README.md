@@ -137,7 +137,7 @@ graph LR
         end
         
         subgraph "Private Subnet"
-            WebContainer -->|API Calls (Internal)| InternalALB[Internal API ALB]
+            WebContainer -->|"API Calls (Internal)"| InternalALB[Internal API ALB]
             InternalALB -->|Load Balance| APIASG[API Server ASG]
             APIASG -->|Process| APIContainer[.NET API Container]
             
