@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization; // [ADDED]
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stripe;
 
@@ -6,7 +6,7 @@ namespace DDAC_WebApplication.Server.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize] // [ADDED]
+    [Authorize]
     public class PaymentsController : ControllerBase
     {
         private readonly IConfiguration _configuration;
@@ -18,7 +18,7 @@ namespace DDAC_WebApplication.Server.Controllers
         }
 
         // -------------------------------------------------------------
-        // 1️⃣ CREATE PAYMENT INTENT
+        // CREATE PAYMENT INTENT
         // -------------------------------------------------------------
         [HttpPost("create-payment-intent")]
         public async Task<ActionResult> CreatePaymentIntent([FromBody] PaymentRequest request)
@@ -35,7 +35,7 @@ namespace DDAC_WebApplication.Server.Controllers
                     "grabpay"
                 },
 
-                // 🔥 FORCE 3DS REDIRECT FOR CARD
+                // FORCE 3DS REDIRECT FOR CARD
                 PaymentMethodOptions = new PaymentIntentPaymentMethodOptionsOptions
                 {
                     Card = new PaymentIntentPaymentMethodOptionsCardOptions
@@ -60,7 +60,7 @@ namespace DDAC_WebApplication.Server.Controllers
 
 
         // -------------------------------------------------------------
-        // 2️⃣ RETRIEVE FULL PAYMENT INTENT (EXPANDED)
+        // RETRIEVE FULL PAYMENT INTENT (EXPANDED)
         // -------------------------------------------------------------
         [HttpGet("payment-intent/{id}")]
         public async Task<ActionResult> GetPaymentIntent(string id)
